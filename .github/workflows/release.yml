@@ -1,0 +1,41 @@
+# Rakentaa asennettavan jasenrekisteri.zip-tiedoston ja liittää sen julkaisuun (Release).
+# Zipissä lisäosan kansion nimi on aina "jasenrekisteri", jotta WordPress tunnistaa päivitykset.
+name: Julkaisun zip
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: PHP-syntaksin tarkistus
+        run: |
+          for f in $(find . -name '*.php' -not -path './.git/*'); do php -l "$f" > /dev/null || exit 1; done
+
+      - name: Rakenna zip
+        # git archive jättää pois .gitattributesin export-ignore-polut (docs, .github)
+        run: |
+          mkdir -p build
+          git archive --format=tar --prefix=jasenrekisteri/ HEAD | tar -x -C build
+          cd build && zip -qr ../jasenrekisteri.zip jasenrekisteri
+
+      - name: Liitä zip julkaisuun
+        if: github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.event.release.tag_name }}" jasenrekisteri.zip --clobber
+
+      - name: Tallenna zip (käsin ajettaessa)
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: jasenrekisteri
+          path: jasenrekisteri.zip

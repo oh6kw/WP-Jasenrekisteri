@@ -1,0 +1,173 @@
+/* Jäsenrekisteri – hallinnan tyylit */
+.jr-wrap {
+    --jr-accent: #1d3557;
+    --jr-ok: #1a7f37;      --jr-ok-bg: #e6f4ea;
+    --jr-warn: #9a6700;    --jr-warn-bg: #fff4d6;
+    --jr-err: #b42318;     --jr-err-bg: #fdecea;
+    --jr-info: #1f5fa8;    --jr-info-bg: #e8f0fb;
+    --jr-muted: #646970;   --jr-muted-bg: #f0f0f1;
+    --jr-border: #dcdcde;
+    max-width: 1280px;
+}
+
+/* Paneelit ja kortit */
+.jr-panel {
+    background: #fff;
+    border: 1px solid var(--jr-border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin: 16px 0;
+}
+.jr-panel h2 { margin-top: 0; font-size: 1.15em; }
+.jr-panel > summary { cursor: pointer; }
+.jr-panel[open] > summary { margin-bottom: 12px; }
+
+.jr-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+.jr-card {
+    background: #fff;
+    border: 1px solid var(--jr-border);
+    border-left: 4px solid var(--jr-accent);
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+}
+.jr-card-num { font-size: 22px; font-weight: 600; line-height: 1.3; color: #1d2327; }
+.jr-card-label { color: var(--jr-muted); font-size: 13px; }
+.jr-card-ok   { border-left-color: var(--jr-ok); }
+.jr-card-warn { border-left-color: #dba617; }
+.jr-card-err  { border-left-color: var(--jr-err); }
+
+.jr-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
+@media (max-width: 960px) { .jr-columns { grid-template-columns: 1fr; } }
+
+/* Työkalurivi */
+.jr-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin: 8px 0;
+}
+.jr-toolbar .subsubsub { margin: 0; float: none; }
+.jr-toolbar-right { display: flex; gap: 8px; align-items: center; }
+.jr-tabs li + li::before { content: "|"; color: #a7aaad; padding: 0 4px; }
+.jr-search { min-width: 320px; }
+
+/* Taulukot */
+.jr-table td, .jr-table th { vertical-align: middle; }
+.jr-table .jr-col-id { width: 48px; }
+.jr-table .jr-col-actions { text-align: right; white-space: nowrap; }
+.jr-table .jr-col-actions .button { margin: 2px 0 2px 4px; }
+.jr-name { font-weight: 600; }
+.jr-sub { color: var(--jr-muted); font-size: 12px; margin-top: 2px; }
+.jr-err { color: var(--jr-err); }
+.jr-empty { text-align: center; color: var(--jr-muted); padding: 24px !important; }
+.jr-muted { color: var(--jr-muted); }
+.jr-count { margin-top: 8px; }
+.jr-call {
+    display: inline-block;
+    font-family: Consolas, Menlo, monospace;
+    font-weight: 600;
+    letter-spacing: .03em;
+    background: #f0f6fc;
+    color: var(--jr-accent);
+    border-radius: 4px;
+    padding: 0 6px;
+    margin-left: 4px;
+}
+.jr-ref { background: transparent; padding: 0; font-size: 13px; white-space: nowrap; }
+
+/* Merkit */
+.jr-badge {
+    display: inline-block;
+    font-size: 12px;
+    line-height: 1.6;
+    padding: 0 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+    background: var(--jr-muted-bg);
+    color: var(--jr-muted);
+}
+.jr-badge-ok    { background: var(--jr-ok-bg);   color: var(--jr-ok); }
+.jr-badge-warn  { background: var(--jr-warn-bg); color: var(--jr-warn); }
+.jr-badge-err   { background: var(--jr-err-bg);  color: var(--jr-err); }
+.jr-badge-info  { background: var(--jr-info-bg); color: var(--jr-info); }
+.jr-badge-lg    { font-size: 13px; padding: 4px 12px; }
+
+.jr-btn-danger { color: var(--jr-err) !important; border-color: #e0b4b0 !important; }
+.jr-btn-danger:hover { background: var(--jr-err-bg) !important; }
+
+/* Lomakkeet */
+.jr-form label { display: block; font-weight: 600; margin-bottom: 4px; }
+.jr-form label.jr-radio, .jr-pick-list label, .jr-member-pick label { font-weight: normal; }
+.jr-form input[type=text], .jr-form input[type=email], .jr-form input[type=tel],
+.jr-form input[type=date], .jr-form select, .jr-form textarea { width: 100%; max-width: 100%; }
+.jr-form textarea { font-family: inherit; }
+.jr-form .description { display: block; margin-top: 4px; }
+.jr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 20px; }
+.jr-span-2 { grid-column: span 2; }
+@media (max-width: 600px) { .jr-span-2 { grid-column: auto; } }
+.jr-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.jr-fieldset { border: 1px solid var(--jr-border); border-radius: 6px; padding: 8px 16px 12px; margin: 16px 0; }
+.jr-fieldset legend { font-weight: 600; padding: 0 6px; }
+.jr-radio { margin: 6px 0; }
+.jr-hint { background: var(--jr-warn-bg); color: #6b4b00; border-radius: 6px; padding: 8px 12px; }
+
+.jr-member-pick { margin-top: 8px; }
+.jr-member-pick > p { display: flex; gap: 12px; align-items: center; }
+.jr-member-pick > p label { display: inline; }
+.jr-pick-list {
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid var(--jr-border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    columns: 2 260px;
+}
+.jr-pick-list label { display: block; padding: 3px 0; break-inside: avoid; }
+
+/* Lähetys ja edistyminen */
+.jr-send-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.jr-progress { margin-top: 14px; }
+.jr-progress-bar { height: 10px; background: var(--jr-muted-bg); border-radius: 999px; overflow: hidden; }
+.jr-progress-bar span { display: block; height: 100%; width: 0; background: var(--jr-accent); transition: width .3s ease; }
+.jr-progress.is-error .jr-progress-bar span { background: #dba617; }
+.jr-progress-text { margin: 8px 0 0; }
+.jr-errors { color: var(--jr-err); margin: 6px 0 0 18px; list-style: disc; }
+
+.jr-meter { display: inline-block; vertical-align: middle; width: 70px; height: 6px; background: var(--jr-muted-bg); border-radius: 999px; overflow: hidden; margin-right: 6px; }
+.jr-meter span { display: block; height: 100%; background: var(--jr-ok); }
+
+.jr-bulk { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.jr-bulk input[type=date] { width: auto; }
+
+.jr-empty-state { text-align: center; padding: 40px 20px; }
+
+/* 3.1 */
+.jr-badge-purple { background: #f1ebfb; color: #6b3fa0; }
+.jr-testbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--jr-border); }
+.jr-testbox label { font-weight: 600; margin: 0; }
+.jr-form .jr-testbox input[type=email], .jr-testbox input[type=email] { width: 280px; max-width: 100%; }
+.jr-testbox .description { flex-basis: 100%; margin: 0; }
+.jr-badge-orange { background: #fdebd8; color: #b54708; margin-top: 3px; }
+
+/* 4.0 */
+.jr-badge-laji { background: #e7f3f1; color: #0b6e5f; }
+.jr-lajit { max-width: 640px; margin-bottom: 8px; }
+.jr-lajit input[type=text] { width: 100%; }
+.jr-lajit td { vertical-align: middle; }
+.jr-laji-del { color: var(--jr-err); font-size: 16px; text-decoration: none; }
+.jr-hinnat td { padding: 4px 12px 4px 0; vertical-align: middle; }
+.jr-hinnat input[type=text] { width: 110px !important; }
+.jr-import-table td, .jr-import-table th { font-size: 13px; }
+.jr-import-table select { max-width: 160px; }
+.jr-row-ok td { background: #f3faf5 !important; }
+.jr-upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.jr-radio.jr-indent { margin-left: 24px; }
