@@ -1,6 +1,6 @@
 # Jäsenrekisteri – WordPress-lisäosa yhdistyksille
 
-Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin. Lisäosa on tehty radiokerhon tarpeisiin, mutta sopii mille tahansa suomalaiselle yhdistykselle.
+Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisille yhdistyksille.
 
 Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
 
@@ -12,7 +12,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 
 ![Jäsenlista](docs/kuvat/01-jasenlista.png)
 
-> Kuvissa on keksitty esimerkkikerho. Nimet, kutsutunnukset, osoitteet ja puhelinnumerot ovat kuvitteellisia, ja tilinumero on pankkien yleisesti käyttämä esimerkkinumero.
+> Kuvissa on keksitty esimerkkiyhdistys. Nimet, jäsennumerot, osoitteet ja puhelinnumerot ovat kuvitteellisia, ja tilinumero on pankkien yleisesti käyttämä esimerkkinumero.
 
 ## Ominaisuudet
 
@@ -20,7 +20,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Omat jäsenluokat ja jäsenmaksut, esim. Jäsen 25 €, Nuorisojäsen 10 €, Perhejäsen 10 € ja Kunniajäsen 0 €. Luokat näkyvät jäsenlistassa välilehtinä.
 - 0 €:n luokan jäsenille ei tehdä laskua, mutta he saavat tiedotteet.
 - Haku, lajittelu, joukkotoiminnot (aseta luokka, merkitse eronneeksi) sekä jokaisen jäsenen lasku- ja maksuhistoria.
-- Vapaasti nimettävä lisäkenttä, esim. *Kutsutunnus* tai *Jäsennumero*.
+- Vapaasti nimettävä lisäkenttä, esim. *Jäsennumero*.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
 - Varoitus mahdollisesta tuplakirjauksesta.
 - **Kesken kauden liittyvä jäsen** lisätään jäsenlomakkeesta suoraan jo lähetetylle laskulle. Hän saa oman viitteen ja eräpäivän, ja laskun voi lähettää heti.
@@ -38,6 +38,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Maksut kohdistetaan viitteen perusteella, myös RF-muotoisesta viitteestä. Ennen tallennusta näytetään esikatselu, josta näkee täsmäävät maksut, poikkeavat summat, jo kirjatut maksut ja tuntemattomat viitteet.
 - Samaa maksua ei kirjata kahdesti, koska pankin arkistointitunnus tallennetaan.
 - Merkintä onnistuu myös käsin, yksittäin tai joukkona. Hakukenttä löytää laskun tiliotteen viitteellä.
+- **Excel-raportti:** yhdellä painalluksella kaikki laskut yhteen Excel-tiedostoon: yhteenveto, kaikki avoimet maksut ja jokainen lasku omalla välilehdellään (kuka on maksanut, kuka ei, maksupäivät ja maksajat).
 
 **Tiedotteet**
 - Sähköposti kaikille jäsenille, yhdelle jäsenluokalle tai viimeisimmän laskun maksamattomille.
@@ -136,6 +137,8 @@ includes/
   mailer.php                Tiedotteet
   cron.php                  Automaattiset muistutukset
   settings.php              Asetussivu
+  export-xlsx.php           Laskujen Excel-raportti
+  xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
   lib/jr-qrcode.php         QR-koodikirjasto (MIT)
 assets/                     Hallinnan CSS ja JavaScript
@@ -150,7 +153,7 @@ Kehitysehdotukset ja vikailmoitukset ovat tervetulleita:
 
 ### Tarjoa kahvit
 
-Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit: **[ko-fi.com/oh6kw](https://ko-fi.com/oh6kw)** ☕ Kiitos! 73
+Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit: **[ko-fi.com/oh6kw](https://ko-fi.com/oh6kw)** ☕ Kiitos!
 
 ## Tekijät
 

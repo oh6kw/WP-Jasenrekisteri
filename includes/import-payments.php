@@ -138,8 +138,13 @@ function jr_parse_bank_csv($lines) {
     for ($k = 1; $k < count($lines); $k++) {
         $row = str_getcsv($lines[$k], $delim);
         if (!isset($row[$i_amt])) continue;
-        $amt = str_replace(array(' ', "\xC2\xA0", '+'), '', $row[$i_amt]);
-        if (strpos($amt, ',') !== false) $amt = str_replace(array('.', ','), array('', '.'), $amt);
+        $amt = str_replace(array(' ', "\xC2\xA0", '+', '€'), '', $row[$i_amt]);
+        $pc = strrpos($amt, ','); $pd = strrpos($amt, '.');
+        if ($pc !== false && ($pd === false || $pc > $pd)) {
+            $amt = str_replace(array('.', ','), array('', '.'), $amt);   // 1.234,50 → 1234.50
+        } else {
+            $amt = str_replace(',', '', $amt);                         // 1,234.50 → 1234.50
+        }
         if (!is_numeric($amt)) continue;
         $out[] = array(
             'pvm'     => $i_date !== null && isset($row[$i_date]) ? jr_parse_date_any($row[$i_date]) : null,

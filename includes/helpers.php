@@ -47,7 +47,7 @@ function jr_settings() {
     return $s;
 }
 
-/** Onko lisätunniste (esim. kutsutunnus, jäsennumero) käytössä, ja millä nimellä. */
+/** Onko lisätunniste (esim. jäsennumero) käytössä, ja millä nimellä. */
 function jr_tunnus_on() {
     return jr_settings()['tunnus_kaytossa'] === '1';
 }
@@ -288,6 +288,22 @@ function jr_viite_tarkiste($base) {
  */
 function jr_viite($lasku_id, $jasen_id) {
     $base = sprintf('%d%04d', (int) $lasku_id, (int) $jasen_id);
+    return $base . jr_viite_tarkiste($base);
+}
+
+/**
+ * Yksilöllinen viite laskuriville. Jos perusmuotoinen viite on jo käytössä (mahdollista, kun
+ * jäsenten ID:t ylittävät 9999), lisätään perään juokseva numero ennen tarkistetta.
+ */
+function jr_unique_viite($lasku_id, $jasen_id) {
+    global $wpdb;
+    $t = jr_t('rivit');
+    $base = sprintf('%d%04d', (int) $lasku_id, (int) $jasen_id);
+    for ($k = 0; $k < 1000; $k++) {
+        $b = $k === 0 ? $base : $base . $k;
+        $v = $b . jr_viite_tarkiste($b);
+        if (!$wpdb->get_var($wpdb->prepare("SELECT 1 FROM $t WHERE viite = %s", $v))) return $v;
+    }
     return $base . jr_viite_tarkiste($base);
 }
 

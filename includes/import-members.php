@@ -35,7 +35,7 @@ function jr_guess_field($header) {
         'etunimi' => 'etunimi', 'etunimet' => 'etunimi', 'firstname' => 'etunimi',
         'sukunimi' => 'sukunimi', 'lastname' => 'sukunimi',
         'nimi' => 'nimi_es', 'kokonimi' => 'nimi_es', 'name' => 'nimi_es',
-        'tunnus' => 'tunnus', 'kutsutunnus' => 'tunnus', 'kutsu' => 'tunnus', 'jasennumero' => 'tunnus', 'jasennro' => 'tunnus', 'callsign' => 'tunnus',
+        'tunnus' => 'tunnus', 'jasennumero' => 'tunnus', 'jasennro' => 'tunnus', 'jasentunnus' => 'tunnus',
         'osoite' => 'osoite', 'katuosoite' => 'osoite', 'lahiosoite' => 'osoite', 'address' => 'osoite',
         'postinumero' => 'postinumero', 'postinro' => 'postinumero', 'postnr' => 'postinumero',
         'postitoimipaikka' => 'postitoimipaikka', 'paikkakunta' => 'postitoimipaikka', 'kaupunki' => 'postitoimipaikka', 'kunta' => 'postitoimipaikka',
@@ -230,7 +230,8 @@ function jr_members_import_page() {
     <p><a href="<?php echo esc_url(admin_url('admin.php?page=jasenrekisteri')); ?>">&larr; Takaisin jäsenlistaan</a></p>
     <?php jr_notice(); ?>
 
-    <?php if (empty($_GET['vaihe']) || !$t): ?>
+    <?php if (empty($_GET['vaihe']) || !$t):
+        if ($t) delete_transient('jr_memimp_' . get_current_user_id()); // peruttu tai uusi tuonti ?>
     <div class="jr-panel">
         <h2>1. Valitse tiedosto</h2>
         <form method="post" action="<?php echo esc_url($post); ?>" enctype="multipart/form-data" class="jr-upload">

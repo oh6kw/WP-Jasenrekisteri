@@ -98,19 +98,7 @@ function jr_migrate($old) {
             $s['tunnus_nimi']     = 'Tunnus';
             $s['tunnus_isot']     = '1';
         }
-        // Vanhojen oletustekstien "73," vaihdetaan yleiseen tervehdykseen.
-        $old_sign = "73,\n{yhdistys}";
-        $new_sign = "Ystävällisin terveisin\n{yhdistys}";
-        foreach (array('viesti_oletus', 'muistutus_teksti') as $k) {
-            if (isset($s[$k])) $s[$k] = str_replace(array("73,\r\n{yhdistys}", $old_sign), $new_sign, $s[$k]);
-        }
         update_option('jr_settings', $s);
-
-        $t = jr_t('laskut');
-        foreach ($wpdb->get_results("SELECT id, viesti FROM $t WHERE viesti LIKE '%73,%'") as $l) {
-            $new = str_replace(array("73,\r\n{yhdistys}", $old_sign), $new_sign, $l->viesti);
-            if ($new !== $l->viesti) $wpdb->update($t, array('viesti' => $new), array('id' => $l->id));
-        }
     }
     if ($old < 6) {
         // Erillinen "maksuvapaa"-tila poistuu: maksuvapaus määräytyy nyt jäsenluokasta (jäsenmaksu 0 €).

@@ -44,7 +44,7 @@ function jr_add_rows($lasku_id, $members, $summa, $hinnat = array(), &$skipped =
             'jasen_id' => $m->id,
             'nimi'     => trim($m->etunimi . ' ' . $m->sukunimi),
             'email'    => (string) $m->email,
-            'viite'    => jr_viite($lasku_id, $m->id),
+            'viite'    => jr_unique_viite($lasku_id, $m->id),
             'summa'    => $price,
             'erapaiva' => $erapaiva,
         ));
@@ -67,7 +67,7 @@ function jr_add_member_to_lasku($lasku, $m, $summa, $erapaiva = null) {
         'jasen_id' => $m->id,
         'nimi'     => trim($m->etunimi . ' ' . $m->sukunimi),
         'email'    => (string) $m->email,
-        'viite'    => jr_viite($lasku->id, $m->id),
+        'viite'    => jr_unique_viite($lasku->id, $m->id),
         'summa'    => $summa,
         'erapaiva' => ($erapaiva && $erapaiva !== $lasku->erapaiva) ? $erapaiva : null,
     ));
@@ -414,6 +414,7 @@ function jr_settings_warning() {
 
 function jr_invoice_list() {
     global $wpdb;
+    delete_transient('jr_payimp_' . get_current_user_id()); // keskeneräinen maksujen tuonti peruttu
     $laskut = $wpdb->get_results(
         $wpdb->prepare('SELECT l.*, COUNT(r.id) AS n, SUM(r.lahetetty IS NOT NULL) AS lah, SUM(r.maksettu IS NOT NULL) AS mak, MIN(r.summa) AS min_s, MAX(r.summa) AS max_s, '
         . 'SUM(r.maksettu IS NULL AND COALESCE(r.erapaiva, l.erapaiva) < %s) AS erant, ', current_time('Y-m-d'))
@@ -424,6 +425,9 @@ function jr_invoice_list() {
     ?>
     <h1 class="wp-heading-inline">Jäsenmaksulaskutus</h1>
     <a href="<?php echo esc_url(admin_url('admin.php?page=jr-laskutus&view=new')); ?>" class="page-title-action">Uusi lasku</a>
+    <?php if ($laskut): ?>
+    <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jr_export_xlsx&id=0'), 'jr_export_xlsx_0')); ?>" class="page-title-action" title="Yhteenveto, kaikki avoimet maksut ja jokainen lasku omalla välilehdellään">Vie kaikki laskut Exceliin</a>
+    <?php endif; ?>
     <hr class="wp-header-end">
     <?php jr_notice(); jr_settings_warning(); ?>
 
@@ -780,6 +784,7 @@ function jr_invoice_detail($id) {
                     <a class="button" href="<?php echo esc_url(wp_nonce_url($post_url . '?action=jr_add_missing&id=' . $id, 'jr_add_missing_' . $id)); ?>">Lisää laskulle uudet aktiiviset jäsenet (<?php echo $n_missing; ?>)</a>
                 <?php endif; ?>
                 <a class="button" href="<?php echo esc_url(admin_url('admin.php?page=jr-laskutus#jr-maksutuonti')); ?>">Tuo maksut pankista</a>
+                <a class="button" href="<?php echo esc_url(wp_nonce_url($post_url . '?action=jr_export_xlsx&id=' . $id, 'jr_export_xlsx_' . $id)); ?>">Vie Exceliin</a>
                 <a class="button" href="<?php echo esc_url(wp_nonce_url($post_url . '?action=jr_export_lasku&id=' . $id, 'jr_export_lasku_' . $id)); ?>">Vie CSV</a>
                 <a class="button jr-btn-danger" href="<?php echo esc_url(wp_nonce_url($post_url . '?action=jr_delete_lasku&id=' . $id, 'jr_delete_lasku_' . $id)); ?>"
                    data-confirm="Poistetaanko koko lasku ja kaikki sen maksutiedot pysyvästi?">Poista lasku</a>

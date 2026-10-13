@@ -56,7 +56,7 @@ function jr_page_about() {
 
         <div class="jr-panel">
             <h2>Jäsenrekisteri <?php echo esc_html(JR_VERSION); ?></h2>
-            <p>Jäsenrekisteri ja jäsenmaksulaskutus yhdistyksille. Alun perin radiokerhon tarpeisiin tehty, mutta sopii mille tahansa yhdistykselle.</p>
+            <p>Jäsenrekisteri ja jäsenmaksulaskutus yhdistyksille.</p>
             <dl>
                 <dt>Tekijä</dt>
                 <dd>Jarno Jaskari, OH6KW – alkuperäinen lisäosa, ideointi ja ylläpito</dd>
@@ -78,7 +78,7 @@ function jr_page_about() {
 
         <div class="jr-panel">
             <h2>Tarjoa kahvit</h2>
-            <p>Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit. Kiitos! 73</p>
+            <p>Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit. Kiitos!</p>
             <p><a class="jr-kofi" href="<?php echo esc_url(JR_KOFI); ?>" target="_blank" rel="noopener">☕ Tarjoa kahvit Ko-fissa</a></p>
         </div>
 

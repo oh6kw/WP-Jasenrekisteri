@@ -1,5 +1,26 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.5.0 (2026-10-13)
+
+### Uutta: laskut Exceliin
+- Laskutus-sivulla on painike **Vie kaikki laskut Exceliin**. Se tekee yhden .xlsx-tiedoston, jossa on:
+  - **Yhteenveto:** jokaisesta laskusta laskujen, maksettujen, avoimien ja erääntyneiden määrä sekä laskutettu, maksettu ja avoinna oleva summa. Yhteensä-rivillä on kaavat.
+  - **Avoimet maksut:** kaikki maksamattomat kaikilta laskuilta yhdellä välilehdellä yhteystietoineen, muistutusmäärineen ja eräpäivineen.
+  - **Jokainen lasku omalla välilehdellään:** jäsen, jäsenluokka, viite, summa, eräpäivä, tila (Maksettu / Avoin / Erääntynyt / Maksettu eri summalla, värikoodattuina), maksupäivä, maksettu summa, maksaja, lähetyspäivä ja muistutukset.
+- Otsikkorivit on kiinnitetty, sarakkeissa on suodattimet, ja päivämäärät ja eurot ovat oikeassa muodossa, joten niillä voi laskea. Tulostettaessa taulukko sovitetaan sivun leveyteen.
+- Yksittäisen laskun sivulla on lisäksi painike **Vie Exceliin**. CSV-vienti on edelleen käytettävissä.
+- Excel-tiedosto tehdään ilman ulkoisia kirjastoja tai PHP:n zip-laajennusta, joten vienti toimii kaikilla palvelimilla.
+
+### Yleiskäyttöisyys
+- Radioamatööriviittaukset poistettu lisäosasta, README:stä ja kuvista. Esimerkkinä on nyt kuvitteellinen Esimerkkiyhdistys ry jäsennumeroineen.
+- Jäsentuonti tunnistaa sarakkeen ”Jäsentunnus”. Tuonti löytää edelleen sarakkeen, jonka nimi on sama kuin asetuksissa annettu lisätunnisteen nimi.
+
+### Korjaukset (koodikatselmointi)
+1. **Viitenumeroiden törmäys suurilla jäsen-ID:illä:** kun jäsenten ID:t ylittävät 9999, kahdelle eri laskuriville saattoi syntyä sama viite (esim. lasku 1 + jäsen 12345 ja lasku 11 + jäsen 2345). Tällöin jäsenelle ei syntynyt laskua. Nyt viite tarkistetaan, ja törmäyksessä perään lisätään juokseva numero ennen tarkistetta. Tavallisissa tapauksissa viitteet ovat ennallaan.
+2. **Pankin CSV:n summat:** muoto 1,234.50 (pilkku tuhaterottimena) tulkittiin väärin. Desimaalierotin tunnistetaan nyt viimeisestä erottimesta, ja €-merkki ohitetaan.
+3. **Tietosuoja:** keskeneräisen jäsen- tai maksutuonnin tiedot (henkilötietoja) poistetaan tietokannasta heti, kun tuonti perutaan. Aiemmin ne vanhenivat tunnin kuluttua.
+
+
 ## 4.4.0 (2026-10-13)
 
 ### Uutta: klikattavat paikkamerkit
