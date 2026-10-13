@@ -11,6 +11,7 @@ function jr_t($name) {
         'jasenet' => 'jasenrekisteri',            // sama taulu kuin aiemmissa versioissa
         'laskut'  => 'jasenrekisteri_laskut',
         'rivit'   => 'jasenrekisteri_laskurivit',
+        'loki'    => 'jasenrekisteri_loki',
     );
     return $wpdb->prefix . $map[$name];
 }
@@ -30,6 +31,8 @@ function jr_settings() {
         'tunnus_isot'     => '0',
         'maksukoodi'      => 'molemmat',
         'jasenlajit'      => array(),
+        'lisakentat'      => array(),
+        'loki_kk'         => '24',
         'auto_muistutus'  => '0',
         'auto_paivia'     => '14',
         'auto_max'        => '1',
@@ -95,6 +98,42 @@ function jr_laji_badge($laji_id) {
     $free = (float) $lajit[$laji_id]['summa'] <= 0;
     return '<span class="jr-badge ' . ($free ? 'jr-badge-purple' : 'jr-badge-laji') . '"' . ($free ? ' title="Ei jäsenmaksua"' : '') . '>'
         . esc_html($lajit[$laji_id]['nimi']) . '</span>';
+}
+
+/**
+ * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta', 'lista' => '1'|'0')).
+ * Arvot tallennetaan jäsenelle JSON-muodossa (jasenet.lisakentat).
+ */
+function jr_lisakentat() {
+    $l = jr_settings()['lisakentat'];
+    return is_array($l) ? $l : array();
+}
+function jr_member_lisa($m) {
+    $raw = is_object($m) && isset($m->lisakentat) ? $m->lisakentat : '';
+    $d = $raw ? json_decode($raw, true) : array();
+    return is_array($d) ? $d : array();
+}
+/** Lisäkentän arvo näytettäväksi: valintaruutu "✓"/"Kyllä", teksti sellaisenaan. */
+function jr_lisa_value($kentta, $v, $check = '✓') {
+    $v = (string) $v;
+    if ($kentta['tyyppi'] === 'valinta') return $v !== '' ? $check : '';
+    return $v;
+}
+/** Tulkitsee tuodun tai lomakkeen arvon lisäkentälle. */
+function jr_lisa_parse($kentta, $v) {
+    $v = trim((string) $v);
+    if ($kentta['tyyppi'] === 'valinta') {
+        $l = strtolower(remove_accents($v));
+        return in_array($l, array('1', 'x', 'k', 'kylla', 'on', 'yes', 'true', 'y', '✓'), true) ? '1' : '';
+    }
+    $v = sanitize_text_field($v);
+    return function_exists('mb_substr') ? mb_substr($v, 0, 200) : substr($v, 0, 200);
+}
+
+/** Saako jäsen laskun paperilla? Kyllä, jos hän on sitä pyytänyt tai häneltä puuttuu sähköposti. */
+function jr_is_paperi($r) {
+    $email = isset($r->to_email) ? $r->to_email : (isset($r->email) ? $r->email : '');
+    return !empty($r->paperilasku) || (string) $email === '';
 }
 
 /** Laskurivin eräpäivä: jäsenkohtainen (myöhemmin lisätty jäsen), muuten laskun eräpäivä. */
@@ -189,6 +228,8 @@ function jr_notice() {
         'no_mail_recipients' => array('warning', 'Valitulla vastaanottajajoukolla ei ole yhtään sähköpostiosoitetta.'),
         'due_before_date' => array('error',   'Eräpäivä ei voi olla ennen laskun päiväystä.'),
         'member_duplicate'=> array('warning', 'Jäsen tallennettiin, mutta rekisterissä on jo toinen jäsen samalla nimellä tai sähköpostiosoitteella. Tarkista, ettei kyseessä ole tuplakirjaus.'),
+        'paper_marked'    => array('success', sprintf('%d paperilaskua merkitty postitetuksi.', $n)),
+        'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),
         'rows_failed'     => array('warning', sprintf('Lasku luotiin, mutta %d jäsenelle laskua ei voitu muodostaa (viitenumero oli jo käytössä). Ota yhteyttä ylläpitoon.', $n)),
     );
     if (!isset($msgs[$_GET['jr_msg']])) return;
@@ -422,6 +463,8 @@ function jr_csv_output($filename, $header, $rows) {
             // Puhelinnumerot ja muut etunollalliset numerot tekstinä, jottei Excel pudota nollaa
             // (0401234567 → 401234567) tai muuta +358-numeroa luvuksi. Tuonti tunnistaa muodon.
             if (preg_match('/^(0[\d ]*\d|\+\d[\d ]{6,})$/', $v)) return '="' . $v . '"';
+            // Esim. avaimen numero 8.12 – Excel tulkitsisi sen päivämääräksi 8.12.
+            if (preg_match('/^\d{1,2}\.\d{1,2}$/', $v)) return '="' . $v . '"';
             // Estetään kaavojen suoritus taulukkolaskennassa
             return ($v !== '' && in_array($v[0], array('=', '@', '+', '-', "\t", "\r"), true)) ? "'" . $v : $v;
         }, $row);

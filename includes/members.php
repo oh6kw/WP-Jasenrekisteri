@@ -28,7 +28,28 @@ function jr_handle_save_member() {
         'tila'       => array_key_exists($tila, jr_tilat()) ? $tila : 'aktiivinen',
         'lisatiedot' => sanitize_textarea_field(jr_post('lisatiedot')),
         'jasenlaji'  => array_key_exists(jr_post('jasenlaji'), jr_jasenlajit()) ? jr_post('jasenlaji') : '',
+        'paperilasku'=> jr_post('paperilasku') === '1' ? 1 : 0,
     );
+
+    // Omat lisäkentät
+    $lisa = array();
+    $posted = isset($_POST['lisa']) && is_array($_POST['lisa']) ? wp_unslash($_POST['lisa']) : array();
+    foreach (jr_lisakentat() as $kid => $k) {
+        $val = jr_lisa_parse($k, isset($posted[$kid]) ? $posted[$kid] : '');
+        if ($val !== '') $lisa[$kid] = $val;
+    }
+    $data['lisakentat'] = $lisa ? wp_json_encode($lisa) : null;
+
+    $old = $id ? $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . jr_t('jasenet') . ' WHERE id = %d', $id)) : null;
+    if ($id && !$old) jr_redirect('jasenrekisteri');
+
+    // Eroamispäivä: annettu päivä, aiempi päivä tai tämä päivä, kun jäsen merkitään eronneeksi
+    if ($data['tila'] === 'eronnut') {
+        $ero = jr_date_or_null(jr_post('eronnut_pvm'));
+        $data['eronnut_pvm'] = $ero ? $ero : (($old && $old->eronnut_pvm) ? $old->eronnut_pvm : current_time('Y-m-d'));
+    } else {
+        $data['eronnut_pvm'] = null;
+    }
 
     if ($data['etunimi'] === '' || $data['sukunimi'] === '') {
         jr_redirect('jasenrekisteri', array('view' => $id ? 'edit' : 'new', 'id' => $id ?: null, 'jr_msg' => 'name_required'));
@@ -43,10 +64,13 @@ function jr_handle_save_member() {
     if ($id) {
         $wpdb->update(jr_t('jasenet'), $data, array('id' => $id));
         $msg = 'member_updated';
+        $diff = jr_log_diff(jr_member_snapshot($old), jr_member_snapshot(array_merge((array) $old, $data)));
+        if ($diff) jr_log('jasen', $id, 'muokattu', jr_log_member_name($data), $diff);
     } else {
         $wpdb->insert(jr_t('jasenet'), $data);
         $id  = (int) $wpdb->insert_id;
         $msg = 'member_added';
+        jr_log('jasen', $id, 'lisatty', jr_log_member_name($data), jr_log_diff(array(), jr_member_snapshot($data)));
     }
     if ($dup) $msg = 'member_duplicate';
     if ($raw_email !== '' && $email === '') $msg = 'email_invalid';
@@ -68,7 +92,8 @@ function jr_handle_save_member() {
             $rid = jr_add_member_to_lasku($lasku, $m, $summa, $era ? $era : jr_late_era($lasku));
             if (!$rid) continue;
             $lisatty++;
-            if ($laheta && $m->email) {
+            jr_log('maksu', $id, 'laskulle', $lasku->nimi . ': ' . jr_log_member_name($m) . ', ' . html_entity_decode(jr_money($summa)) . ', eräpäivä ' . jr_date($era ? $era : jr_late_era($lasku)));
+            if ($laheta && $m->email && empty($m->paperilasku)) {
                 if (jr_send_rivi($lasku, jr_get_rivi($rid))) $lahetetty++; else $virhe++;
             }
         }
@@ -87,7 +112,9 @@ function jr_handle_delete_member() {
     jr_check('jr_delete_member_' . $id);
     global $wpdb;
     // Laskurivit säilyvät (nimi ja sähköposti on tallennettu riville), jotta kirjanpito pysyy ehjänä.
+    $old = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . jr_t('jasenet') . ' WHERE id = %d', $id));
     $wpdb->delete(jr_t('jasenet'), array('id' => $id));
+    if ($old) jr_log('jasen', $id, 'poistettu', jr_log_member_name($old));
     jr_redirect('jasenrekisteri', array('jr_msg' => 'member_deleted'));
 }
 
@@ -102,13 +129,26 @@ function jr_handle_bulk_members() {
     $in = implode(',', $ids);
     $t  = jr_t('jasenet');
     $n  = 0;
+    $before = $wpdb->get_results("SELECT * FROM $t WHERE id IN ($in)", OBJECT_K);
     if (strpos($op, 'laji:') === 0) {
         $laji = substr($op, 5);
         if (array_key_exists($laji, jr_jasenlajit())) {
             $n = (int) $wpdb->query($wpdb->prepare("UPDATE $t SET jasenlaji = %s WHERE id IN ($in)", $laji));
         }
-    } elseif ($op === 'eronnut' || $op === 'aktiivinen') {
-        $n = (int) $wpdb->query($wpdb->prepare("UPDATE $t SET tila = %s WHERE id IN ($in)", $op));
+    } elseif ($op === 'eronnut') {
+        $n = (int) $wpdb->query($wpdb->prepare("UPDATE $t SET tila = 'eronnut', eronnut_pvm = %s WHERE tila <> 'eronnut' AND id IN ($in)", current_time('Y-m-d')));
+    } elseif ($op === 'aktiivinen') {
+        $n = (int) $wpdb->query("UPDATE $t SET tila = 'aktiivinen', eronnut_pvm = NULL WHERE tila = 'eronnut' AND id IN ($in)");
+    } elseif ($op === 'paperi_on' || $op === 'paperi_off') {
+        $n = (int) $wpdb->query($wpdb->prepare("UPDATE $t SET paperilasku = %d WHERE id IN ($in)", $op === 'paperi_on' ? 1 : 0));
+    }
+    if ($n) {
+        $after = $wpdb->get_results("SELECT * FROM $t WHERE id IN ($in)", OBJECT_K);
+        foreach ($after as $mid => $m) {
+            if (!isset($before[$mid])) continue;
+            $diff = jr_log_diff(jr_member_snapshot($before[$mid]), jr_member_snapshot($m));
+            if ($diff) jr_log('jasen', $mid, 'muokattu', jr_log_member_name($m) . ' (joukkomuutos)', $diff);
+        }
     }
     jr_redirect('jasenrekisteri', array('nayta' => $nayta, 'jr_msg' => 'members_bulk', 'jr_n' => $n));
 }
@@ -118,14 +158,21 @@ function jr_handle_export_members() {
     jr_check('jr_export_members');
     global $wpdb;
     $rows = $wpdb->get_results('SELECT * FROM ' . jr_t('jasenet') . ' ORDER BY sukunimi, etunimi');
+    $kentat = jr_lisakentat();
+    $tilat = jr_tilat();
     $out = array();
     foreach ($rows as $m) {
-        $tilat = jr_tilat();
-        $out[] = array($m->id, $m->etunimi, $m->sukunimi, $m->tunnus, $m->osoite, $m->puhelin, $m->email, jr_date($m->liittynyt),
-            jr_laji_nimi($m->jasenlaji), isset($tilat[$m->tila]) ? $tilat[$m->tila] : $m->tila, $m->lisatiedot);
+        $row = array($m->id, $m->etunimi, $m->sukunimi, $m->tunnus, $m->osoite, $m->puhelin, $m->email, jr_date($m->liittynyt),
+            jr_laji_nimi($m->jasenlaji), isset($tilat[$m->tila]) ? $tilat[$m->tila] : $m->tila, jr_date($m->eronnut_pvm),
+            $m->paperilasku ? 'Kyllä' : '', $m->lisatiedot);
+        $lisa = jr_member_lisa($m);
+        foreach ($kentat as $kid => $k) $row[] = jr_lisa_value($k, isset($lisa[$kid]) ? $lisa[$kid] : '', 'Kyllä');
+        $out[] = $row;
     }
+    jr_log('vienti', 0, 'vienti', 'Jäsenrekisteri CSV-tiedostoon (' . count($rows) . ' jäsentä)');
     jr_csv_output('jasenrekisteri-' . current_time('Y-m-d') . '.csv',
-        array('ID', 'Etunimi', 'Sukunimi', jr_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Lisätiedot'), $out);
+        array_merge(array('ID', 'Etunimi', 'Sukunimi', jr_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'),
+            array_values(array_map(function ($k) { return $k['nimi']; }, $kentat))), $out);
 }
 
 /* ------------------------------------------------------------------
@@ -207,7 +254,29 @@ function jr_member_form($id) {
                    <?php endforeach; ?>
                </select>
                <span class="description">Eronneet eivät saa laskuja eivätkä tiedotteita, mutta heidän tietonsa ja maksuhistoriansa säilyvät.</span></p>
+            <p class="jr-ero" <?php echo $v('tila', 'aktiivinen') === 'eronnut' ? '' : 'hidden'; ?>><label for="jr-ero">Eroamispäivä</label>
+               <input type="date" id="jr-ero" name="eronnut_pvm" value="<?php echo esc_attr($v('eronnut_pvm')); ?>">
+               <span class="description">Tyhjänä tallennetaan tämä päivä. Käytetään vuosiraportin jäsenmäärissä.</span></p>
         </div>
+        <p><label class="jr-radio"><input type="checkbox" name="paperilasku" value="1" <?php checked((int) $v('paperilasku', 0), 1); ?>>
+            <strong>Haluaa laskun paperilla</strong> – laskua ei lähetetä sähköpostilla, vaan se tulostetaan laskun sivulta postitettavaksi.
+            Jäsenet, joilla ei ole sähköpostia, saavat laskun paperilla aina.</label></p>
+        <?php $kentat = jr_lisakentat(); if ($kentat): $lisa = jr_member_lisa($m); ?>
+        <fieldset class="jr-fieldset">
+            <legend>Lisäkentät</legend>
+            <div class="jr-grid">
+            <?php foreach ($kentat as $kid => $k): $val = isset($lisa[$kid]) ? (string) $lisa[$kid] : ''; ?>
+                <?php if ($k['tyyppi'] === 'valinta'): ?>
+                    <p><label class="jr-radio" style="margin-top:26px"><input type="checkbox" name="lisa[<?php echo esc_attr($kid); ?>]" value="1" <?php checked($val !== ''); ?>> <strong><?php echo esc_html($k['nimi']); ?></strong></label></p>
+                <?php else: ?>
+                    <p><label for="jr-lisa-<?php echo esc_attr($kid); ?>"><?php echo esc_html($k['nimi']); ?></label>
+                       <input type="text" id="jr-lisa-<?php echo esc_attr($kid); ?>" name="lisa[<?php echo esc_attr($kid); ?>]" value="<?php echo esc_attr($val); ?>" maxlength="200"></p>
+                <?php endif; ?>
+            <?php endforeach; ?>
+            </div>
+            <p class="description">Lisäkentät määritellään <a href="<?php echo esc_url(admin_url('admin.php?page=jr-asetukset#jr-lisakentat')); ?>">asetuksissa</a>.</p>
+        </fieldset>
+        <?php endif; ?>
         <p><label for="jr-lisatiedot">Lisätiedot</label>
            <textarea id="jr-lisatiedot" name="lisatiedot" rows="3"><?php echo esc_textarea($v('lisatiedot')); ?></textarea></p>
 
@@ -237,7 +306,7 @@ function jr_member_form($id) {
                     </span>
                 </div>
             <?php endforeach; ?>
-            <label class="jr-radio"><input type="checkbox" name="laheta_heti" value="1" checked> Lähetä lasku heti sähköpostilla (jos jäsenellä on sähköpostiosoite)</label>
+            <label class="jr-radio"><input type="checkbox" name="laheta_heti" value="1" checked> Lähetä lasku heti sähköpostilla (jos jäsenellä on sähköpostiosoite eikä hän ole valinnut paperilaskua)</label>
         </fieldset>
         <?php endif; ?>
 
@@ -246,7 +315,7 @@ function jr_member_form($id) {
             <a class="button button-large" href="<?php echo esc_url(admin_url('admin.php?page=jasenrekisteri')); ?>">Peruuta</a>
         </p>
     </form>
-    <?php if ($m) jr_member_history($m); ?>
+    <?php if ($m) { jr_member_history($m); jr_member_log_panel($m); } ?>
     <?php
 }
 
@@ -335,6 +404,9 @@ function jr_member_list() {
 
     $members = $wpdb->get_results("SELECT * FROM $t $where ORDER BY $order_by $order, sukunimi ASC, etunimi ASC");
     $n_noemail = (int) $wpdb->get_var("SELECT COUNT(*) FROM $t WHERE " . jr_sql_jasenet() . " AND (email IS NULL OR email = '')");
+    $n_paperi  = (int) $wpdb->get_var("SELECT COUNT(*) FROM $t WHERE " . jr_sql_jasenet() . " AND (paperilasku = 1 OR email IS NULL OR email = '')");
+    $kentat = jr_lisakentat();
+    $sarakkeet = array_filter($kentat, function ($k) { return !empty($k['lista']) && $k['lista'] === '1'; });
 
     // Viimeisimmän laskun maksutilanne jäsenittäin
     $latest = $wpdb->get_row('SELECT * FROM ' . jr_t('laskut') . ' ORDER BY id DESC LIMIT 1');
@@ -347,7 +419,7 @@ function jr_member_list() {
         $arrow = $order_by === $col ? ($order === 'ASC' ? ' ▲' : ' ▼') : '';
         return '<a href="' . esc_url(add_query_arg(array('order_by' => $col, 'order' => $next, 'nayta' => $nayta), $base)) . '">' . esc_html($label) . $arrow . '</a>';
     };
-    $cols = $tunnus_on ? 8 : 7;
+    $cols = ($tunnus_on ? 8 : 7) + count($sarakkeet);
     ?>
     <h1 class="wp-heading-inline">Jäsenrekisteri</h1>
     <a href="<?php echo esc_url(add_query_arg(array('view' => 'new', 'laji' => strpos($nayta, 'l_') === 0 ? substr($nayta, 2) : null), $base)); ?>" class="page-title-action">Lisää uusi jäsen</a>
@@ -358,6 +430,9 @@ function jr_member_list() {
         <div class="jr-card"><span class="jr-card-num"><?php echo $n_jas; ?></span><span class="jr-card-label">Jäsentä<?php echo $n_free ? ', joista ' . $n_free . ' ilman jäsenmaksua' : ''; ?></span></div>
         <div class="jr-card"><span class="jr-card-num"><?php echo $n_ero; ?></span><span class="jr-card-label">Eronnutta</span></div>
         <div class="jr-card <?php echo $n_noemail ? 'jr-card-warn' : ''; ?>"><span class="jr-card-num"><?php echo $n_noemail; ?></span><span class="jr-card-label">Jäsentä ilman sähköpostia</span></div>
+        <?php if ($n_paperi): ?>
+        <div class="jr-card"><span class="jr-card-num"><?php echo $n_paperi; ?></span><span class="jr-card-label">Saa laskun paperilla</span></div>
+        <?php endif; ?>
         <?php if ($latest):
             $paid = 0; foreach ($paystatus as $p) { if ($p->maksettu) $paid++; } ?>
         <div class="jr-card"><span class="jr-card-num"><?php echo $paid . ' / ' . count($paystatus); ?></span>
@@ -378,7 +453,7 @@ function jr_member_list() {
             <?php endforeach; ?>
         </ul>
         <div class="jr-toolbar-right">
-            <input type="search" class="jr-search" data-jr-filter="#jr-members" placeholder="<?php echo esc_attr('Hae: nimi, sähköposti, puhelin' . ($tunnus_on ? ', ' . mb_strtolower(jr_tunnus_nimi()) : '') . '…'); ?>">
+            <input type="search" class="jr-search" data-jr-filter="#jr-members" placeholder="<?php echo esc_attr('Hae: nimi, sähköposti, puhelin' . ($tunnus_on ? ', ' . mb_strtolower(jr_tunnus_nimi()) : '') . ($kentat ? ', lisäkenttä' : '') . '…'); ?>">
             <a class="button" href="<?php echo esc_url(add_query_arg('view', 'tuonti', $base)); ?>">Tuo CSV</a>
             <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jr_export_members'), 'jr_export_members')); ?>">Vie CSV</a>
         </div>
@@ -397,6 +472,7 @@ function jr_member_list() {
                 <?php if ($tunnus_on): ?><th><?php echo $sort_link('tunnus', jr_tunnus_nimi()); ?></th><?php endif; ?>
                 <th>Yhteystiedot</th>
                 <th><?php echo $sort_link('liittynyt', 'Liittynyt'); ?></th>
+                <?php foreach ($sarakkeet as $k): ?><th><?php echo esc_html($k['nimi']); ?></th><?php endforeach; ?>
                 <th><?php echo $latest ? esc_html($latest->nimi) : 'Jäsenmaksu'; ?></th>
                 <th class="jr-col-actions">Toiminnot</th>
             </tr>
@@ -406,7 +482,11 @@ function jr_member_list() {
             <tr><td colspan="<?php echo $cols; ?>" class="jr-empty">Ei jäseniä tässä näkymässä.</td></tr>
         <?php endif; ?>
         <?php foreach ($members as $m):
-            $search = preg_replace('/\s+/', '', strtolower(remove_accents($m->etunimi . $m->sukunimi . $m->etunimi . $m->tunnus . $m->email . $m->puhelin . jr_laji_nimi($m->jasenlaji))));
+            $lisa = jr_member_lisa($m);
+            // Hakuun myös lisäkentät: kentän nimi (esim. "avain") löytää kaikki, joilla kenttä on täytetty
+            $lisa_haku = '';
+            foreach ($kentat as $kid => $k) if (isset($lisa[$kid]) && $lisa[$kid] !== '') $lisa_haku .= $k['nimi'] . ($k['tyyppi'] === 'valinta' ? '' : $lisa[$kid]);
+            $search = preg_replace('/\s+/', '', strtolower(remove_accents($m->etunimi . $m->sukunimi . $m->etunimi . $m->tunnus . $m->email . $m->puhelin . jr_laji_nimi($m->jasenlaji) . $lisa_haku . ($m->paperilasku ? 'paperilasku' : ''))));
             $edit_url = add_query_arg(array('view' => 'edit', 'id' => $m->id), $base);
             $del_url  = wp_nonce_url(admin_url('admin-post.php?action=jr_delete_member&id=' . $m->id), 'jr_delete_member_' . $m->id);
             ?>
@@ -421,10 +501,12 @@ function jr_member_list() {
                 <?php if ($tunnus_on): ?><td><?php echo $m->tunnus ? '<span class="jr-call">' . esc_html($m->tunnus) . '</span>' : ''; ?></td><?php endif; ?>
                 <td>
                     <?php if ($m->email): ?><a href="mailto:<?php echo esc_attr($m->email); ?>"><?php echo esc_html($m->email); ?></a><?php else: ?><span class="jr-badge jr-badge-warn">ei sähköpostia</span><?php endif; ?>
+                    <?php if ($m->paperilasku): ?><span class="jr-badge jr-badge-info" title="Lasku tulostetaan ja postitetaan">paperilasku</span><?php endif; ?>
                     <?php if ($m->puhelin): ?><div class="jr-sub"><?php echo esc_html($m->puhelin); ?></div><?php endif; ?>
                     <?php if ($m->osoite): ?><div class="jr-sub"><?php echo esc_html($m->osoite); ?></div><?php endif; ?>
                 </td>
                 <td><?php echo esc_html(jr_date($m->liittynyt)); ?></td>
+                <?php foreach ($sarakkeet as $kid => $k): ?><td><?php echo esc_html(jr_lisa_value($k, isset($lisa[$kid]) ? $lisa[$kid] : '')); ?></td><?php endforeach; ?>
                 <td><?php
                     if ($latest && isset($paystatus[$m->id])) {
                         if ($paystatus[$m->id]->maksettu) {
@@ -463,6 +545,10 @@ function jr_member_list() {
             <optgroup label="Jäsenyys">
                 <option value="eronnut">Merkitse eronneeksi</option>
                 <option value="aktiivinen">Palauta jäseneksi</option>
+            </optgroup>
+            <optgroup label="Laskun toimitus">
+                <option value="paperi_on">Lasku paperilla</option>
+                <option value="paperi_off">Lasku sähköpostilla</option>
             </optgroup>
         </select>
         <button type="submit" class="button" data-confirm="Muutetaanko valittujen jäsenten tiedot?">Suorita</button>

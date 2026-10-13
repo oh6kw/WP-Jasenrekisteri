@@ -2,7 +2,7 @@
 
 Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisille yhdistyksille.
 
-Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
+Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella, ja tulosta paperilaskut niille, jotka niitä haluavat. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
 
 [![Versio](https://img.shields.io/github/v/release/oh6kw/WP-Jasenrekisteri?label=versio)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest)
 ![WordPress 5.8+](https://img.shields.io/badge/WordPress-5.8%2B-21759b)
@@ -19,8 +19,10 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 **Jäsenet**
 - Omat jäsenluokat ja jäsenmaksut, esim. Jäsen 25 €, Nuorisojäsen 10 €, Perhejäsen 10 € ja Kunniajäsen 0 €. Luokat näkyvät jäsenlistassa välilehtinä.
 - 0 €:n luokan jäsenille ei tehdä laskua, mutta he saavat tiedotteet.
-- Haku, lajittelu, joukkotoiminnot (aseta luokka, merkitse eronneeksi) sekä jokaisen jäsenen lasku- ja maksuhistoria.
-- Vapaasti nimettävä lisäkenttä, esim. *Jäsennumero*.
+- Haku, lajittelu, joukkotoiminnot (aseta luokka, merkitse eronneeksi, lasku paperilla) sekä jokaisen jäsenen lasku- ja maksuhistoria.
+- Vapaasti nimettävä lisätunniste, esim. *Jäsennumero*.
+- **Omat lisäkentät**, esim. *Avain* (kerhotalon avaimen numero) tai *Talkoolistalla*. Kenttä voi olla teksti tai valintaruutu, ja sen voi näyttää jäsenlistassa omana sarakkeenaan. Haku kentän nimellä (esim. ”avain”) löytää kaikki, joilla kenttä on täytetty.
+- Eroamispäivä tallentuu, kun jäsen merkitään eronneeksi.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
 - Varoitus mahdollisesta tuplakirjauksesta.
 - **Kesken kauden liittyvä jäsen** lisätään jäsenlomakkeesta suoraan jo lähetetylle laskulle. Hän saa oman viitteen ja eräpäivän, ja laskun voi lähettää heti.
@@ -31,6 +33,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Siisti HTML-lasku, jossa on EPC QR -koodi, pankkiviivakoodi (versio 4) ja virtuaaliviivakoodi tekstinä. Sähköpostissa on mukana myös tekstiversio.
 - Ennen lähetystä voi esikatsella laskun ja lähettää testilaskun valittuun osoitteeseen.
 - Lähetys tehdään pienissä erissä edistymispalkin kanssa, joten suurikaan jäsenmäärä ei aiheuta aikakatkaisuja. Jo lähetettyjä laskuja ei lähetetä uudelleen.
+- **Paperilaskut:** jäsenelle voi valita ”Haluaa laskun paperilla”. Hänelle ja jäsenille, joilla ei ole sähköpostia, ei lähetetä sähköpostia, vaan laskun sivulla on oma lista, josta laskut tulostetaan A4-paperille ikkunakuoreen sopiviksi (QR- ja pankkiviivakoodeineen) ja merkitään postitetuiksi. Myös paperiset maksumuistutukset.
 - Maksumuistutukset käsin tai automaattisesti, esim. 14 päivää eräpäivän jälkeen ja enintään 2 kertaa. Rahastonhoitaja saa halutessaan yhteenvedon lähetetyistä muistutuksista.
 
 **Maksujen kirjaus**
@@ -39,6 +42,10 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Samaa maksua ei kirjata kahdesti, koska pankin arkistointitunnus tallennetaan.
 - Merkintä onnistuu myös käsin, yksittäin tai joukkona. Hakukenttä löytää laskun tiliotteen viitteellä.
 - **Excel-raportti:** yhdellä painalluksella kaikki laskut yhteen Excel-tiedostoon: yhteenveto, kaikki avoimet maksut ja jokainen lasku omalla välilehdellään (kuka on maksanut, kuka ei, maksupäivät ja maksajat).
+
+**Vuosiraportti ja muutosloki**
+- **Vuosiraportti vuosikokoukseen:** jäsenmäärät jäsenluokittain vuoden alussa ja lopussa, liittyneet ja eronneet, vuoden laskut (laskutettu, maksettu, avoinna) jäsenluokittain sekä vuoden aikana kertyneet jäsenmaksut. Tulostettavissa ja vietävissä Exceliin.
+- **Muutosloki:** kuka muutti mitä ja milloin – jäsenten tiedot vanha → uusi, maksumerkinnät, lähetykset, postitukset, laskut, asetukset, tiedotteet, tuonnit ja viennit. Jäsenen sivulla näkyy hänen oma muutoshistoriansa. Säilytysaika valitaan asetuksista.
 
 **Tiedotteet**
 - Sähköposti kaikille jäsenille, yhdelle jäsenluokalle tai viimeisimmän laskun maksamattomille.
@@ -52,6 +59,9 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Uusi lasku](docs/kuvat/05-uusi-lasku.png) **Uusi lasku:** summat jäsenluokittain. Luokat, joiden jäsenmaksu on 0 €, jätetään laskutuksesta pois. | ![Maksujen tuonti](docs/kuvat/07-maksujen-tuonti.png) **Maksujen tuonti pankista:** esikatselu ennen kirjausta. |
 | ![Jäsenen tiedot](docs/kuvat/02-jasen.png) **Jäsenen tiedot** sekä kaikki laskut ja maksut. | ![Asetukset](docs/kuvat/08-asetukset.png) **Asetukset:** jäsenluokat ja automaattinen muistutus. |
 | ![Tiedote](docs/kuvat/09-tiedote.png) **Tiedote** koko jäsenistölle tai yhdelle luokalle. | ![Laskut](docs/kuvat/03-laskut.png) **Laskut:** maksukertymä ja maksujen tuonti. |
+| ![Paperilaskut](docs/kuvat/13-paperilaskut.png) **Paperilaskut** laskun sivulla: tulosta, laita kuoreen ja merkitse postitetuksi. | ![Tulostettava paperilasku](docs/kuvat/14-paperilasku.png) **Tulostettava lasku** ikkunakuoreen (C5 tai DL). |
+| ![Vuosiraportti](docs/kuvat/15-vuosiraportti.png) **Vuosiraportti:** jäsenmäärät luokittain ja jäsenmaksut. | ![Muutosloki](docs/kuvat/16-muutosloki.png) **Muutosloki:** kuka muutti mitä ja milloin. |
+| ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** asetuksissa, esim. avaimen numero. | |
 | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. |
 
 ## Asennus
@@ -78,8 +88,9 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 2. Esikatsele ja lähetä testilasku itsellesi, sitten **Lähetä laskut**.
 3. Lataa verkkopankista viitesiirtoaineisto tai camt.054 ja tuo se kohdasta **Laskutus → Tuo maksut pankista**. Toista tarvittaessa – samaa maksua ei kirjata kahdesti.
 4. Eräpäivän jälkeen maksamattomat saavat muistutuksen automaattisesti tai yhdellä painalluksella.
-5. Jäsenet, joilla ei ole sähköpostia, näkyvät laskulla omana ryhmänään. Heidän viitteensä ja summansa ovat taulukossa, joten laskun voi toimittaa muuta kautta.
-6. **Kesken kauden liittyvä jäsen:** kun lisäät uuden jäsenen, lomakkeessa on kohta *Jäsenmaksu jo tehdyltä laskulta*. Valitse lasku, tarkista summa (osan kaudesta voi laskuttaa pienemmällä summalla) ja tallenna. Jäsen saa oman viitteen ja vähintään kolmen viikon eräpäivän, ja lasku lähtee heti sähköpostilla. Saman voi tehdä myöhemmin jäsenen muokkaussivulta. Laskun sivun painike *Lisää laskulle uudet jäsenet* lisää kerralla kaikki laskulta puuttuvat maksavat jäsenet.
+5. **Paperilaskut:** laskun sivun kohdassa *Paperilaskut* ovat jäsenet, jotka haluavat laskun paperilla, ja jäsenet ilman sähköpostia. Valitse **Tulosta postittamattomat**, tulosta A4-paperille (marginaalit: ei mitään tai oletus, skaalaus 100 %), taita reunan merkkien kohdalta ja laita ikkunakuoreen. Merkitse sitten postitetuksi tulostussivun painikkeella. Erääntyneille voi tulostaa paperisen muistutuksen samalla tavalla.
+6. **Vuosikokous:** *Jäsenrekisteri → Vuosiraportti* näyttää jäsenmäärät ja jäsenmaksukertymän valitulta vuodelta. Tulosta tai vie Exceliin.
+7. **Kesken kauden liittyvä jäsen:** kun lisäät uuden jäsenen, lomakkeessa on kohta *Jäsenmaksu jo tehdyltä laskulta*. Valitse lasku, tarkista summa (osan kaudesta voi laskuttaa pienemmällä summalla) ja tallenna. Jäsen saa oman viitteen ja vähintään kolmen viikon eräpäivän, ja lasku lähtee heti sähköpostilla. Saman voi tehdä myöhemmin jäsenen muokkaussivulta. Laskun sivun painike *Lisää laskulle uudet jäsenet* lisää kerralla kaikki laskulta puuttuvat maksavat jäsenet.
 
 ## Pankkitiedostot
 
@@ -107,6 +118,7 @@ Jäsenrekisteri sisältää henkilötietoja. Rekisterinpitäjä on yhdistys, ja 
 - Lisäosaa voivat käyttää vain ylläpitäjät (`manage_options`).
 - Tallentavat toiminnot on suojattu CSRF-tunnisteilla (nonce). Tietokantakyselyt ovat valmisteltuja, ja kaikki tulostettava tieto escapataan.
 - CSV-vienti estää kaavojen suorittamisen taulukkolaskennassa.
+- Muutosloki kirjaa jokaisen muutoksen tekijän ja ajan. Koska loki sisältää henkilötietoja (esim. vanhoja osoitteita), vanhat merkinnät poistetaan automaattisesti asetuksissa valitun säilytysajan jälkeen (oletus 2 vuotta). Myös jäsenrekisterin viennit kirjataan lokiin.
 - Tiedot pysyvät omalla palvelimellasi. Lisäosa ei lähetä tietoja ulkopuolisille palveluille. Ainoa poikkeus on palautelomake: se lähettää vain itse kirjoittamasi viestin ja halutessasi versiotiedot.
 - **Lisäosan poistaminen:** kun lisäosa poistetaan käytöstä, kysytään, säilytetäänkö tiedot vai poistetaanko kaikki taulut ja asetukset, jos lisäosa myöhemmin poistetaan kokonaan. Valinnan voi vaihtaa myös asetuksista. Oletuksena tiedot säilyvät.
 
@@ -137,6 +149,9 @@ includes/
   mailer.php                Tiedotteet
   cron.php                  Automaattiset muistutukset
   settings.php              Asetussivu
+  print.php                 Tulostettavat paperilaskut ja postitusmerkinnät
+  report.php                Vuosiraportti (näyttö ja Excel)
+  log.php                   Muutosloki
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
@@ -176,4 +191,4 @@ QR-koodien tekoon käytetään Kazuhiko Arasen [qrcode-generator](https://github
 
 ## In English
 
-*Jäsenrekisteri* is a WordPress membership register and dues-invoicing plugin for Finnish associations. It manages members and membership classes, emails individual invoices with Finnish reference numbers, EPC QR codes and Finnish bank barcodes, imports payments from bank files (KTL, camt.054/053, CSV) and matches them by reference, and sends reminders and newsletters. The user interface is in Finnish. License: AGPL-3.0-or-later. Feedback: jarno.jaskari@gmail.com · Support: [ko-fi.com/oh6kw](https://ko-fi.com/oh6kw)
+*Jäsenrekisteri* is a WordPress membership register and dues-invoicing plugin for Finnish associations. It manages members, membership classes and custom fields, emails individual invoices (or prints window-envelope paper invoices) with Finnish reference numbers, EPC QR codes and Finnish bank barcodes, imports payments from bank files (KTL, camt.054/053, CSV) and matches them by reference, sends reminders and newsletters, produces an annual report for the AGM and keeps an audit log of all changes. The user interface is in Finnish. License: AGPL-3.0-or-later. Feedback: jarno.jaskari@gmail.com · Support: [ko-fi.com/oh6kw](https://ko-fi.com/oh6kw)

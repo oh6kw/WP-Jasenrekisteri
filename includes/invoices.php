@@ -12,7 +12,9 @@ function jr_get_lasku($id) {
 
 /** Laskurivit liitettynä jäsenen nykyisiin tietoihin. to_email = nykyinen osoite, tai laskulle tallennettu. */
 function jr_rivi_select_sql() {
-    return 'SELECT r.*, m.etunimi, m.sukunimi, m.tunnus, m.tila, m.jasenlaji, '
+    // Jäsenluokka laskutushetken mukaan (vanhoilla riveillä nykyinen luokka)
+    return "SELECT r.*, m.etunimi, m.sukunimi, m.tunnus, m.tila, m.osoite, COALESCE(m.paperilasku, 0) AS paperilasku, "
+         . "COALESCE(NULLIF(r.jasenlaji, ''), m.jasenlaji, '') AS jasenlaji, "
          . "COALESCE(NULLIF(m.email, ''), r.email) AS to_email "
          . 'FROM ' . jr_t('rivit') . ' r LEFT JOIN ' . jr_t('jasenet') . ' m ON m.id = r.jasen_id ';
 }
@@ -46,6 +48,7 @@ function jr_add_rows($lasku_id, $members, $summa, $hinnat = array(), &$skipped =
             'email'    => (string) $m->email,
             'viite'    => jr_unique_viite($lasku_id, $m->id),
             'summa'    => $price,
+            'jasenlaji'=> (string) $m->jasenlaji,
             'erapaiva' => $erapaiva,
         ));
         if ($ok) $n++;
@@ -69,6 +72,7 @@ function jr_add_member_to_lasku($lasku, $m, $summa, $erapaiva = null) {
         'email'    => (string) $m->email,
         'viite'    => jr_unique_viite($lasku->id, $m->id),
         'summa'    => $summa,
+        'jasenlaji'=> (string) $m->jasenlaji,
         'erapaiva' => ($erapaiva && $erapaiva !== $lasku->erapaiva) ? $erapaiva : null,
     ));
     return $ok ? (int) $wpdb->insert_id : 0;
@@ -81,6 +85,13 @@ function jr_laskut_ilman_jasenta($jasen_id, $limit = 3) {
         'SELECT * FROM ' . jr_t('laskut') . ' WHERE id NOT IN (SELECT lasku_id FROM ' . jr_t('rivit') . ' WHERE jasen_id = %d) ORDER BY id DESC LIMIT %d',
         (int) $jasen_id, (int) $limit
     ));
+}
+
+/** Kirjaa yksittäisen laskurivin tapahtuman jäsenen muutoshistoriaan. */
+function jr_log_rivi($r, $toiminto, $lisa = '', $lasku = null) {
+    if (!$lasku) $lasku = jr_get_lasku($r->lasku_id);
+    $p = jr_rivi_person($r);
+    jr_log('maksu', (int) $r->jasen_id, $toiminto, ($lasku ? $lasku->nimi : 'Lasku') . ': ' . $p['nimi'] . ', ' . html_entity_decode(jr_money($r->summa)) . ($lisa !== '' ? ' – ' . $lisa : ''));
 }
 
 /**
@@ -176,6 +187,11 @@ function jr_handle_create_lasku() {
         $wpdb->delete(jr_t('laskut'), array('id' => $lasku_id));
         jr_redirect('jr-laskutus', array('view' => 'new', 'jr_msg' => 'no_recipients'));
     }
+    $hm = array();
+    foreach ($hinnat as $lid => $h) $hm[] = array('Hinta: ' . jr_laji_nimi($lid), '', html_entity_decode(jr_money($h)));
+    if (!$hinnat || $summa > 0) $hm[] = array('Summa' . ($hinnat ? ' (ilman jäsenluokkaa)' : ''), '', html_entity_decode(jr_money($summa)));
+    $hm[] = array('Eräpäivä', '', jr_date($erapaiva));
+    jr_log('lasku', $lasku_id, 'lasku_luotu', $nimi . ': ' . $n . ' jäsentä' . ($skipped ? ', ' . $skipped . ' ohitettu (0 €)' : ''), $hm);
     if ($skipped > 0 && $failed <= 0) {
         jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jr_msg' => 'lasku_created_skip', 'jr_n' => $n, 'jr_s' => $skipped));
     }
@@ -195,10 +211,19 @@ function jr_handle_update_lasku() {
     if ($nimi === '' || !$erapaiva) {
         jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $id, 'jr_msg' => 'lasku_invalid'));
     }
-    $wpdb->update(jr_t('laskut'), array(
+    $old = jr_get_lasku($id);
+    if (!$old) jr_redirect('jr-laskutus');
+    $upd = array(
         'nimi' => $nimi, 'erapaiva' => $erapaiva, 'viesti' => sanitize_textarea_field(jr_post('viesti')),
-        'auto_muistutus' => jr_post('auto_muistutus') === '1' ? 1 : 0,
-    ), array('id' => $id));
+        'auto_muistutus' => jr_settings()['auto_muistutus'] === '1' ? (jr_post('auto_muistutus') === '1' ? 1 : 0) : (int) $old->auto_muistutus,
+    );
+    $wpdb->update(jr_t('laskut'), $upd, array('id' => $id));
+    $snap = function ($l) {
+        $l = (object) $l;
+        return array('Nimi' => $l->nimi, 'Eräpäivä' => jr_date($l->erapaiva), 'Saateteksti' => (string) $l->viesti, 'Automaattiset muistutukset' => $l->auto_muistutus ? 'kyllä' : 'ei');
+    };
+    $diff = jr_log_diff($snap($old), $snap($upd));
+    if ($diff) jr_log('lasku', $id, 'lasku_muokattu', $nimi, $diff);
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $id, 'jr_msg' => 'lasku_updated'));
 }
 
@@ -207,6 +232,11 @@ function jr_handle_delete_lasku() {
     $id = intval(isset($_REQUEST['id']) ? $_REQUEST['id'] : 0);
     jr_check('jr_delete_lasku_' . $id);
     global $wpdb;
+    $old = jr_get_lasku($id);
+    if ($old) {
+        $st = $wpdb->get_row($wpdb->prepare('SELECT COUNT(*) AS n, SUM(maksettu IS NOT NULL) AS mak, SUM(summa) AS yht FROM ' . jr_t('rivit') . ' WHERE lasku_id = %d', $id));
+        jr_log('lasku', $id, 'lasku_poistettu', sprintf('%s (%d laskua, %d maksettu, yhteensä %s)', $old->nimi, $st->n, $st->mak, html_entity_decode(jr_money($st->yht))));
+    }
     $wpdb->delete(jr_t('rivit'), array('lasku_id' => $id));
     $wpdb->delete(jr_t('laskut'), array('id' => $id));
     jr_redirect('jr-laskutus', array('jr_msg' => 'lasku_deleted'));
@@ -226,6 +256,11 @@ function jr_handle_add_missing() {
     $era = jr_late_era($lasku);
     $skipped = 0;
     $n = jr_add_rows($id, $members, $lasku->summa, jr_lasku_hinnat($lasku), $skipped, $era !== $lasku->erapaiva ? $era : null);
+    if ($n) {
+        $nimet = array();
+        foreach ($members as $m) if (jr_member_price($m, jr_lasku_hinnat($lasku), $lasku->summa) > 0) $nimet[] = jr_log_member_name($m);
+        jr_log('lasku', $id, 'jasenia_lisatty', $lasku->nimi . ': ' . $n . ' uutta jäsentä, eräpäivä ' . jr_date($era), array('nimet' => $nimet));
+    }
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $id, 'jr_msg' => 'rows_added', 'jr_n' => $n));
 }
 
@@ -239,6 +274,7 @@ function jr_handle_toggle_paid() {
     $wpdb->update(jr_t('rivit'), $r->maksettu
         ? array('maksettu' => null, 'maksettu_summa' => null, 'maksaja' => null, 'arkistotunnus' => null)
         : array('maksettu' => current_time('Y-m-d')), array('id' => $rid));
+    jr_log_rivi($r, $r->maksettu ? 'maksu_peruttu' : 'maksettu', $r->maksettu ? 'aiemmin merkitty ' . jr_date($r->maksettu) : 'käsin');
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $r->lasku_id, 'jr_msg' => 'paid_updated', 'jr_n' => 1));
 }
 
@@ -254,6 +290,13 @@ function jr_handle_bulk_rows() {
     $in = implode(',', $ids);
     $t  = jr_t('rivit');
     $op = jr_post('bulk_op');
+    $kohteet = $wpdb->get_results($wpdb->prepare(jr_rivi_select_sql() . "WHERE r.lasku_id = %d AND r.id IN ($in)", $lasku_id));
+    $bpvm = jr_date_or_null(jr_post('bulk_pvm'));
+    foreach ($kohteet as $r) {
+        if ($op === 'paid' && !$r->maksettu) jr_log_rivi($r, 'maksettu', 'joukkotoiminto, maksupäivä ' . jr_date($bpvm ? $bpvm : current_time('Y-m-d')));
+        if ($op === 'unpaid' && $r->maksettu) jr_log_rivi($r, 'maksu_peruttu', 'joukkotoiminto');
+        if ($op === 'remove') jr_log_rivi($r, 'poistettu_laskulta', 'viite ' . jr_viite_format($r->viite));
+    }
     if ($op === 'paid') {
         $pvm = jr_date_or_null(jr_post('bulk_pvm'));
         if (!$pvm) $pvm = current_time('Y-m-d');
@@ -277,6 +320,7 @@ function jr_handle_delete_rivi() {
     $r = jr_get_rivi($rid);
     if (!$r) jr_redirect('jr-laskutus');
     $wpdb->delete(jr_t('rivit'), array('id' => $rid));
+    jr_log_rivi($r, 'poistettu_laskulta', 'viite ' . jr_viite_format($r->viite));
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $r->lasku_id, 'jr_msg' => 'row_deleted'));
 }
 
@@ -289,6 +333,7 @@ function jr_handle_send_one() {
     if (!$lasku) jr_redirect('jr-laskutus');
     $reminder = !empty($_REQUEST['muistutus']);
     $ok = jr_send_rivi($lasku, $r, $reminder);
+    if ($ok) jr_log_rivi($r, $reminder ? 'muistutettu' : 'lahetetty', $r->to_email, $lasku);
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $lasku->id, 'jr_msg' => $ok ? 'sent_one' : 'send_failed'));
 }
 
@@ -335,6 +380,7 @@ function jr_handle_export_lasku() {
             $r->maksettu ? jr_date($r->maksettu) : '', $r->maksettu_summa !== null ? number_format((float) $r->maksettu_summa, 2, ',', '') : '',
             (string) $r->maksaja, (string) $r->arkistotunnus, $r->virhe);
     }
+    jr_log('vienti', 0, 'vienti', 'Lasku ' . $lasku->nimi . ' CSV-tiedostoon');
     jr_csv_output(sanitize_file_name($lasku->nimi) . '.csv',
         array('Nimi', jr_tunnus_nimi(), 'Sähköposti', 'Viite', 'Summa', 'Eräpäivä', 'Lähetetty', 'Muistutettu', 'Maksettu', 'Maksettu summa', 'Maksaja', 'Arkistointitunnus', 'Virhe'), $out);
 }
@@ -358,7 +404,7 @@ function jr_ajax_send_chunk() {
     if (!preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $run_start)) wp_send_json_error('Virheellinen pyyntö');
 
     $cond = $wpdb->prepare(
-        "WHERE r.lasku_id = %d AND (r.viim_yritys IS NULL OR r.viim_yritys < %s) AND COALESCE(NULLIF(m.email, ''), r.email) <> '' ",
+        "WHERE r.lasku_id = %d AND (r.viim_yritys IS NULL OR r.viim_yritys < %s) AND COALESCE(NULLIF(m.email, ''), r.email) <> '' AND COALESCE(m.paperilasku, 0) = 0 ",
         $lasku_id, $run_start
     );
     if ($reminder) {
@@ -369,16 +415,18 @@ function jr_ajax_send_chunk() {
     }
 
     $rows = $wpdb->get_results(jr_rivi_select_sql() . $cond . 'ORDER BY r.id LIMIT 5');
-    $sent = 0; $failed = 0; $errors = array();
+    $sent = 0; $failed = 0; $errors = array(); $names = array();
     foreach ($rows as $r) {
         if (jr_send_rivi($lasku, $r, $reminder)) {
             $sent++;
+            $names[] = jr_rivi_person($r)['nimi'];
         } else {
             $failed++;
             $errors[] = jr_rivi_person($r)['nimi'] . ': ' . ($GLOBALS['jr_mail_error'] ?: 'lähetys epäonnistui');
         }
     }
     $remaining = (int) $wpdb->get_var('SELECT COUNT(*) FROM ' . jr_t('rivit') . ' r LEFT JOIN ' . jr_t('jasenet') . ' m ON m.id = r.jasen_id ' . $cond);
+    jr_log_run($lasku, $reminder ? 'muistutukset' : 'lahetys', $run_start, $names, $failed);
 
     wp_send_json_success(array('sent' => $sent, 'failed' => $failed, 'remaining' => $remaining, 'errors' => $errors));
 }
@@ -468,7 +516,7 @@ function jr_invoice_new_form() {
     global $wpdb;
     $s = jr_settings();
     $members = $wpdb->get_results('SELECT * FROM ' . jr_t('jasenet') . ' ORDER BY tila ASC, sukunimi, etunimi');
-    $n_akt = 0; $n_noemail = 0; $n_mv = 0;
+    $n_akt = 0; $n_noemail = 0; $n_mv = 0; $n_pap = 0;
     $lajit = jr_jasenlajit();
     $laji_n = array();
     foreach ($members as $m) {
@@ -478,6 +526,7 @@ function jr_invoice_new_form() {
         if (jr_is_maksuvapaa($m)) { $n_mv++; continue; }
         $n_akt++;
         if (!$m->email) $n_noemail++;
+        elseif ($m->paperilasku) $n_pap++;
     }
     $year = (int) current_time('Y');
     $suggest_year = ((int) current_time('n') >= 10) ? $year + 1 : $year;
@@ -534,8 +583,8 @@ function jr_invoice_new_form() {
                 Kaikille jäsenmaksun maksaville jäsenille (<?php echo (int) $n_akt; ?>)<?php if ($n_mv): ?> <span class="jr-muted">– <?php echo (int) $n_mv; ?> jäsentä, joiden jäsenmaksu on 0 €, jätetään pois</span><?php endif; ?></label>
             <label class="jr-radio"><input type="radio" name="vastaanottajat" value="valitut" data-jr-toggle="#jr-member-pick">
                 Valituille jäsenille</label>
-            <?php if ($n_noemail): ?>
-                <p class="jr-hint">⚠ <?php echo (int) $n_noemail; ?> laskutettavalla jäsenellä ei ole sähköpostia. Heille lasku luodaan viitteineen, mutta se pitää toimittaa muuta kautta.</p>
+            <?php if ($n_noemail || $n_pap): ?>
+                <p class="jr-hint">📄 <?php echo (int) ($n_noemail + $n_pap); ?> laskutettavaa saa laskun paperilla (<?php echo $n_pap ? (int) $n_pap . ' haluaa paperilaskun' : ''; ?><?php echo $n_pap && $n_noemail ? ', ' : ''; ?><?php echo $n_noemail ? (int) $n_noemail . ' ilman sähköpostia' : ''; ?>). Heidän laskunsa tulostetaan laskun sivulta ikkunakuoreen sopivina.</p>
             <?php endif; ?>
             <div id="jr-member-pick" class="jr-member-pick" hidden>
                 <p><input type="search" class="jr-search" data-jr-filter="#jr-pick-list" placeholder="Hae…">
@@ -549,7 +598,7 @@ function jr_invoice_new_form() {
                         <?php if ($m->tunnus && jr_tunnus_on()): ?><span class="jr-call"><?php echo esc_html($m->tunnus); ?></span><?php endif; ?>
                         <?php echo jr_laji_badge($m->jasenlaji); ?>
                         <?php echo jr_tila_badge($m->tila); ?>
-                        <?php if (!$m->email): ?><span class="jr-badge jr-badge-warn">ei sähköpostia</span><?php endif; ?>
+                        <?php if (!$m->email): ?><span class="jr-badge jr-badge-warn">ei sähköpostia</span><?php elseif ($m->paperilasku): ?><span class="jr-badge jr-badge-info">paperilasku</span><?php endif; ?>
                     </label>
                 <?php endforeach; ?>
                 </div>
@@ -564,6 +613,20 @@ function jr_invoice_new_form() {
     <?php
 }
 
+/** Laskurivin maksutilanne merkkinä. */
+function jr_pay_badge($lasku, $r, $today) {
+    if ($r->maksettu) {
+        $h = '<span class="jr-badge jr-badge-ok">Maksettu ' . esc_html(jr_date($r->maksettu)) . '</span>';
+        if ($r->maksettu_summa !== null && abs((float) $r->maksettu_summa - (float) $r->summa) > 0.004) {
+            $h .= '<div><span class="jr-badge jr-badge-orange">Maksettu summa ' . esc_html(jr_money($r->maksettu_summa)) . '</span></div>';
+        }
+        if ($r->maksaja) $h .= '<div class="jr-sub">Maksaja: ' . esc_html($r->maksaja) . '</div>';
+        return $h;
+    }
+    if (jr_rivi_era($lasku, $r) < $today) return '<span class="jr-badge jr-badge-err">Erääntynyt</span>';
+    return '<span class="jr-badge jr-badge-info">Avoin</span>';
+}
+
 function jr_invoice_detail($id) {
     global $wpdb;
     $lasku = jr_get_lasku($id);
@@ -573,14 +636,24 @@ function jr_invoice_detail($id) {
     $today = current_time('Y-m-d');
     $no_iban = false;
 
-    $st = array('n' => 0, 'lah' => 0, 'mak' => 0, 'mak_summa' => 0, 'avoin_summa' => 0, 'unsent' => 0, 'unpaid_mail' => 0, 'noemail' => 0, 'muist_tanaan' => 0, 'muist_aiemmin' => 0, 'min' => null, 'max' => null, 'erant' => 0);
+    $st = array('n' => 0, 'lah' => 0, 'mak' => 0, 'mak_summa' => 0, 'avoin_summa' => 0, 'unsent' => 0, 'unpaid_mail' => 0, 'noemail' => 0, 'muist_tanaan' => 0, 'muist_aiemmin' => 0, 'min' => null, 'max' => null, 'erant' => 0,
+                'paperi' => 0, 'p_unsent' => 0, 'p_remind' => 0, 'p_noaddr' => 0);
+    $paper_rows = array();
     foreach ($rows as $r) {
         $st['n']++;
         $st['min'] = $st['min'] === null ? $r->summa : min($st['min'], $r->summa);
         $st['max'] = $st['max'] === null ? $r->summa : max($st['max'], $r->summa);
         if ($r->lahetetty) $st['lah']++;
         if ($r->maksettu) { $st['mak']++; $st['mak_summa'] += $r->summa; } else { $st['avoin_summa'] += $r->summa; if (jr_rivi_era($lasku, $r) < $today) $st['erant'] += $r->summa; }
-        if (!$r->to_email) { $st['noemail']++; continue; }
+        if (jr_is_paperi($r)) {
+            $st['paperi']++;
+            if (!$r->to_email) $st['noemail']++;
+            if (!$r->lahetetty) $st['p_unsent']++;
+            elseif (!$r->maksettu && jr_rivi_era($lasku, $r) < $today) $st['p_remind']++;
+            if (trim((string) $r->osoite) === '') $st['p_noaddr']++;
+            $paper_rows[] = $r;
+            continue;
+        }
         if (!$r->lahetetty) $st['unsent']++;
         if (!$r->maksettu) {
             if ($r->muistutettu && substr($r->muistutettu, 0, 10) === $today) { $st['muist_tanaan']++; }
@@ -622,7 +695,7 @@ function jr_invoice_detail($id) {
                     data-confirm="<?php echo esc_attr('Lähetetäänkö lasku ' . $st['unsent'] . ' jäsenelle sähköpostilla?'); ?>">
                     Lähetä laskut (<?php echo (int) $st['unsent']; ?> lähettämätöntä)</button>
             <?php else: ?>
-                <span class="jr-badge jr-badge-ok jr-badge-lg">✓ Kaikki sähköpostilliset laskut lähetetty</span>
+                <span class="jr-badge jr-badge-ok jr-badge-lg">✓ Kaikki sähköpostilaskut lähetetty</span>
             <?php endif; ?>
 
             <?php if ($st['lah'] > 0 && $st['unpaid_mail'] > 0): ?>
@@ -660,10 +733,76 @@ function jr_invoice_detail($id) {
                 pois päältä tältä laskulta.
             <?php endif; ?></p>
         <?php endif; ?>
-        <?php if ($st['noemail']): ?>
-            <p class="jr-hint">⚠ <?php echo (int) $st['noemail']; ?> jäsenellä ei ole sähköpostiosoitetta. Toimita heille lasku muuten – viite ja summa näkyvät alla olevassa taulukossa.</p>
+        <?php if ($st['paperi']): ?>
+            <p class="description">📄 <?php echo (int) $st['paperi']; ?> jäsentä saa laskun paperilla, eikä heille lähetetä sähköpostia – ks. <a href="#jr-paperi">Paperilaskut</a>.</p>
         <?php endif; ?>
     </div>
+
+    <?php if ($paper_rows): ?>
+    <div class="jr-panel" id="jr-paperi">
+        <h2>Paperilaskut (<?php echo (int) $st['paperi']; ?>)</h2>
+        <p class="description"><?php
+            $pref = $st['paperi'] - $st['noemail'];
+            echo esc_html(implode(', ', array_filter(array($pref ? $pref . ' haluaa laskun paperilla' : '', $st['noemail'] ? $st['noemail'] . ' ilman sähköpostia' : '')))) . '.'; ?>
+            Tulosta laskut, taita ja laita ikkunakuoreen (C5 tai DL) – nimi ja osoite osuvat ikkunaan. Merkitse sitten postitetuksi, niin näet mitkä on hoidettu.</p>
+        <div class="jr-send-actions">
+            <?php if ($st['p_unsent']): ?>
+                <a class="button button-primary button-large" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('joukko' => 'postittamattomat'))); ?>" <?php echo $no_iban ? 'aria-disabled="true"' : ''; ?>>🖨 Tulosta postittamattomat (<?php echo (int) $st['p_unsent']; ?>)</a>
+            <?php else: ?>
+                <span class="jr-badge jr-badge-ok jr-badge-lg">✓ Kaikki paperilaskut postitettu</span>
+            <?php endif; ?>
+            <?php if ($st['p_remind']): ?>
+                <a class="button button-large" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('joukko' => 'muistutukset'))); ?>">🖨 Tulosta muistutukset erääntyneille (<?php echo (int) $st['p_remind']; ?>)</a>
+            <?php endif; ?>
+            <a class="button" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('joukko' => 'kaikki'))); ?>">Näytä kaikki paperilaskut</a>
+        </div>
+        <?php if ($st['p_noaddr']): ?>
+            <p class="jr-hint">⚠ <?php echo (int) $st['p_noaddr']; ?> paperilaskun saajalta puuttuu osoite. Lisää osoite jäsenen tietoihin.</p>
+        <?php endif; ?>
+        <form method="post" action="<?php echo esc_url($post_url); ?>">
+            <input type="hidden" name="action" value="jr_paper_mark">
+            <input type="hidden" name="lasku_id" value="<?php echo esc_attr($id); ?>">
+            <?php wp_nonce_field('jr_paper_mark_' . $id); ?>
+            <table class="widefat striped jr-table" id="jr-paper-rows">
+                <thead><tr>
+                    <td class="check-column"><input type="checkbox" class="jr-check-all" data-target="#jr-paper-rows"></td>
+                    <th>Jäsen</th><th>Postiosoite</th><th>Viite</th><th>Summa</th><th>Postitus</th><th>Maksu</th><th class="jr-col-actions">Toiminnot</th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($paper_rows as $r):
+                    $p = jr_rivi_person($r); ?>
+                    <tr>
+                        <th class="check-column"><input type="checkbox" name="rivit[]" value="<?php echo esc_attr($r->id); ?>"></th>
+                        <td><strong><?php echo esc_html($p['nimi']); ?></strong>
+                            <div class="jr-sub"><?php echo $r->paperilasku ? 'haluaa paperilaskun' : 'ei sähköpostia'; ?></div></td>
+                        <td><?php echo trim((string) $r->osoite) !== '' ? esc_html($r->osoite) : '<span class="jr-badge jr-badge-warn">osoite puuttuu</span>'; ?></td>
+                        <td><code class="jr-ref"><?php echo esc_html(jr_viite_format($r->viite)); ?></code></td>
+                        <td><?php echo esc_html(jr_money($r->summa)); ?></td>
+                        <td><?php if ($r->lahetetty): ?><span class="jr-badge jr-badge-ok">Postitettu <?php echo esc_html(jr_date($r->lahetetty)); ?></span><?php else: ?><span class="jr-badge jr-badge-muted">Ei postitettu</span><?php endif; ?>
+                            <?php if ($r->muistutettu): ?><div><span class="jr-badge jr-badge-orange">Muistutettu <?php echo (int) $r->muistutuksia > 1 ? (int) $r->muistutuksia . '× · ' : ''; ?><?php echo esc_html(jr_date($r->muistutettu)); ?></span></div><?php endif; ?></td>
+                        <td><?php echo jr_pay_badge($lasku, $r, $today); // phpcs:ignore ?></td>
+                        <td class="jr-col-actions">
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('rivi' => $r->id))); ?>">Näytä lasku</a>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('rivi' => $r->id, 'tulosta' => 1))); ?>">🖨 Tulosta</a>
+                            <?php if (!$r->maksettu && $r->lahetetty && jr_rivi_era($lasku, $r) < $today): ?>
+                                <a class="button button-small" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('rivi' => $r->id, 'muistutus' => 1, 'tulosta' => 1))); ?>">🖨 Muistutus</a>
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <div class="jr-bulk">
+                <label for="jr-paper-op"><strong>Valituille:</strong></label>
+                <select name="tapa" id="jr-paper-op">
+                    <option value="lasku">Merkitse lasku postitetuksi tänään</option>
+                    <option value="muistutus">Merkitse muistutus postitetuksi tänään</option>
+                </select>
+                <button type="submit" class="button" data-confirm="Merkitäänkö valitut postitetuiksi?">Suorita</button>
+            </div>
+        </form>
+    </div>
+    <?php endif; ?>
 
     <form method="post" action="<?php echo esc_url($post_url); ?>" id="jr-bulk-form">
         <input type="hidden" name="action" value="jr_bulk_rows">
@@ -676,7 +815,7 @@ function jr_invoice_detail($id) {
                 <li><a href="#" data-status="avoin">Avoimet (<?php echo $st['n'] - $st['mak']; ?>)</a></li>
                 <li><a href="#" data-status="maksettu">Maksetut (<?php echo $st['mak']; ?>)</a></li>
                 <li><a href="#" data-status="lahettamaton">Lähettämättömät (<?php echo $st['n'] - $st['lah']; ?>)</a></li>
-                <?php if ($st['noemail']): ?><li><a href="#" data-status="eiemail">Ei sähköpostia (<?php echo $st['noemail']; ?>)</a></li><?php endif; ?>
+                <?php if ($st['paperi']): ?><li><a href="#" data-status="paperi">Paperilaskut (<?php echo $st['paperi']; ?>)</a></li><?php endif; ?>
             </ul>
             <div class="jr-toolbar-right">
                 <input type="search" class="jr-search" data-jr-filter="#jr-rows" placeholder="Hae viitteellä, nimellä tai sähköpostilla…">
@@ -694,7 +833,8 @@ function jr_invoice_detail($id) {
                 $p = jr_rivi_person($r);
                 $status = array($r->maksettu ? 'maksettu' : 'avoin');
                 if (!$r->lahetetty) $status[] = 'lahettamaton';
-                if (!$r->to_email) $status[] = 'eiemail';
+                $paperi = jr_is_paperi($r);
+                if ($paperi) $status[] = 'paperi';
                 $search = preg_replace('/\s+/', '', strtolower(remove_accents($p['nimi'] . $p['tunnus'] . $r->to_email)) . $r->viite);
                 $paid_url = wp_nonce_url($post_url . '?action=jr_toggle_paid&rivi=' . $r->id, 'jr_paid_' . $r->id);
                 $send_url = wp_nonce_url($post_url . '?action=jr_send_one&rivi=' . $r->id, 'jr_send_one_' . $r->id);
@@ -709,8 +849,10 @@ function jr_invoice_detail($id) {
                     <td><?php echo esc_html(jr_money($r->summa)); ?>
                         <?php if (!empty($r->erapaiva) && $r->erapaiva !== $lasku->erapaiva): ?><div class="jr-sub" title="Jäsenkohtainen eräpäivä (lisätty laskulle myöhemmin)">eräp. <?php echo esc_html(jr_date($r->erapaiva)); ?></div><?php endif; ?></td>
                     <td>
-                        <?php if (!$r->to_email): ?>
-                            <span class="jr-badge jr-badge-warn">ei sähköpostia</span>
+                        <?php if ($paperi): ?>
+                            <span class="jr-badge jr-badge-info">📄 paperilasku</span>
+                            <div><?php echo $r->lahetetty ? '<span class="jr-badge jr-badge-ok">Postitettu ' . esc_html(jr_date($r->lahetetty)) . '</span>' : '<span class="jr-badge jr-badge-muted">Ei postitettu</span>'; ?></div>
+                            <?php if ($r->muistutettu): ?><div><span class="jr-badge jr-badge-orange">Muistutettu <?php echo esc_html(jr_date($r->muistutettu)); ?></span></div><?php endif; ?>
                         <?php elseif ($r->lahetetty): ?>
                             <span class="jr-badge jr-badge-ok">Lähetetty <?php echo esc_html(jr_date($r->lahetetty)); ?></span>
                             <?php if ($r->muistutettu): ?><div><span class="jr-badge jr-badge-orange" title="<?php echo esc_attr('Muistutuksia lähetetty ' . (int) $r->muistutuksia . ' kpl'); ?>">Muistutettu <?php echo (int) $r->muistutuksia > 1 ? (int) $r->muistutuksia . '× · viimeksi ' : ''; ?><?php echo esc_html(jr_date($r->muistutettu)); ?></span></div><?php endif; ?>
@@ -720,23 +862,16 @@ function jr_invoice_detail($id) {
                         <?php if ($r->virhe): ?><div class="jr-sub jr-err" title="<?php echo esc_attr($r->virhe); ?>">⚠ <?php echo esc_html(wp_trim_words($r->virhe, 8)); ?></div><?php endif; ?>
                         <?php if ($r->to_email): ?><div class="jr-sub"><?php echo esc_html($r->to_email); ?></div><?php endif; ?>
                     </td>
-                    <td>
-                        <?php if ($r->maksettu): ?>
-                            <span class="jr-badge jr-badge-ok">Maksettu <?php echo esc_html(jr_date($r->maksettu)); ?></span>
-                            <?php if ($r->maksettu_summa !== null && abs((float) $r->maksettu_summa - (float) $r->summa) > 0.004): ?>
-                                <div><span class="jr-badge jr-badge-orange">Maksettu summa <?php echo esc_html(jr_money($r->maksettu_summa)); ?></span></div>
-                            <?php endif; ?>
-                            <?php if ($r->maksaja): ?><div class="jr-sub">Maksaja: <?php echo esc_html($r->maksaja); ?></div><?php endif; ?>
-                        <?php elseif (jr_rivi_era($lasku, $r) < $today): ?>
-                            <span class="jr-badge jr-badge-err">Erääntynyt</span>
-                        <?php else: ?>
-                            <span class="jr-badge jr-badge-info">Avoin</span>
-                        <?php endif; ?>
-                    </td>
+                    <td><?php echo jr_pay_badge($lasku, $r, $today); // phpcs:ignore ?></td>
                     <td class="jr-col-actions">
                         <a class="button button-small <?php echo $r->maksettu ? '' : 'button-primary'; ?>" href="<?php echo esc_url($paid_url); ?>"><?php echo $r->maksettu ? 'Peru maksu' : 'Merkitse maksetuksi'; ?></a>
-                        <a class="button button-small" target="_blank" href="<?php echo esc_url($prev_url); ?>">Näytä</a>
-                        <?php if ($r->to_email): ?>
+                        <?php if ($paperi): ?>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('rivi' => $r->id))); ?>">Näytä</a>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('rivi' => $r->id, 'tulosta' => 1))); ?>">Tulosta</a>
+                        <?php else: ?>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url($prev_url); ?>">Näytä</a>
+                        <?php endif; ?>
+                        <?php if ($r->to_email && !$paperi): ?>
                             <a class="button button-small" href="<?php echo esc_url($send_url); ?>"
                                data-confirm="<?php echo esc_attr(($r->lahetetty ? 'Lähetetäänkö lasku uudelleen' : 'Lähetetäänkö lasku') . ' osoitteeseen ' . $r->to_email . '?'); ?>"><?php echo $r->lahetetty ? 'Lähetä uudelleen' : 'Lähetä'; ?></a>
                         <?php endif; ?>

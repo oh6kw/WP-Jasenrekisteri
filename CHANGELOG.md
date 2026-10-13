@@ -1,5 +1,51 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.0 (2026-10-13)
+
+### Uutta: paperilaskut
+- Jäsenen tiedoissa on valinta **”Haluaa laskun paperilla”**. Laskua ei silloin lähetetä sähköpostilla, vaan se tulostetaan. Jäsenet, joilla ei ole sähköpostia, saavat laskun paperilla aina.
+- Laskun sivulla on oma osio **Paperilaskut**: jäsen, postiosoite, viite, summa, postitustila ja maksutilanne. Jokaisella rivillä on painikkeet *Näytä lasku* ja *Tulosta*, ja ylhäällä *Tulosta postittamattomat*, *Tulosta muistutukset erääntyneille* ja *Näytä kaikki paperilaskut*.
+- **Tulostettava lasku** on A4-sivu, joka sopii ikkunakuoreen (C5 tai DL, ikkuna vasemmalla). Nimi ja osoite osuvat ikkunaan, ja reunassa on taittomerkit. Laskussa ovat saateteksti, erittely, maksutiedot, EPC QR -koodi, pankkiviivakoodi ja virtuaaliviivakoodi. Osoite jaetaan riveiksi pilkkujen kohdalta. Jos osoite puuttuu, siitä varoitetaan.
+- Tulostussivulla on painike **Merkitse postitetuksi**. Postituspäivä näkyy laskun rivillä kohdassa ”Postitettu”. Paperiset muistutukset kirjataan muistutuksiksi kuten sähköpostimuistutukset.
+- Sähköpostilähetys, muistutukset (käsin ja automaattiset) ja kesken kauden liittyvän jäsenen ”lähetä heti” ohittavat paperilaskun valinneet. Laskun taulukossa on suodatin *Paperilaskut*, ja uuden laskun sivu kertoo, moniko saa laskun paperilla.
+- Jäsenlistassa on merkki *paperilasku* ja kortti ”Saa laskun paperilla”. Valinnan voi asettaa myös joukkotoiminnolla, ja se kulkee CSV-viennissä ja -tuonnissa (sarake *Paperilasku*).
+
+### Uutta: omat lisäkentät
+- Asetuksissa voi luoda jäsenille omia kenttiä, esim. **Avain** (kerhotalon avaimen numero, kuten 8.59) tai **Talkoolistalla**.
+- Kenttä on joko **teksti** (tyhjä = ei arvoa) tai **valintaruutu** (kyllä/ei). Kentän voi näyttää jäsenlistassa omana sarakkeenaan.
+- Kentät näkyvät jäsenlomakkeella, ovat mukana CSV-viennissä ja tunnistetaan CSV-tuonnissa sarakeotsikosta.
+- Jäsenlistan haku löytää kentän nimellä (esim. ”avain”) kaikki, joilla kenttä on täytetty, ja tekstikentän arvolla (esim. ”8.59”) oikean jäsenen.
+- CSV-viennissä arvot kuten 8.12 suojataan, jottei Excel muuta niitä päivämääriksi.
+
+### Uutta: muutosloki
+- Uusi sivu **Jäsenrekisteri → Muutosloki**: kuka muutti mitä ja milloin.
+- Kirjataan:
+  - jäsenen lisäys, muutokset (jokainen muuttunut kenttä vanha → uusi) ja poisto
+  - joukkomuutokset ja CSV-tuonnit
+  - maksumerkinnät ja niiden peruminen (käsin, joukkona tai pankkitiedostosta)
+  - laskun lähetys ja muistutus, paperilaskun postitus ja laskulta poisto
+  - laskun luonti, muokkaus ja poisto, sekä uusien jäsenten lisäys laskulle
+  - sähköpostilähetykset (yksi merkintä per lähetysajo vastaanottajineen) ja automaattiset muistutukset
+  - asetusmuutokset, tiedotteet sekä tuonnit ja viennit (CSV ja Excel)
+- Suodatus aiheen mukaan, haku nimellä, käyttäjällä tai muutoksella, sekä sivutus.
+- Jäsenen sivulla on oma **Muutoshistoria**, jossa ovat hänen viimeisimmät merkintänsä, ja linkki kaikkiin merkintöihin.
+- Asetuksissa valitaan **säilytysaika** (1–10 vuotta tai pysyvästi, oletus 2 vuotta). Vanhemmat merkinnät poistetaan automaattisesti, koska loki sisältää henkilötietoja.
+
+### Uutta: vuosiraportti vuosikokoukseen
+- Uusi sivu **Jäsenrekisteri → Vuosiraportti** vuosivalinnalla:
+  - **Jäsenmäärä jäsenluokittain:** jäseniä edellisen vuoden lopussa, liittyneet, eronneet, jäseniä vuoden lopussa (kuluvana vuonna tänään) ja muutos.
+  - **Jäsenmaksut:** vuoden laskut (laskuja, maksettu kpl, laskutettu, maksettu €, avoinna, josta erääntynyt) sekä sama jäsenluokittain.
+  - **Jäsenmaksukertymä:** vuoden aikana maksupäivän mukaan kirjatut maksut, myös aiempien vuosien laskuista. Luku on vertailukelpoinen kirjanpidon kanssa.
+- Painikkeet **Tulosta** (sivu tulostuu ilman WordPressin valikoita) ja **Vie Exceliin** (neljä välilehteä, yhteensä-rivit kaavoina).
+- Raportti kertoo, jos eronneilta puuttuu eroamispäivä tai jäseniltä liittymispäivä.
+
+### Muut muutokset
+- **Eroamispäivä:** kun jäsen merkitään eronneeksi (lomakkeella, joukkona tai CSV-tuonnissa), eroamispäivä tallentuu. Lomakkeella päivää voi muuttaa, ja se tyhjenee, jos jäsen palautetaan. CSV-vienti ja -tuonti tuntevat sarakkeen *Eronnut*.
+- **Jäsenluokka laskutushetkellä:** laskuriville tallennetaan jäsenen luokka laskua tehtäessä. Laskussa, Excel-raportissa ja vuosiraportissa näkyy siksi luokka, jonka mukaan maksu on laskutettu, vaikka jäsenen luokka myöhemmin vaihtuisi. Vanhoille riveille päivitys asettaa nykyisen luokan.
+- Laskun muokkaus ei enää nollaa laskun automaattimuistutusvalintaa, jos automaattimuistutus on asetuksissa pois päältä.
+- Jäsen-CSV:n mallitiedostossa on uudet sarakkeet (Eronnut, Paperilasku ja omat lisäkentät).
+- Tietokantaversio 8: uudet sarakkeet `paperilasku`, `lisakentat` ja `eronnut_pvm` jäsenille, `jasenlaji` laskuriveille ja uusi taulu `jasenrekisteri_loki`. Päivitys tapahtuu automaattisesti, ja lisäosan poisto (jos tietojen poisto on valittu) poistaa myös lokitaulun.
+
 ## 4.5.0 (2026-10-13)
 
 ### Uutta: laskut Exceliin

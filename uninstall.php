@@ -15,7 +15,7 @@ function jr_uninstall_site() {
         return; // Säilytetään jäsenet, laskut ja asetukset – lisäosan voi asentaa uudelleen ja jatkaa siitä.
     }
 
-    foreach (array('jasenrekisteri_laskurivit', 'jasenrekisteri_laskut', 'jasenrekisteri') as $t) {
+    foreach (array('jasenrekisteri_laskurivit', 'jasenrekisteri_laskut', 'jasenrekisteri_loki', 'jasenrekisteri') as $t) {
         $wpdb->query('DROP TABLE IF EXISTS `' . esc_sql($wpdb->prefix . $t) . '`');
     }
     delete_option('jr_settings');

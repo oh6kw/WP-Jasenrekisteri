@@ -40,7 +40,7 @@ function jr_auto_candidates($limit = 50) {
     $cut   = date('Y-m-d', strtotime($today . " -$days days")); // eräpäivä/edellinen muistutus viimeistään tänä päivänä
     $sql = jr_rivi_select_sql() . 'JOIN ' . jr_t('laskut') . ' l ON l.id = r.lasku_id '
         . "WHERE l.auto_muistutus = 1 AND COALESCE(r.erapaiva, l.erapaiva) <= %s AND r.maksettu IS NULL AND r.lahetetty IS NOT NULL "
-        . "AND COALESCE(NULLIF(m.email, ''), r.email) <> '' "
+        . "AND COALESCE(NULLIF(m.email, ''), r.email) <> '' AND COALESCE(m.paperilasku, 0) = 0 "
         . "AND (m.tila IS NULL OR m.tila = 'aktiivinen') "
         . 'AND r.muistutuksia < %d '
         . 'AND (r.muistutettu IS NULL OR r.muistutettu < %s) '
@@ -57,14 +57,21 @@ function jr_run_auto_reminders() {
     if (!$rows) return;
 
     $laskut = array();
-    $sent = array(); $failed = array();
+    $sent = array(); $failed = array(); $per_lasku = array();
     foreach ($rows as $r) {
         if (!isset($laskut[$r->lasku_id])) $laskut[$r->lasku_id] = jr_get_lasku($r->lasku_id);
         $lasku = $laskut[$r->lasku_id];
         if (!$lasku) continue;
         $line = jr_rivi_person($r)['nimi'] . ' – ' . $lasku->nimi . ' (' . jr_money($r->summa) . ', muistutus ' . ((int) $r->muistutuksia + 1) . ')';
-        if (jr_send_rivi($lasku, $r, true)) $sent[] = $line;
-        else $failed[] = $line . ': ' . ($GLOBALS['jr_mail_error'] ?: 'lähetys epäonnistui');
+        if (jr_send_rivi($lasku, $r, true)) {
+            $sent[] = $line;
+            $per_lasku[$lasku->id][] = jr_rivi_person($r)['nimi'];
+        } else {
+            $failed[] = $line . ': ' . ($GLOBALS['jr_mail_error'] ?: 'lähetys epäonnistui');
+        }
+    }
+    foreach ($per_lasku as $lid => $nimet) {
+        jr_log('lasku', $lid, 'auto_muistutukset', $laskut[$lid]->nimi . ': ' . count($nimet) . ' automaattista muistutusta', array('nimet' => $nimet));
     }
 
     if ($s['auto_raportti'] === '1' && ($sent || $failed)) {

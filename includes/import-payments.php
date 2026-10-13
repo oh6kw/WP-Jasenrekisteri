@@ -251,8 +251,13 @@ function jr_handle_payments_confirm() {
             function_exists('mb_substr') ? mb_substr($p['maksaja'], 0, 100) : substr($p['maksaja'], 0, 100),
             substr($p['arkisto'], 0, 40), $p['rivi']->id
         ));
-        if ($ok) $n++;
+        if ($ok) {
+            $n++;
+            jr_log_rivi($p['rivi'], 'maksettu', 'pankkitiedosto ' . $parsed['tiedosto'] . ', maksupäivä ' . jr_date($p['pvm'])
+                . ($p['tila'] === 'ero' ? ', maksettu ' . html_entity_decode(jr_money($p['summa'])) : '') . ($p['maksaja'] !== '' ? ', maksaja ' . $p['maksaja'] : ''));
+        }
     }
+    if ($n) jr_log('vienti', 0, 'tuonti', 'Maksut tuotu pankin tiedostosta ' . $parsed['tiedosto'] . ' (' . $parsed['muoto'] . '): ' . $n . ' laskua merkitty maksetuksi');
     delete_transient($key);
     jr_redirect('jr-laskutus', array('jr_msg' => 'payments_imported', 'jr_n' => $n));
 }

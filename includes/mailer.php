@@ -60,6 +60,9 @@ function jr_handle_mass_mail() {
     // Pienet kirjaimet: sanitize_key() muuttaa tunnuksen pieneksi luettaessa.
     $key = strtolower(wp_generate_password(12, false));
     set_transient('jr_mail_run_' . $key, array('subject' => $subject, 'body' => $body, 'ids' => $ids, 'user' => $uid), DAY_IN_SECONDS);
+    $kohteet = array('aktiiviset' => 'kaikki jäsenet', 'kaikki' => 'kaikki, myös eronneet', 'maksamattomat' => 'viimeisimmän laskun maksamattomat');
+    $kuvaus = strpos($kohde, 'luokka_') === 0 ? jr_laji_nimi(substr($kohde, 7)) : (isset($kohteet[$kohde]) ? $kohteet[$kohde] : $kohde);
+    jr_log('viesti', 0, 'tiedote', '"' . $subject . '" – ' . count($ids) . ' vastaanottajaa (' . $kuvaus . ')', array(array('Viesti', '', $body)));
     jr_redirect('jr-sahkoposti', array('run' => $key));
 }
 

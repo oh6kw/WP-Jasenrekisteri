@@ -26,6 +26,9 @@ function jr_install() {
         tila varchar(20) NOT NULL DEFAULT 'aktiivinen',
         jasenlaji varchar(30) NOT NULL DEFAULT '',
         lisatiedot text,
+        paperilasku tinyint(1) NOT NULL DEFAULT 0,
+        lisakentat text,
+        eronnut_pvm date DEFAULT NULL,
         PRIMARY KEY  (id)
     ) $charset_collate;";
 
@@ -50,6 +53,7 @@ function jr_install() {
         email varchar(100) NOT NULL DEFAULT '',
         viite varchar(25) NOT NULL,
         summa decimal(10,2) NOT NULL DEFAULT '0.00',
+        jasenlaji varchar(30) NOT NULL DEFAULT '',
         erapaiva date DEFAULT NULL,
         lahetetty datetime DEFAULT NULL,
         muistutettu datetime DEFAULT NULL,
@@ -65,6 +69,22 @@ function jr_install() {
         KEY arkistotunnus (arkistotunnus),
         KEY lasku_id (lasku_id),
         KEY jasen_id (jasen_id)
+    ) $charset_collate;";
+
+    $loki = jr_t('loki');
+    $sql[] = "CREATE TABLE $loki (
+        id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+        aika datetime NOT NULL,
+        kayttaja_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        kayttaja varchar(100) NOT NULL DEFAULT '',
+        kohde varchar(20) NOT NULL DEFAULT '',
+        kohde_id bigint(20) unsigned NOT NULL DEFAULT 0,
+        toiminto varchar(40) NOT NULL DEFAULT '',
+        kuvaus text,
+        muutokset longtext,
+        PRIMARY KEY  (id),
+        KEY aika (aika),
+        KEY kohde (kohde,kohde_id)
     ) $charset_collate;";
 
     require_once ABSPATH . 'wp-admin/includes/upgrade.php';
@@ -120,5 +140,10 @@ function jr_migrate($old) {
             }
             $wpdb->query($wpdb->prepare("UPDATE $jt SET tila = 'aktiivinen', jasenlaji = %s WHERE tila = 'maksuvapaa'", $id));
         }
+    }
+    if ($old < 8) {
+        // Laskuriveille talteen jäsenluokka laskutushetkellä (vuosiraporttia varten); vanhoille riveille nykyinen luokka.
+        $rt = jr_t('rivit'); $jt = jr_t('jasenet');
+        $wpdb->query("UPDATE $rt SET jasenlaji = COALESCE((SELECT m.jasenlaji FROM $jt m WHERE m.id = $rt.jasen_id), '') WHERE jasenlaji = ''");
     }
 }

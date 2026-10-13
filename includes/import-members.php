@@ -7,7 +7,7 @@ if (!defined('ABSPATH')) exit;
  */
 
 function jr_import_fields() {
-    return array(
+    $f = array(
         ''                => '— ei tuoda —',
         'etunimi'         => 'Etunimi',
         'sukunimi'        => 'Sukunimi',
@@ -22,8 +22,12 @@ function jr_import_fields() {
         'liittynyt'       => 'Liittynyt',
         'jasenlaji'       => 'Jäsenluokka',
         'tila'            => 'Jäsenyys (voimassa / eronnut)',
+        'eronnut_pvm'     => 'Eroamispäivä',
+        'paperilasku'     => 'Paperilasku (kyllä / tyhjä)',
         'lisatiedot'      => 'Lisätiedot',
     );
+    foreach (jr_lisakentat() as $kid => $k) $f['lisa_' . $kid] = 'Lisäkenttä: ' . $k['nimi'];
+    return $f;
 }
 
 /** Arvaa kentän sarakeotsikosta. */
@@ -45,8 +49,13 @@ function jr_guess_field($header) {
         'jasenlaji' => 'jasenlaji', 'laji' => 'jasenlaji', 'jasentyyppi' => 'jasenlaji', 'jasenluokka' => 'jasenlaji', 'luokka' => 'jasenlaji',
         'jasenyys' => 'tila', 'tila' => 'tila', 'status' => 'tila',
         'lisatiedot' => 'lisatiedot', 'huom' => 'lisatiedot', 'huomautukset' => 'lisatiedot', 'muistiinpanot' => 'lisatiedot',
+        'eronnut' => 'eronnut_pvm', 'eroamispaiva' => 'eronnut_pvm', 'eronnutpvm' => 'eronnut_pvm', 'eropaiva' => 'eronnut_pvm',
+        'paperilasku' => 'paperilasku', 'laskupaperilla' => 'paperilasku',
     );
     if ($tn !== '' && $h === $tn) return 'tunnus';
+    foreach (jr_lisakentat() as $kid => $k) {
+        if ($h === preg_replace('/[^a-z0-9]+/', '', strtolower(remove_accents($k['nimi'])))) return 'lisa_' . $kid;
+    }
     return isset($map[$h]) ? $map[$h] : '';
 }
 
@@ -92,12 +101,14 @@ function jr_import_tila($s, $oletus) {
 
 add_action('admin_post_jr_members_template', function () {
     jr_check('jr_members_template');
-    $head = array('Etunimi', 'Sukunimi', jr_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Lisätiedot');
+    $kentat = array_values(array_map(function ($k) { return $k['nimi']; }, jr_lisakentat()));
+    $head = array_merge(array('Etunimi', 'Sukunimi', jr_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'), $kentat);
+    $tyhjat = array_fill(0, count($kentat), '');
     $nimet = array_values(array_map(function ($l) { return $l['nimi']; }, jr_jasenlajit()));
     jr_csv_output('jasenrekisteri-malli.csv', $head, array(
-        array('Matti', 'Meikäläinen', '', 'Esimerkkitie 1, 00100 Helsinki', '040 123 4567', 'matti@example.com', '1.1.2020', isset($nimet[0]) ? $nimet[0] : 'Jäsen', 'Voimassa', ''),
-        array('Maija', 'Mallikas', '', '', '', 'maija@example.com', '2015', isset($nimet[1]) ? $nimet[1] : 'Kunniajäsen', 'Voimassa', ''),
-        array('Erkki', 'Esimerkki', '', '', '', '', '2001', '', 'Eronnut', ''),
+        array_merge(array('Matti', 'Meikäläinen', '', 'Esimerkkitie 1, 00100 Helsinki', '040 123 4567', 'matti@example.com', '1.1.2020', isset($nimet[0]) ? $nimet[0] : 'Jäsen', 'Voimassa', '', '', ''), $tyhjat),
+        array_merge(array('Maija', 'Mallikas', '', 'Mallitie 2, 00200 Helsinki', '', '', '2015', isset($nimet[1]) ? $nimet[1] : 'Kunniajäsen', 'Voimassa', '', 'Kyllä', ''), $tyhjat),
+        array_merge(array('Erkki', 'Esimerkki', '', '', '', '', '2001', '', 'Eronnut', '31.12.2025', '', ''), $tyhjat),
     ));
 });
 
@@ -166,6 +177,13 @@ function jr_handle_members_import() {
         }
         $tunnus = sanitize_text_field($g('tunnus'));
         if ($isot) $tunnus = function_exists('mb_strtoupper') ? mb_strtoupper($tunnus) : strtoupper($tunnus);
+        $tila = jr_import_tila(isset($v['tila']) ? $v['tila'] : '', $oletus);
+        $ero  = $tila === 'eronnut' ? jr_parse_date_any($g('eronnut_pvm')) : null;
+        $lisa = array();
+        foreach (jr_lisakentat() as $kid => $k) {
+            $val = jr_lisa_parse($k, $g('lisa_' . $kid));
+            if ($val !== '') $lisa[$kid] = $val;
+        }
 
         $data = array(
             'etunimi'    => $etu,
@@ -175,9 +193,12 @@ function jr_handle_members_import() {
             'puhelin'    => sanitize_text_field(jr_normalize_phone($g('puhelin'))),
             'email'      => sanitize_email($g('email')),
             'liittynyt'  => $liitt,
-            'tila'       => jr_import_tila(isset($v['tila']) ? $v['tila'] : '', $oletus),
+            'tila'       => $tila,
             'jasenlaji'  => $laji,
             'lisatiedot' => sanitize_textarea_field($g('lisatiedot')),
+            'eronnut_pvm'=> $ero,
+            'paperilasku'=> jr_lisa_parse(array('tyyppi' => 'valinta'), $g('paperilasku')) === '1' ? 1 : 0,
+            'lisakentat' => $lisa ? wp_json_encode($lisa) : null,
         );
 
         // Onko jäsen jo rekisterissä? 1) nimi + sähköposti, 2) nimi (yksiselitteinen),
@@ -199,21 +220,35 @@ function jr_handle_members_import() {
             if ($tuplat === 'ohita') { $c['ohitettu']++; continue; }
             // Päivitetään vain tiedostossa annetut (ei-tyhjät) kentät
             $upd = array();
+            $old = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table WHERE id = %d", $existing));
             foreach ($data as $k => $val) {
+                if ($k === 'lisakentat' || $k === 'paperilasku' || $k === 'eronnut_pvm') continue;
                 $src = array('osoite' => array('osoite', 'postinumero', 'postitoimipaikka'), 'etunimi' => array('etunimi', 'nimi_es', 'nimi_se'), 'sukunimi' => array('sukunimi', 'nimi_es', 'nimi_se'));
                 $keys = isset($src[$k]) ? $src[$k] : array($k);
                 $given = false;
                 foreach ($keys as $kk) if ($g($kk) !== '') $given = true;
                 if ($given && $val !== null && $val !== '') $upd[$k] = $val;
             }
-            if ($upd) $wpdb->update($table, $upd, array('id' => $existing));
+            if (isset($upd['tila'])) {
+                if ($upd['tila'] === 'eronnut') $upd['eronnut_pvm'] = $ero ? $ero : ($old->eronnut_pvm ? $old->eronnut_pvm : current_time('Y-m-d'));
+                else $upd['eronnut_pvm'] = null;
+            }
+            if ($g('paperilasku') !== '') $upd['paperilasku'] = $data['paperilasku'];
+            if ($lisa) $upd['lisakentat'] = wp_json_encode(array_merge(jr_member_lisa($old), $lisa));
+            if ($upd) {
+                $wpdb->update($table, $upd, array('id' => $existing));
+                $diff = jr_log_diff(jr_member_snapshot($old), jr_member_snapshot(array_merge((array) $old, $upd)));
+                if ($diff) jr_log('jasen', $existing, 'tuonti_paivitys', jr_log_member_name($old) . ' (' . $t['tiedosto'] . ')', $diff);
+            }
             $c['paivitetty']++;
         } else {
             $wpdb->insert($table, $data);
+            jr_log('jasen', (int) $wpdb->insert_id, 'tuotu', jr_log_member_name($data) . ' (' . $t['tiedosto'] . ')', jr_log_diff(array(), jr_member_snapshot($data)));
             $c['lisatty']++;
         }
     }
     delete_transient($key);
+    jr_log('vienti', 0, 'tuonti', sprintf('Jäseniä tuotu tiedostosta %s: %d lisätty, %d päivitetty, %d ohitettu', $t['tiedosto'], $c['lisatty'], $c['paivitetty'], $c['ohitettu'] + $c['virheelliset']));
     jr_redirect('jasenrekisteri', array('jr_msg' => 'members_imported', 'jr_n' => $c['lisatty'], 'jr_u' => $c['paivitetty'],
         'jr_s' => $c['ohitettu'], 'jr_e' => $c['virheelliset'], 'jr_l' => $c['laji']));
 }

@@ -67,6 +67,24 @@
         if (!nimi || window.confirm('Poistetaanko jäsenluokka "' + nimi + '"? Muutos tallentuu, kun tallennat asetukset.')) $tr.remove();
     });
 
+    // Yleinen taulukkorivin lisäys/poisto (lisäkentät asetuksissa)
+    $(document).on('click', '.jr-row-add', function () {
+        var $row = $(document.querySelector($(this).data('tpl')).innerHTML);
+        $($(this).data('table')).find('tbody').append($row);
+        $row.find('input[type=text]').first().trigger('focus');
+    });
+    $(document).on('click', '.jr-row-del', function () {
+        var $tr = $(this).closest('tr');
+        var nimi = $tr.find('input[type=text]').first().val();
+        var msg = $(this).data('confirm-del') || 'Poistetaanko rivi?';
+        if (!nimi || window.confirm('"' + nimi + '": ' + msg + ' Muutos tallentuu, kun tallennat asetukset.')) $tr.remove();
+    });
+
+    // Jäsenlomake: eroamispäivä näkyy, kun jäsenyys on "Eronnut"
+    $(document).on('change', '#jr-tila', function () {
+        $('.jr-ero').prop('hidden', $(this).val() !== 'eronnut');
+    });
+
     // Jäsenlomake: laskulle lisättävän summan päivitys jäsenluokan mukaan (ellei summaa ole muutettu käsin)
     $(document).on('input', '.jr-laskulle-rivi input[type=text]', function () { $(this).data('touched', true); });
     $(document).on('change', '#jr-laji', function () {

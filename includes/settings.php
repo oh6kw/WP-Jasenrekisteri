@@ -20,6 +20,25 @@ function jr_handle_save_settings() {
         $lajit[$id] = array('nimi' => $nimi, 'summa' => jr_parse_money(isset($summat[$i]) ? $summat[$i] : ''));
     }
 
+    // Omat lisäkentät: kentta_id[], kentta_nimi[], kentta_tyyppi[], kentta_lista[]
+    $kentat = array();
+    $kids   = (array) jr_post('kentta_id', array());
+    $knimet = (array) jr_post('kentta_nimi', array());
+    $ktyyp  = (array) jr_post('kentta_tyyppi', array());
+    $klista = (array) jr_post('kentta_lista', array());
+    foreach ($knimet as $i => $nimi) {
+        $nimi = sanitize_text_field($nimi);
+        if ($nimi === '') continue;
+        $kid = isset($kids[$i]) ? sanitize_key($kids[$i]) : '';
+        if ($kid === '' || isset($kentat[$kid])) $kid = 'k' . strtolower(wp_generate_password(6, false));
+        $kentat[$kid] = array(
+            'nimi'   => $nimi,
+            'tyyppi' => (isset($ktyyp[$i]) && $ktyyp[$i] === 'valinta') ? 'valinta' : 'teksti',
+            'lista'  => (isset($klista[$i]) && $klista[$i] === '1') ? '1' : '0',
+        );
+    }
+
+    $vanha = jr_settings();
     $s = array(
         'yhdistys'         => sanitize_text_field(jr_post('yhdistys')),
         'iban'             => $iban,
@@ -34,6 +53,8 @@ function jr_handle_save_settings() {
         'tunnus_nimi'      => sanitize_text_field(jr_post('tunnus_nimi')),
         'tunnus_isot'      => jr_post('tunnus_isot') === '1' ? '1' : '0',
         'jasenlajit'       => $lajit,
+        'lisakentat'       => $kentat,
+        'loki_kk'          => in_array(jr_post('loki_kk'), array('0', '12', '24', '36', '60', '120'), true) ? jr_post('loki_kk') : '24',
         'auto_muistutus'   => jr_post('auto_muistutus') === '1' ? '1' : '0',
         'auto_paivia'      => (string) max(1, min(365, intval(jr_post('auto_paivia', 14)))),
         'auto_max'         => (string) max(1, min(10, intval(jr_post('auto_max', 1)))),
@@ -43,8 +64,38 @@ function jr_handle_save_settings() {
         'muistutus_teksti' => sanitize_textarea_field(jr_post('muistutus_teksti')),
     );
     update_option('jr_settings', $s);
+    jr_log_settings_change($vanha, jr_settings());
     jr_schedule_cron();
     jr_redirect('jr-asetukset', array('jr_msg' => ($iban !== '' && !jr_iban_valid($iban)) ? 'iban_invalid' : 'settings_saved'));
+}
+
+/** Kirjaa muuttuneet asetukset muutoslokiin. */
+function jr_log_settings_change($a, $b) {
+    $labels = array(
+        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi',
+        'yhteystiedot' => 'Yhteystiedot', 'lahettaja_nimi' => 'Lähettäjän nimi', 'lahettaja_email' => 'Lähettäjän osoite',
+        'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
+        'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
+        'auto_max' => 'Muistutuksia enintään', 'auto_raportti' => 'Muistutusten yhteenveto', 'poista_tiedot' => 'Poista tiedot lisäosan poistossa',
+        'loki_kk' => 'Muutoslokin säilytys (kk)', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
+    );
+    $fmt = function ($k, $v) {
+        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot'), true)) return $v === '1' ? 'kyllä' : 'ei';
+        return (string) $v;
+    };
+    $old = array(); $new = array();
+    foreach ($labels as $k => $label) {
+        $old[$label] = $fmt($k, isset($a[$k]) ? $a[$k] : '');
+        $new[$label] = $fmt($k, isset($b[$k]) ? $b[$k] : '');
+    }
+    $extra = function ($src) {
+        $out = array();
+        foreach ((array) $src['jasenlajit'] as $l) $out['Jäsenluokka ' . $l['nimi']] = html_entity_decode(jr_money($l['summa']));
+        foreach ((array) $src['lisakentat'] as $k) $out['Lisäkenttä ' . $k['nimi']] = ($k['tyyppi'] === 'valinta' ? 'valintaruutu' : 'teksti') . ($k['lista'] === '1' ? ', listassa' : '');
+        return $out;
+    };
+    $diff = jr_log_diff($old + $extra($a), $new + $extra($b));
+    if ($diff) jr_log('asetukset', 0, 'asetukset', count($diff) . ' asetusta muutettu', $diff);
 }
 
 function jr_page_settings() {
@@ -121,6 +172,37 @@ function jr_page_settings() {
                 <p class="description">Jos poistat luokan, sen jäsenet siirtyvät välilehdelle ”Ilman jäsenluokkaa”, josta heille voi valita uuden luokan joukkona. Luokan voi nimetä uudelleen – jäsenet pysyvät siinä.</p>
             </div>
 
+            <div class="jr-panel" id="jr-lisakentat">
+                <h2>Omat lisäkentät</h2>
+                <p class="description">Yhdistyksen omat tiedot jäsenille, esim. <em>Avain</em> (kerhotalon avaimen numero), <em>Lehti paperilla</em> tai <em>Talkoovastaava</em>.
+                    <strong>Teksti</strong>-kenttään voi kirjoittaa arvon (esim. avaimen numero 8.59 – tyhjä tarkoittaa, ettei avainta ole).
+                    <strong>Valintaruutu</strong> on pelkkä kyllä/ei-ruksi. Kentät näkyvät jäsenen lomakkeella, CSV-viennissä ja -tuonnissa, ja halutessa omana sarakkeenaan jäsenlistassa.
+                    Jäsenlistan haku löytää kentän nimellä (esim. ”avain”) kaikki, joilla kenttä on täytetty.</p>
+                <table class="widefat jr-lajit" id="jr-kentat">
+                    <thead><tr><th>Kentän nimi</th><th style="width:160px">Tyyppi</th><th style="width:150px">Jäsenlistassa</th><th style="width:60px"></th></tr></thead>
+                    <tbody>
+                    <?php foreach ($s['lisakentat'] as $kid => $k): ?>
+                        <tr>
+                            <td><input type="hidden" name="kentta_id[]" value="<?php echo esc_attr($kid); ?>">
+                                <input type="text" name="kentta_nimi[]" value="<?php echo esc_attr($k['nimi']); ?>"></td>
+                            <td><select name="kentta_tyyppi[]"><option value="teksti" <?php selected($k['tyyppi'], 'teksti'); ?>>Teksti</option><option value="valinta" <?php selected($k['tyyppi'], 'valinta'); ?>>Valintaruutu</option></select></td>
+                            <td><select name="kentta_lista[]"><option value="1" <?php selected($k['lista'], '1'); ?>>Näytä sarake</option><option value="0" <?php selected($k['lista'], '0'); ?>>Ei</option></select></td>
+                            <td><button type="button" class="button-link jr-row-del" data-confirm-del="Poistetaanko lisäkenttä? Kenttään tallennetut tiedot poistuvat jäseniltä, kun jäsenen tiedot seuraavan kerran tallennetaan.">✕</button></td>
+                        </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <template id="jr-kentta-tpl">
+                    <tr>
+                        <td><input type="hidden" name="kentta_id[]" value=""><input type="text" name="kentta_nimi[]" placeholder="esim. Avain"></td>
+                        <td><select name="kentta_tyyppi[]"><option value="teksti">Teksti</option><option value="valinta">Valintaruutu</option></select></td>
+                        <td><select name="kentta_lista[]"><option value="1">Näytä sarake</option><option value="0">Ei</option></select></td>
+                        <td><button type="button" class="button-link jr-row-del">✕</button></td>
+                    </tr>
+                </template>
+                <p><button type="button" class="button jr-row-add" data-tpl="#jr-kentta-tpl" data-table="#jr-kentat">+ Lisää kenttä</button></p>
+            </div>
+
             <div class="jr-panel">
                 <h2>Automaattinen maksumuistutus</h2>
                 <p><label class="jr-radio"><input type="checkbox" name="auto_muistutus" value="1" <?php checked($s['auto_muistutus'], '1'); ?>> Lähetä maksamattomille muistutus automaattisesti</label></p>
@@ -171,6 +253,18 @@ function jr_page_settings() {
                 <p><label for="jr-mt">Maksumuistutuksen teksti</label>
                    <textarea id="jr-mt" name="muistutus_teksti" rows="6"><?php echo esc_textarea($s['muistutus_teksti']); ?></textarea>
                    <?php echo jr_placeholders('jr-mt', 'lasku'); ?></p>
+            </div>
+
+            <div class="jr-panel" id="jr-loki">
+                <h2>Muutosloki</h2>
+                <p>Kaikki muutokset jäsenten tietoihin, laskuihin, maksuihin ja asetuksiin kirjataan <a href="<?php echo esc_url(admin_url('admin.php?page=jr-loki')); ?>">muutoslokiin</a> (kuka, mitä ja milloin).</p>
+                <p><label for="jr-lokikk">Säilytysaika</label>
+                   <select id="jr-lokikk" name="loki_kk" style="width:auto">
+                       <?php foreach (array('12' => '1 vuosi', '24' => '2 vuotta', '36' => '3 vuotta', '60' => '5 vuotta', '120' => '10 vuotta', '0' => 'Pysyvästi') as $k => $label): ?>
+                           <option value="<?php echo esc_attr($k); ?>" <?php selected($s['loki_kk'], (string) $k); ?>><?php echo esc_html($label); ?></option>
+                       <?php endforeach; ?>
+                   </select>
+                   <span class="description">Loki sisältää henkilötietoja (esim. vanhoja osoitteita), joten sitä ei kannata säilyttää tarpeettoman pitkään. Vanhemmat merkinnät poistetaan automaattisesti.</span></p>
             </div>
 
             <div class="jr-panel" id="jr-poisto">

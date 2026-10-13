@@ -25,7 +25,7 @@ function jr_handle_export_xlsx() {
 
     foreach ($laskut as $l) {
         $rows = $wpdb->get_results($wpdb->prepare(
-            'SELECT r.*, m.etunimi, m.sukunimi, m.tunnus, m.tila, m.jasenlaji, m.puhelin, '
+            "SELECT r.*, m.etunimi, m.sukunimi, m.tunnus, m.tila, COALESCE(NULLIF(r.jasenlaji, ''), m.jasenlaji, '') AS jasenlaji, m.puhelin, "
             . "COALESCE(NULLIF(m.email, ''), r.email) AS to_email "
             . 'FROM ' . jr_t('rivit') . ' r LEFT JOIN ' . jr_t('jasenet') . ' m ON m.id = r.jasen_id '
             . 'WHERE r.lasku_id = %d ORDER BY m.sukunimi, m.etunimi, r.nimi', $l->id
@@ -115,6 +115,7 @@ function jr_handle_export_xlsx() {
 
     $nimi = $id ? sanitize_file_name($laskut[0]->nimi) : 'jasenmaksut-' . current_time('Y-m-d');
     $bin = $x->build();
+    jr_log('vienti', 0, 'vienti', $id ? 'Lasku ' . $laskut[0]->nimi . ' Exceliin' : 'Kaikki laskut Exceliin (' . count($laskut) . ' laskua)');
     nocache_headers();
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $nimi . '.xlsx"');

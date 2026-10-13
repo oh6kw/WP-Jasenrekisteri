@@ -197,3 +197,30 @@
 .jr-ph:hover, .jr-ph:focus { background: #dcebfa; border-color: #2271b1; outline: none; }
 .jr-ph:focus-visible { box-shadow: 0 0 0 2px #2271b1; }
 .jr-ph.jr-ph-ok { background: var(--jr-ok-bg); border-color: var(--jr-ok); color: var(--jr-ok); }
+
+/* 4.6: muutosloki, paperilaskut, vuosiraportti */
+.jr-log-changes { margin: 4px 0 0 0; padding: 0; list-style: none; font-size: 12px; }
+.jr-log-changes li { margin: 1px 0; }
+.jr-log-field { color: var(--jr-muted); }
+.jr-log-changes del { color: var(--jr-err); background: var(--jr-err-bg); text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
+.jr-log-changes ins { color: var(--jr-ok); background: var(--jr-ok-bg); text-decoration: none; padding: 0 3px; border-radius: 3px; }
+.jr-log .jr-badge { margin-right: 6px; }
+.jr-log-jasen { background: var(--jr-info-bg); color: var(--jr-info); }
+.jr-log-maksu { background: var(--jr-ok-bg); color: var(--jr-ok); }
+.jr-log-lasku { background: #e7f3f1; color: #0b6e5f; }
+.jr-log-asetukset { background: #f1ebfb; color: #6b3fa0; }
+.jr-log-viesti { background: #fdebd8; color: #b54708; }
+.jr-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.jr-inline { display: inline-flex; gap: 8px; align-items: center; margin-left: 8px; vertical-align: middle; }
+.jr-report-sub { color: var(--jr-muted); margin-top: 4px; }
+.jr-num td:not(:first-child), .jr-num th:not(:first-child) { text-align: right; }
+.jr-num tfoot th { font-weight: 600; }
+.jr-report h3 { margin: 20px 0 8px; font-size: 1em; }
+@media print {
+    #adminmenumain, #wpadminbar, #wpfooter, .jr-noprint, .notice, .update-nag, #screen-meta-links { display: none !important; }
+    #wpcontent, #wpbody-content { margin: 0 !important; padding: 0 !important; }
+    html.wp-toolbar { padding-top: 0 !important; }
+    .jr-wrap { max-width: none; }
+    .jr-panel, .jr-card { border-color: #999; break-inside: avoid; }
+    .jr-report .jr-panel { page-break-inside: avoid; }
+}
