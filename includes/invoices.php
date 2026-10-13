@@ -522,7 +522,7 @@ function jr_invoice_new_form() {
 
         <p><label for="jr-viesti">Saateteksti</label>
            <textarea id="jr-viesti" name="viesti" rows="8"><?php echo esc_textarea($s['viesti_oletus']); ?></textarea>
-           <span class="description">Paikkamerkit: <code>{etunimi}</code> <code>{sukunimi}</code><?php if (jr_tunnus_on()): ?> <code>{tunnus}</code><?php endif; ?> <code>{jasenluokka}</code> <code>{laskun_nimi}</code> <code>{summa}</code> <code>{viite}</code> <code>{erapaiva}</code> <code>{yhdistys}</code>. Laskun tiedot (tilinumero, viite, summa, eräpäivä ja virtuaaliviivakoodi) lisätään viestiin automaattisesti.</span></p>
+           <?php echo jr_placeholders('jr-viesti', 'lasku', 'Laskun tiedot (tilinumero, viite, summa, eräpäivä, QR- ja viivakoodi) lisätään viestiin automaattisesti.'); ?></p>
 
         <fieldset class="jr-fieldset">
             <legend>Kenelle lasku tehdään?</legend>
@@ -766,7 +766,8 @@ function jr_invoice_detail($id) {
                 <?php if (jr_settings()['auto_muistutus'] === '1'): ?>
                 <p><label class="jr-radio"><input type="checkbox" name="auto_muistutus" value="1" <?php checked((int) $lasku->auto_muistutus, 1); ?>> Automaattiset maksumuistutukset tälle laskulle</label></p>
                 <?php endif; ?>
-                <p><label for="jr-e-viesti">Saateteksti</label><textarea id="jr-e-viesti" name="viesti" rows="6"><?php echo esc_textarea($lasku->viesti); ?></textarea></p>
+                <p><label for="jr-e-viesti">Saateteksti</label><textarea id="jr-e-viesti" name="viesti" rows="6"><?php echo esc_textarea($lasku->viesti); ?></textarea>
+                   <?php echo jr_placeholders('jr-e-viesti', 'lasku'); ?></p>
                 <p class="description">Summaa ei voi muuttaa jälkikäteen, koska laskut on jo muodostettu. Muutokset näkyvät seuraavissa lähetyksissä.</p>
                 <p><button type="submit" class="button button-primary">Tallenna</button></p>
             </form>

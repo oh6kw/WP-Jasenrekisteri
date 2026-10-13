@@ -1,5 +1,14 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.4.0 (2026-10-13)
+
+### Uutta: klikattavat paikkamerkit
+- Tekstikenttien alla olevat paikkamerkit, kuten `{etunimi}`, `{jasenluokka}` ja `{summa}`, ovat nyt **painikkeita**. Klikkaus lisää merkin tekstiin kohdistimen kohdalle tai valitun tekstin tilalle, ja kohdistin siirtyy merkin perään.
+- Käytössä kaikissa viestikentissä: uuden laskun saateteksti, laskun muokkaus, tiedote sekä asetusten oletussaate ja muistutusteksti. Oletussaatteella on nyt oma paikkamerkkirivi, eikä se enää jaa riviä muistutustekstin kanssa.
+- Painikkeen päälle vietäessä näytetään selite (esim. ”Summa, esim. 25,00 €”). Paikkamerkit näkyvät nyt myös laskun muokkauskentässä (Muokkaa laskun tietoja).
+- Lisätunnisteen paikkamerkki `{tunnus}` näytetään vain, jos lisätunniste on käytössä asetuksissa.
+
+
 ## 4.3.0 (2026-10-13)
 
 ### Uutta: kesken kauden liittyvä jäsen

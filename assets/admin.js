@@ -80,6 +80,26 @@
         });
     });
 
+    // Klikattavat paikkamerkit: lisätään kohdistimen kohdalle (tai valitun tekstin tilalle)
+    $(document).on('click', '.jr-ph', function (e) {
+        e.preventDefault();
+        var el = $($(this).data('target')).get(0);
+        if (!el) return;
+        var ph = String($(this).data('ph'));
+        var start = typeof el.selectionStart === 'number' ? el.selectionStart : el.value.length;
+        var end = typeof el.selectionEnd === 'number' ? el.selectionEnd : el.value.length;
+        el.focus();
+        if (typeof el.setRangeText === 'function') {
+            el.setRangeText(ph, start, end, 'end');
+        } else {
+            el.value = el.value.slice(0, start) + ph + el.value.slice(end);
+            el.selectionStart = el.selectionEnd = start + ph.length;
+        }
+        $(el).trigger('input');
+        var $b = $(this).addClass('jr-ph-ok');
+        setTimeout(function () { $b.removeClass('jr-ph-ok'); }, 400);
+    });
+
     // Tunnukset isoilla kirjaimilla
     $(document).on('input', '.jr-upper', function () {
         var p = this.selectionStart;

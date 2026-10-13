@@ -141,7 +141,7 @@ function jr_page_mail() {
                <input type="text" id="jr-subject" name="subject" value="<?php echo esc_attr($draft['subject']); ?>" required></p>
             <p><label for="jr-body">Viesti</label>
                <textarea id="jr-body" name="body" rows="12" required placeholder="Hei {etunimi},&#10;&#10;…"><?php echo esc_textarea($draft['body']); ?></textarea>
-               <span class="description">Paikkamerkit: <code>{etunimi}</code> <code>{sukunimi}</code> <code>{nimi}</code><?php if (jr_tunnus_on()): ?> <code>{tunnus}</code><?php endif; ?> <code>{jasenluokka}</code> <code>{yhdistys}</code>. Rivinvaihdot säilyvät.</span></p>
+               <?php echo jr_placeholders('jr-body', 'tiedote', 'Rivinvaihdot säilyvät.'); ?></p>
 
             <p class="jr-actions">
                 <button type="submit" class="button button-primary button-large" data-confirm="Lähetetäänkö viesti valituille jäsenille?">Lähetä</button>

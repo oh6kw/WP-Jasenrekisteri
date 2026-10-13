@@ -185,3 +185,15 @@
 .jr-about dd { margin: 0; }
 .jr-kofi { display: inline-flex; align-items: center; gap: 8px; background: #72a4f2; color: #fff !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
 .jr-kofi:hover { background: #5b8fe0; }
+
+/* 4.4: klikattavat paikkamerkit */
+.jr-phs { display: block; margin-top: 6px; line-height: 2; }
+.jr-ph {
+    font-family: Consolas, Menlo, monospace; font-size: 12px;
+    background: #f0f6fc; color: var(--jr-accent); border: 1px solid #c5d9ed; border-radius: 4px;
+    padding: 1px 7px; margin: 0 2px 2px 0; cursor: pointer; line-height: 1.6;
+    transition: background .15s, border-color .15s;
+}
+.jr-ph:hover, .jr-ph:focus { background: #dcebfa; border-color: #2271b1; outline: none; }
+.jr-ph:focus-visible { box-shadow: 0 0 0 2px #2271b1; }
+.jr-ph.jr-ph-ok { background: var(--jr-ok-bg); border-color: var(--jr-ok); color: var(--jr-ok); }

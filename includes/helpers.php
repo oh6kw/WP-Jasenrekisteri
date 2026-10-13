@@ -358,6 +358,28 @@ function jr_mail($to, $subject, $html, $images = array()) {
     return $ok;
 }
 
+/**
+ * Klikattavat paikkamerkit tekstikentän alle: painike lisää merkin kohdistimen kohdalle.
+ * $tyyppi: 'lasku' (laskut ja muistutukset) tai 'tiedote'.
+ */
+function jr_placeholders($target_id, $tyyppi = 'lasku', $lisa = '') {
+    $selitteet = array(
+        'etunimi' => 'Etunimi', 'sukunimi' => 'Sukunimi', 'nimi' => 'Etu- ja sukunimi',
+        'tunnus' => jr_tunnus_nimi(), 'jasenluokka' => 'Jäsenluokka, esim. Nuorisojäsen',
+        'laskun_nimi' => 'Laskun nimi, esim. Jäsenmaksu 2027', 'summa' => 'Summa, esim. 25,00 €',
+        'viite' => 'Viitenumero', 'erapaiva' => 'Eräpäivä', 'yhdistys' => 'Yhdistyksen nimi',
+    );
+    $merkit = $tyyppi === 'tiedote'
+        ? array('etunimi', 'sukunimi', 'nimi', 'tunnus', 'jasenluokka', 'yhdistys')
+        : array('etunimi', 'sukunimi', 'tunnus', 'jasenluokka', 'laskun_nimi', 'summa', 'viite', 'erapaiva', 'yhdistys');
+    if (!jr_tunnus_on()) $merkit = array_values(array_diff($merkit, array('tunnus')));
+    $out = '<span class="description jr-phs">Paikkamerkit – lisää klikkaamalla: ';
+    foreach ($merkit as $k) {
+        $out .= '<button type="button" class="jr-ph" data-target="#' . esc_attr($target_id) . '" data-ph="{' . esc_attr($k) . '}" title="' . esc_attr($selitteet[$k]) . '">{' . esc_html($k) . '}</button> ';
+    }
+    return $out . ($lisa !== '' ? esc_html($lisa) : '') . '</span>';
+}
+
 /** Korvaa {paikkamerkit} ja muuttaa tekstin turvalliseksi HTML:ksi. */
 function jr_fill($text, $vars) {
     $out = esc_html($text);

@@ -166,10 +166,11 @@ function jr_page_settings() {
             <div class="jr-panel">
                 <h2>Oletustekstit</h2>
                 <p><label for="jr-vo">Laskun saateteksti (oletus uusille laskuille)</label>
-                   <textarea id="jr-vo" name="viesti_oletus" rows="7"><?php echo esc_textarea($s['viesti_oletus']); ?></textarea></p>
+                   <textarea id="jr-vo" name="viesti_oletus" rows="7"><?php echo esc_textarea($s['viesti_oletus']); ?></textarea>
+                   <?php echo jr_placeholders('jr-vo', 'lasku'); ?></p>
                 <p><label for="jr-mt">Maksumuistutuksen teksti</label>
                    <textarea id="jr-mt" name="muistutus_teksti" rows="6"><?php echo esc_textarea($s['muistutus_teksti']); ?></textarea>
-                   <span class="description">Paikkamerkit: <code>{etunimi}</code> <code>{sukunimi}</code><?php if (jr_tunnus_on()): ?> <code>{tunnus}</code><?php endif; ?> <code>{jasenluokka}</code> <code>{laskun_nimi}</code> <code>{summa}</code> <code>{viite}</code> <code>{erapaiva}</code> <code>{yhdistys}</code></span></p>
+                   <?php echo jr_placeholders('jr-mt', 'lasku'); ?></p>
             </div>
 
             <div class="jr-panel" id="jr-poisto">
