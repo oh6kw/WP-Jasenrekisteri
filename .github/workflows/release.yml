@@ -1,8 +1,12 @@
-# Rakentaa asennettavan jasenrekisteri.zip-tiedoston ja liittää sen julkaisuun (Release).
-# Zipissä lisäosan kansion nimi on aina "jasenrekisteri", jotta WordPress tunnistaa päivitykset.
-name: Julkaisun zip
+# Julkaisu: kun repositorioon viedään versiotagi (esim. v4.4.0), GitHub
+#  1) rakentaa asennettavan jasenrekisteri.zip-tiedoston (kansion nimi aina "jasenrekisteri")
+#  2) luo julkaisun (Release), jonka kuvaus otetaan CHANGELOG.md:n vastaavasta osiosta
+# Jos julkaisu tehdään käsin GitHubin sivulla, zip liitetään siihen automaattisesti.
+name: Julkaisu
 
 on:
+  push:
+    tags: ['v*']
   release:
     types: [published]
   workflow_dispatch:
@@ -11,7 +15,7 @@ permissions:
   contents: write
 
 jobs:
-  zip:
+  julkaisu:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,14 +31,36 @@ jobs:
           git archive --format=tar --prefix=jasenrekisteri/ HEAD | tar -x -C build
           cd build && zip -qr ../jasenrekisteri.zip jasenrekisteri
 
-      - name: Liitä zip julkaisuun
+      - name: Luo julkaisu tagista
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          VERSIO="${TAG#v}"
+          # Muutosloki: osio "## VERSIO ..." seuraavaan "## "-otsikkoon asti
+          awk -v v="$VERSIO" '
+            /^## / { if (found) exit; if (index($0, "## " v) == 1) { found = 1; next } }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          {
+            echo
+            echo "**Asennus:** lataa alta \`jasenrekisteri.zip\` ja valitse WordPressissä *Lisäosat → Lisää uusi → Lataa lisäosa*. Aiempi versio korvataan, ja tiedot säilyvät."
+          } >> notes.md
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" jasenrekisteri.zip --clobber
+          else
+            gh release create "$TAG" jasenrekisteri.zip --title "Jäsenrekisteri $VERSIO" --notes-file notes.md --verify-tag --latest
+          fi
+
+      - name: Liitä zip käsin tehtyyn julkaisuun
         if: github.event_name == 'release'
         env:
           GH_TOKEN: ${{ github.token }}
         run: gh release upload "${{ github.event.release.tag_name }}" jasenrekisteri.zip --clobber
 
       - name: Tallenna zip (käsin ajettaessa)
-        if: github.event_name != 'release'
+        if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:
           name: jasenrekisteri
