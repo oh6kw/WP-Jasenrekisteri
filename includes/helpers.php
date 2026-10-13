@@ -33,6 +33,7 @@ function jr_settings() {
         'jasenlajit'      => array(),
         'lisakentat'      => array(),
         'loki_kk'         => '24',
+        'postimaksu'      => '0',
         'auto_muistutus'  => '0',
         'auto_paivia'     => '14',
         'auto_max'        => '1',
@@ -136,6 +137,18 @@ function jr_is_paperi($r) {
     return !empty($r->paperilasku) || (string) $email === '';
 }
 
+/** Asetuksissa määritelty postimaksu paperilaskuille (0 = ei postimaksua). */
+function jr_postimaksu_oletus() {
+    return max(0, round((float) jr_settings()['postimaksu'], 2));
+}
+/** Laskurivin postimaksu ja jäsenmaksu ilman postimaksua. */
+function jr_rivi_postimaksu($r) {
+    return isset($r->postimaksu) ? (float) $r->postimaksu : 0.0;
+}
+function jr_rivi_jasenmaksu($r) {
+    return (float) $r->summa - jr_rivi_postimaksu($r);
+}
+
 /** Laskurivin eräpäivä: jäsenkohtainen (myöhemmin lisätty jäsen), muuten laskun eräpäivä. */
 function jr_rivi_era($lasku, $r) {
     return (!empty($r->erapaiva) && $r->erapaiva !== '0000-00-00') ? $r->erapaiva : $lasku->erapaiva;
@@ -228,6 +241,7 @@ function jr_notice() {
         'no_mail_recipients' => array('warning', 'Valitulla vastaanottajajoukolla ei ole yhtään sähköpostiosoitetta.'),
         'due_before_date' => array('error',   'Eräpäivä ei voi olla ennen laskun päiväystä.'),
         'member_duplicate'=> array('warning', 'Jäsen tallennettiin, mutta rekisterissä on jo toinen jäsen samalla nimellä tai sähköpostiosoitteella. Tarkista, ettei kyseessä ole tuplakirjaus.'),
+        'postage_updated' => array('success', sprintf('Postimaksu päivitetty %d laskuun.', $n)),
         'paper_marked'    => array('success', sprintf('%d paperilaskua merkitty postitetuksi.', $n)),
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),
         'rows_failed'     => array('warning', sprintf('Lasku luotiin, mutta %d jäsenelle laskua ei voitu muodostaa (viitenumero oli jo käytössä). Ota yhteyttä ylläpitoon.', $n)),
@@ -423,12 +437,13 @@ function jr_placeholders($target_id, $tyyppi = 'lasku', $lisa = '') {
     $selitteet = array(
         'etunimi' => 'Etunimi', 'sukunimi' => 'Sukunimi', 'nimi' => 'Etu- ja sukunimi',
         'tunnus' => jr_tunnus_nimi(), 'jasenluokka' => 'Jäsenluokka, esim. Nuorisojäsen',
-        'laskun_nimi' => 'Laskun nimi, esim. Jäsenmaksu 2027', 'summa' => 'Summa, esim. 25,00 €',
+        'laskun_nimi' => 'Laskun nimi, esim. Jäsenmaksu 2027', 'summa' => 'Maksettava summa, esim. 25,00 € (paperilaskussa sisältää postimaksun)',
+        'jasenmaksu' => 'Jäsenmaksu ilman postimaksua', 'postimaksu' => 'Postimaksu (0,00 €, jos lasku tulee sähköpostilla)',
         'viite' => 'Viitenumero', 'erapaiva' => 'Eräpäivä', 'yhdistys' => 'Yhdistyksen nimi',
     );
     $merkit = $tyyppi === 'tiedote'
         ? array('etunimi', 'sukunimi', 'nimi', 'tunnus', 'jasenluokka', 'yhdistys')
-        : array('etunimi', 'sukunimi', 'tunnus', 'jasenluokka', 'laskun_nimi', 'summa', 'viite', 'erapaiva', 'yhdistys');
+        : array('etunimi', 'sukunimi', 'tunnus', 'jasenluokka', 'laskun_nimi', 'summa', 'jasenmaksu', 'viite', 'erapaiva', 'yhdistys');
     if (!jr_tunnus_on()) $merkit = array_values(array_diff($merkit, array('tunnus')));
     $out = '<span class="description jr-phs">Paikkamerkit – lisää klikkaamalla: ';
     foreach ($merkit as $k) {

@@ -38,6 +38,8 @@ function jr_invoice_vars($lasku, $r) {
     return array_merge($p, array(
         'laskun_nimi' => $lasku->nimi,
         'summa'       => jr_money($r->summa),
+        'jasenmaksu'  => jr_money(jr_rivi_jasenmaksu($r)),
+        'postimaksu'  => jr_money(jr_rivi_postimaksu($r)),
         'viite'       => jr_viite_format($r->viite),
         'erapaiva'    => jr_date(jr_rivi_era($lasku, $r)),
         'laskupvm'    => jr_date($lasku->laskupvm),
@@ -76,6 +78,10 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
     if ($s['bic'] !== '') $html .= $row('BIC', esc_html($s['bic']));
     $html .= $row('Viitenumero', '<span style="font-family:Consolas,Menlo,monospace;">' . esc_html($vars['viite']) . '</span>', true);
     $html .= $row('Eräpäivä', esc_html($vars['erapaiva']), true);
+    if (jr_rivi_postimaksu($r) > 0) {
+        $html .= $row('Jäsenmaksu', esc_html($vars['jasenmaksu']));
+        $html .= $row('Postimaksu (paperilasku)', esc_html($vars['postimaksu']));
+    }
     $html .= '</table>';
 
     $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 0;background:#eaf2fb;border-radius:6px;">'

@@ -40,6 +40,7 @@ function jr_install() {
         erapaiva date NOT NULL,
         viesti text,
         hinnat text,
+        postimaksu decimal(10,2) NOT NULL DEFAULT '0.00',
         auto_muistutus tinyint(1) NOT NULL DEFAULT 1,
         luotu datetime NOT NULL,
         PRIMARY KEY  (id)
@@ -54,6 +55,7 @@ function jr_install() {
         viite varchar(25) NOT NULL,
         summa decimal(10,2) NOT NULL DEFAULT '0.00',
         jasenlaji varchar(30) NOT NULL DEFAULT '',
+        postimaksu decimal(10,2) NOT NULL DEFAULT '0.00',
         erapaiva date DEFAULT NULL,
         lahetetty datetime DEFAULT NULL,
         muistutettu datetime DEFAULT NULL,

@@ -1,5 +1,19 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.1 (2026-10-13)
+
+### Uutta: postimaksu paperilaskuihin
+- Asetuksissa on uusi kohta **Paperilaskut → Postimaksu (€)**. Postimaksu lisätään jäsenmaksuun **vain paperilaskun saajille** eli jäsenille, jotka haluavat laskun paperilla tai joilla ei ole sähköpostia. Sähköpostilaskuihin sitä ei lisätä. Oletus on 0 € (ei postimaksua).
+- Uuden laskun lomakkeessa on kenttä *Postimaksu paperilaskuihin*. Se esitäytetään asetuksista, ja sitä voi muuttaa laskukohtaisesti. Lomake kertoo, moneenko laskuun postimaksu tulee.
+- Laskussa (tuloste ja sähköpostiversio) postimaksu näkyy **omana rivinään**: jäsenmaksu, postimaksu ja maksettava yhteensä. QR-koodi, pankkiviivakoodi ja virtuaaliviivakoodi sisältävät kokonaissumman, joten pankkitiedoston tuonti kohdistaa maksun oikein.
+- Laskun sivulla summan alla lukee ”sis. postimaksun 2,50 €”. Laskun kortissa ja laskulistassa näytetään jäsenmaksut ilman postimaksua.
+- Jos jäsen vaihtaa paperilaskuun laskun teon jälkeen, laskun Paperilaskut-osio huomauttaa puuttuvasta postimaksusta, ja painike **Lisää postimaksu** lisää sen kaikkiin postittamattomiin ja maksamattomiin paperilaskuihin.
+- Laskurivien joukkotoimintoihin tuli **Lisää postimaksu** ja **Poista postimaksu** (vain maksamattomat). Jokainen muutos kirjataan muutoslokiin uuden summan kanssa.
+- Myöhemmin laskulle lisätty jäsen (jäsenlomake tai *Lisää laskulle uudet jäsenet*) saa laskun postimaksun, jos hän saa paperilaskun.
+- **Uudet paikkamerkit:** `{jasenmaksu}` (jäsenmaksu ilman postimaksua) ja `{postimaksu}`. `{summa}` on maksettava kokonaissumma. Jos saatteessa lukee esimerkiksi ”Jäsenmaksu tässä luokassa: {summa}”, vaihda se muotoon `{jasenmaksu}`, jotta paperilaskun saaja näkee jäsenmaksun ja postimaksun erikseen.
+- **Vuosiraportti** erittelee jäsenmaksukertymästä postimaksut ja jäsenmaksut omiin sarakkeisiinsa (myös Excelissä), jos postimaksuja on kertynyt.
+- Tietokantaversio 9: sarake `postimaksu` laskuille ja laskuriveille. Päivitys tapahtuu automaattisesti, ja aiemmilla laskuilla postimaksu on 0.
+
 ## 4.6.0 (2026-10-13)
 
 ### Uutta: paperilaskut

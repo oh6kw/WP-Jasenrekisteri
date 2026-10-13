@@ -211,7 +211,8 @@ function jr_print_page($lasku, $r, $reminder, $s) {
 
     $h .= '<div class="saate">' . jr_fill($text, $vars) . '</div>';
     $h .= '<table class="erittely"><thead><tr><th>Erittely</th><th class="summa">Summa</th></tr></thead><tbody>';
-    $h .= '<tr><td>' . esc_html($lasku->nimi) . ' – ' . esc_html($vars['nimi']) . ($luokka !== '' ? ' (' . esc_html($luokka) . ')' : '') . '</td><td class="summa">' . esc_html($vars['summa']) . '</td></tr>';
+    $h .= '<tr><td>' . esc_html($lasku->nimi) . ' – ' . esc_html($vars['nimi']) . ($luokka !== '' ? ' (' . esc_html($luokka) . ')' : '') . '</td><td class="summa">' . esc_html($vars['jasenmaksu']) . '</td></tr>';
+    if (jr_rivi_postimaksu($r) > 0) $h .= '<tr><td>Postimaksu (paperilasku)</td><td class="summa">' . esc_html($vars['postimaksu']) . '</td></tr>';
     $h .= '</tbody></table>';
     $h .= '<div class="yhteensa"><span>Maksettava viimeistään ' . esc_html($vars['erapaiva']) . '</span><strong>' . esc_html($vars['summa']) . '</strong></div>';
 

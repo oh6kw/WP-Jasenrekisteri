@@ -3,7 +3,7 @@
 Plugin Name: Jäsenrekisteri
 Plugin URI: https://github.com/oh6kw/WP-Jasenrekisteri
 Description: Yhdistyksen jäsenrekisteri: jäsenet, jäsenluokat ja omat lisäkentät, jäsenmaksulaskut omilla viitenumeroilla sähköpostilla tai paperilla, QR-koodi ja pankkiviivakoodi, maksujen tuonti pankista, muistutukset, tiedotteet, vuosiraportti ja muutosloki.
-Version: 4.6.0
+Version: 4.6.1
 Author: Jarno Jaskari OH6KW, Claude (Anthropic)
 Author URI: https://github.com/oh6kw
 License: AGPL-3.0-or-later
@@ -18,8 +18,8 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 if (!defined('ABSPATH')) exit; // Estetään suora pääsy tiedostoon
 
-define('JR_VERSION', '4.6.0');
-define('JR_DB_VERSION', '8');
+define('JR_VERSION', '4.6.1');
+define('JR_DB_VERSION', '9');
 define('JR_FILE', __FILE__);
 define('JR_DIR', plugin_dir_path(__FILE__));
 define('JR_URL', plugin_dir_url(__FILE__));

@@ -34,20 +34,23 @@ function jr_lasku_hinnat($lasku) {
  * Luo laskurivit. Summa määräytyy jäsenlajin mukaan ($hinnat), muuten $summa.
  * Jäsenet, joiden summa on 0, ohitetaan ($skipped).
  */
-function jr_add_rows($lasku_id, $members, $summa, $hinnat = array(), &$skipped = 0, $erapaiva = null) {
+function jr_add_rows($lasku_id, $members, $summa, $hinnat = array(), &$skipped = 0, $erapaiva = null, $postimaksu = 0) {
     global $wpdb;
     $n = 0;
     $skipped = 0;
     foreach ($members as $m) {
         $price = jr_member_price($m, $hinnat, $summa);
         if ($price <= 0) { $skipped++; continue; }
+        // Postimaksu vain paperilaskun saajille
+        $pm = ($postimaksu > 0 && jr_is_paperi($m)) ? (float) $postimaksu : 0;
         $ok = $wpdb->insert(jr_t('rivit'), array(
             'lasku_id' => $lasku_id,
             'jasen_id' => $m->id,
             'nimi'     => trim($m->etunimi . ' ' . $m->sukunimi),
             'email'    => (string) $m->email,
             'viite'    => jr_unique_viite($lasku_id, $m->id),
-            'summa'    => $price,
+            'summa'    => $price + $pm,
+            'postimaksu' => $pm,
             'jasenlaji'=> (string) $m->jasenlaji,
             'erapaiva' => $erapaiva,
         ));
@@ -65,13 +68,15 @@ function jr_add_member_to_lasku($lasku, $m, $summa, $erapaiva = null) {
     $t = jr_t('rivit');
     $exists = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM $t WHERE lasku_id = %d AND jasen_id = %d", $lasku->id, $m->id));
     if ($exists) return 0;
+    $pm = (!empty($lasku->postimaksu) && (float) $lasku->postimaksu > 0 && jr_is_paperi($m)) ? (float) $lasku->postimaksu : 0;
     $ok = $wpdb->insert($t, array(
         'lasku_id' => $lasku->id,
         'jasen_id' => $m->id,
         'nimi'     => trim($m->etunimi . ' ' . $m->sukunimi),
         'email'    => (string) $m->email,
         'viite'    => jr_unique_viite($lasku->id, $m->id),
-        'summa'    => $summa,
+        'summa'    => $summa + $pm,
+        'postimaksu' => $pm,
         'jasenlaji'=> (string) $m->jasenlaji,
         'erapaiva' => ($erapaiva && $erapaiva !== $lasku->erapaiva) ? $erapaiva : null,
     ));
@@ -85,6 +90,26 @@ function jr_laskut_ilman_jasenta($jasen_id, $limit = 3) {
         'SELECT * FROM ' . jr_t('laskut') . ' WHERE id NOT IN (SELECT lasku_id FROM ' . jr_t('rivit') . ' WHERE jasen_id = %d) ORDER BY id DESC LIMIT %d',
         (int) $jasen_id, (int) $limit
     ));
+}
+
+/**
+ * Lisää tai poistaa postimaksun maksamattomilta laskuriveiltä. Lisättäessä käytetään laskun postimaksua,
+ * tai asetusten postimaksua, jos laskulla ei ole omaa. Palauttaa muutettujen rivien määrän.
+ */
+function jr_set_postimaksu($lasku, $rows, $lisaa) {
+    global $wpdb;
+    $pm = (float) $lasku->postimaksu > 0 ? (float) $lasku->postimaksu : jr_postimaksu_oletus();
+    $n = 0;
+    foreach ($rows as $r) {
+        if ($r->maksettu) continue;
+        $old = jr_rivi_postimaksu($r);
+        $new = $lisaa ? $pm : 0;
+        if (abs($old - $new) < 0.005) continue;
+        $wpdb->update(jr_t('rivit'), array('postimaksu' => $new, 'summa' => jr_rivi_jasenmaksu($r) + $new), array('id' => $r->id));
+        jr_log_rivi($r, 'muokattu', ($new > 0 ? 'postimaksu lisätty ' . html_entity_decode(jr_money($new)) : 'postimaksu poistettu') . ', uusi summa ' . html_entity_decode(jr_money(jr_rivi_jasenmaksu($r) + $new)), $lasku);
+        $n++;
+    }
+    return $n;
 }
 
 /** Kirjaa yksittäisen laskurivin tapahtuman jäsenen muutoshistoriaan. */
@@ -147,6 +172,7 @@ function jr_handle_create_lasku() {
     $laskupvm = jr_date_or_null(jr_post('laskupvm'));
     if (!$laskupvm) $laskupvm = current_time('Y-m-d');
     $viesti   = sanitize_textarea_field(jr_post('viesti'));
+    $postimaksu = isset($_POST['postimaksu']) ? min(999.99, max(0, jr_parse_money(jr_post('postimaksu')))) : jr_postimaksu_oletus();
 
     // Jäsenlajikohtaiset summat
     $hinnat = array();
@@ -177,11 +203,12 @@ function jr_handle_create_lasku() {
         'nimi' => $nimi, 'summa' => $summa, 'laskupvm' => $laskupvm,
         'erapaiva' => $erapaiva, 'viesti' => $viesti, 'luotu' => current_time('mysql'),
         'hinnat' => $hinnat ? wp_json_encode($hinnat) : null,
+        'postimaksu' => $postimaksu,
         'auto_muistutus' => 1,
     ));
     $lasku_id = (int) $wpdb->insert_id;
     $skipped = 0;
-    $n = jr_add_rows($lasku_id, $members, $summa, $hinnat, $skipped);
+    $n = jr_add_rows($lasku_id, $members, $summa, $hinnat, $skipped, null, $postimaksu);
     $failed = count($members) - $n - $skipped;
     if ($n === 0) {
         $wpdb->delete(jr_t('laskut'), array('id' => $lasku_id));
@@ -190,6 +217,7 @@ function jr_handle_create_lasku() {
     $hm = array();
     foreach ($hinnat as $lid => $h) $hm[] = array('Hinta: ' . jr_laji_nimi($lid), '', html_entity_decode(jr_money($h)));
     if (!$hinnat || $summa > 0) $hm[] = array('Summa' . ($hinnat ? ' (ilman jäsenluokkaa)' : ''), '', html_entity_decode(jr_money($summa)));
+    if ($postimaksu > 0) $hm[] = array('Postimaksu paperilaskuihin', '', html_entity_decode(jr_money($postimaksu)));
     $hm[] = array('Eräpäivä', '', jr_date($erapaiva));
     jr_log('lasku', $lasku_id, 'lasku_luotu', $nimi . ': ' . $n . ' jäsentä' . ($skipped ? ', ' . $skipped . ' ohitettu (0 €)' : ''), $hm);
     if ($skipped > 0 && $failed <= 0) {
@@ -255,13 +283,25 @@ function jr_handle_add_missing() {
     ));
     $era = jr_late_era($lasku);
     $skipped = 0;
-    $n = jr_add_rows($id, $members, $lasku->summa, jr_lasku_hinnat($lasku), $skipped, $era !== $lasku->erapaiva ? $era : null);
+    $n = jr_add_rows($id, $members, $lasku->summa, jr_lasku_hinnat($lasku), $skipped, $era !== $lasku->erapaiva ? $era : null, (float) $lasku->postimaksu);
     if ($n) {
         $nimet = array();
         foreach ($members as $m) if (jr_member_price($m, jr_lasku_hinnat($lasku), $lasku->summa) > 0) $nimet[] = jr_log_member_name($m);
         jr_log('lasku', $id, 'jasenia_lisatty', $lasku->nimi . ': ' . $n . ' uutta jäsentä, eräpäivä ' . jr_date($era), array('nimet' => $nimet));
     }
     jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $id, 'jr_msg' => 'rows_added', 'jr_n' => $n));
+}
+
+add_action('admin_post_jr_add_postage', 'jr_handle_add_postage');
+function jr_handle_add_postage() {
+    $id = intval(isset($_REQUEST['id']) ? $_REQUEST['id'] : 0);
+    jr_check('jr_add_postage_' . $id);
+    global $wpdb;
+    $lasku = jr_get_lasku($id);
+    if (!$lasku) jr_redirect('jr-laskutus');
+    $rows = array_filter($wpdb->get_results($wpdb->prepare(jr_rivi_select_sql() . 'WHERE r.lasku_id = %d AND r.maksettu IS NULL AND r.lahetetty IS NULL', $id)), 'jr_is_paperi');
+    $n = jr_set_postimaksu($lasku, $rows, true);
+    jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $id, 'jr_msg' => 'postage_updated', 'jr_n' => $n));
 }
 
 add_action('admin_post_jr_toggle_paid', 'jr_handle_toggle_paid');
@@ -296,6 +336,11 @@ function jr_handle_bulk_rows() {
         if ($op === 'paid' && !$r->maksettu) jr_log_rivi($r, 'maksettu', 'joukkotoiminto, maksupäivä ' . jr_date($bpvm ? $bpvm : current_time('Y-m-d')));
         if ($op === 'unpaid' && $r->maksettu) jr_log_rivi($r, 'maksu_peruttu', 'joukkotoiminto');
         if ($op === 'remove') jr_log_rivi($r, 'poistettu_laskulta', 'viite ' . jr_viite_format($r->viite));
+    }
+    if ($op === 'posti_lisaa' || $op === 'posti_poista') {
+        $lasku = jr_get_lasku($lasku_id);
+        $n = jr_set_postimaksu($lasku, $kohteet, $op === 'posti_lisaa');
+        jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jr_msg' => 'postage_updated', 'jr_n' => $n));
     }
     if ($op === 'paid') {
         $pvm = jr_date_or_null(jr_post('bulk_pvm'));
@@ -464,7 +509,7 @@ function jr_invoice_list() {
     global $wpdb;
     delete_transient('jr_payimp_' . get_current_user_id()); // keskeneräinen maksujen tuonti peruttu
     $laskut = $wpdb->get_results(
-        $wpdb->prepare('SELECT l.*, COUNT(r.id) AS n, SUM(r.lahetetty IS NOT NULL) AS lah, SUM(r.maksettu IS NOT NULL) AS mak, MIN(r.summa) AS min_s, MAX(r.summa) AS max_s, '
+        $wpdb->prepare('SELECT l.*, COUNT(r.id) AS n, SUM(r.lahetetty IS NOT NULL) AS lah, SUM(r.maksettu IS NOT NULL) AS mak, MIN(r.summa - r.postimaksu) AS min_s, MAX(r.summa - r.postimaksu) AS max_s, '
         . 'SUM(r.maksettu IS NULL AND COALESCE(r.erapaiva, l.erapaiva) < %s) AS erant, ', current_time('Y-m-d'))
         . 'SUM(CASE WHEN r.maksettu IS NOT NULL THEN r.summa ELSE 0 END) AS mak_summa, SUM(r.summa) AS yht '
         . 'FROM ' . jr_t('laskut') . ' l LEFT JOIN ' . jr_t('rivit') . ' r ON r.lasku_id = l.id GROUP BY l.id ORDER BY l.id DESC'
@@ -550,6 +595,9 @@ function jr_invoice_new_form() {
                <input type="date" id="jr-laskupvm" name="laskupvm" value="<?php echo esc_attr(current_time('Y-m-d')); ?>"></p>
             <p><label for="jr-erapaiva">Eräpäivä *</label>
                <input type="date" id="jr-erapaiva" name="erapaiva" required value="<?php echo esc_attr(date('Y-m-d', strtotime(current_time('Y-m-d') . ' +21 days'))); ?>"></p>
+            <p><label for="jr-postimaksu">Postimaksu paperilaskuihin (€)</label>
+               <input type="text" id="jr-postimaksu" name="postimaksu" inputmode="decimal" value="<?php echo esc_attr(number_format(jr_postimaksu_oletus(), 2, ',', '')); ?>">
+               <span class="description">Lisätään vain paperilaskun saajien laskuihin<?php echo ($n_noemail + $n_pap) ? ' (' . (int) ($n_noemail + $n_pap) . ' jäsentä)' : ''; ?>. 0 = ei postimaksua. Oletus <a href="<?php echo esc_url(admin_url('admin.php?page=jr-asetukset#jr-paperi-asetukset')); ?>">asetuksista</a>.</span></p>
         </div>
 
         <?php if ($lajit): ?>
@@ -637,12 +685,13 @@ function jr_invoice_detail($id) {
     $no_iban = false;
 
     $st = array('n' => 0, 'lah' => 0, 'mak' => 0, 'mak_summa' => 0, 'avoin_summa' => 0, 'unsent' => 0, 'unpaid_mail' => 0, 'noemail' => 0, 'muist_tanaan' => 0, 'muist_aiemmin' => 0, 'min' => null, 'max' => null, 'erant' => 0,
-                'paperi' => 0, 'p_unsent' => 0, 'p_remind' => 0, 'p_noaddr' => 0);
+                'paperi' => 0, 'p_unsent' => 0, 'p_remind' => 0, 'p_noaddr' => 0, 'p_nopost' => 0);
     $paper_rows = array();
     foreach ($rows as $r) {
         $st['n']++;
-        $st['min'] = $st['min'] === null ? $r->summa : min($st['min'], $r->summa);
-        $st['max'] = $st['max'] === null ? $r->summa : max($st['max'], $r->summa);
+        $jm = jr_rivi_jasenmaksu($r); // korttiin jäsenmaksut ilman postimaksua
+        $st['min'] = $st['min'] === null ? $jm : min($st['min'], $jm);
+        $st['max'] = $st['max'] === null ? $jm : max($st['max'], $jm);
         if ($r->lahetetty) $st['lah']++;
         if ($r->maksettu) { $st['mak']++; $st['mak_summa'] += $r->summa; } else { $st['avoin_summa'] += $r->summa; if (jr_rivi_era($lasku, $r) < $today) $st['erant'] += $r->summa; }
         if (jr_is_paperi($r)) {
@@ -651,6 +700,7 @@ function jr_invoice_detail($id) {
             if (!$r->lahetetty) $st['p_unsent']++;
             elseif (!$r->maksettu && jr_rivi_era($lasku, $r) < $today) $st['p_remind']++;
             if (trim((string) $r->osoite) === '') $st['p_noaddr']++;
+            if (!$r->maksettu && !$r->lahetetty && jr_rivi_postimaksu($r) <= 0) $st['p_nopost']++;
             $paper_rows[] = $r;
             continue;
         }
@@ -756,6 +806,12 @@ function jr_invoice_detail($id) {
             <?php endif; ?>
             <a class="button" target="_blank" href="<?php echo esc_url(jr_print_url($id, array('joukko' => 'kaikki'))); ?>">Näytä kaikki paperilaskut</a>
         </div>
+        <?php $pm_lasku = (float) $lasku->postimaksu > 0 ? (float) $lasku->postimaksu : jr_postimaksu_oletus();
+        if ($st['p_nopost'] && $pm_lasku > 0): ?>
+            <p class="jr-hint">📮 <?php echo (int) $st['p_nopost']; ?> postittamattomalta paperilaskulta puuttuu postimaksu (esim. jäsen valitsi paperilaskun laskun teon jälkeen).
+                <a class="button button-small" href="<?php echo esc_url(wp_nonce_url($post_url . '?action=jr_add_postage&id=' . $id, 'jr_add_postage_' . $id)); ?>"
+                   data-confirm="<?php echo esc_attr('Lisätäänkö postimaksu ' . html_entity_decode(jr_money($pm_lasku)) . ' ' . $st['p_nopost'] . ' paperilaskuun?'); ?>">Lisää postimaksu <?php echo esc_html(jr_money($pm_lasku)); ?></a></p>
+        <?php endif; ?>
         <?php if ($st['p_noaddr']): ?>
             <p class="jr-hint">⚠ <?php echo (int) $st['p_noaddr']; ?> paperilaskun saajalta puuttuu osoite. Lisää osoite jäsenen tietoihin.</p>
         <?php endif; ?>
@@ -777,7 +833,8 @@ function jr_invoice_detail($id) {
                             <div class="jr-sub"><?php echo $r->paperilasku ? 'haluaa paperilaskun' : 'ei sähköpostia'; ?></div></td>
                         <td><?php echo trim((string) $r->osoite) !== '' ? esc_html($r->osoite) : '<span class="jr-badge jr-badge-warn">osoite puuttuu</span>'; ?></td>
                         <td><code class="jr-ref"><?php echo esc_html(jr_viite_format($r->viite)); ?></code></td>
-                        <td><?php echo esc_html(jr_money($r->summa)); ?></td>
+                        <td><?php echo esc_html(jr_money($r->summa)); ?>
+                            <?php if (jr_rivi_postimaksu($r) > 0): ?><div class="jr-sub">sis. postimaksun <?php echo esc_html(jr_money(jr_rivi_postimaksu($r))); ?></div><?php endif; ?></td>
                         <td><?php if ($r->lahetetty): ?><span class="jr-badge jr-badge-ok">Postitettu <?php echo esc_html(jr_date($r->lahetetty)); ?></span><?php else: ?><span class="jr-badge jr-badge-muted">Ei postitettu</span><?php endif; ?>
                             <?php if ($r->muistutettu): ?><div><span class="jr-badge jr-badge-orange">Muistutettu <?php echo (int) $r->muistutuksia > 1 ? (int) $r->muistutuksia . '× · ' : ''; ?><?php echo esc_html(jr_date($r->muistutettu)); ?></span></div><?php endif; ?></td>
                         <td><?php echo jr_pay_badge($lasku, $r, $today); // phpcs:ignore ?></td>
@@ -847,6 +904,7 @@ function jr_invoice_detail($id) {
                         <?php if ($r->etunimi === null): ?><div class="jr-sub">poistettu rekisteristä</div><?php endif; ?></td>
                     <td><code class="jr-ref"><?php echo esc_html(jr_viite_format($r->viite)); ?></code></td>
                     <td><?php echo esc_html(jr_money($r->summa)); ?>
+                        <?php if (jr_rivi_postimaksu($r) > 0): ?><div class="jr-sub">sis. postimaksun <?php echo esc_html(jr_money(jr_rivi_postimaksu($r))); ?></div><?php endif; ?>
                         <?php if (!empty($r->erapaiva) && $r->erapaiva !== $lasku->erapaiva): ?><div class="jr-sub" title="Jäsenkohtainen eräpäivä (lisätty laskulle myöhemmin)">eräp. <?php echo esc_html(jr_date($r->erapaiva)); ?></div><?php endif; ?></td>
                     <td>
                         <?php if ($paperi): ?>
@@ -887,6 +945,8 @@ function jr_invoice_detail($id) {
                 <option value="paid">Merkitse maksetuksi päivämäärällä</option>
                 <option value="unpaid">Peru maksumerkintä</option>
                 <option value="remove">Poista laskulta</option>
+                <option value="posti_lisaa">Lisää postimaksu (<?php echo esc_html(jr_money((float) $lasku->postimaksu > 0 ? $lasku->postimaksu : jr_postimaksu_oletus())); ?>, maksamattomat)</option>
+                <option value="posti_poista">Poista postimaksu (maksamattomat)</option>
             </select>
             <input type="date" name="bulk_pvm" value="<?php echo esc_attr($today); ?>">
             <button type="submit" class="button" data-confirm="Suoritetaanko toiminto valituille riveille?">Suorita</button>

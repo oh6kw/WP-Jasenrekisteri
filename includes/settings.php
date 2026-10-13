@@ -54,6 +54,7 @@ function jr_handle_save_settings() {
         'tunnus_isot'      => jr_post('tunnus_isot') === '1' ? '1' : '0',
         'jasenlajit'       => $lajit,
         'lisakentat'       => $kentat,
+        'postimaksu'       => (string) min(999.99, max(0, jr_parse_money(jr_post('postimaksu')))),
         'loki_kk'          => in_array(jr_post('loki_kk'), array('0', '12', '24', '36', '60', '120'), true) ? jr_post('loki_kk') : '24',
         'auto_muistutus'   => jr_post('auto_muistutus') === '1' ? '1' : '0',
         'auto_paivia'      => (string) max(1, min(365, intval(jr_post('auto_paivia', 14)))),
@@ -77,7 +78,7 @@ function jr_log_settings_change($a, $b) {
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
         'auto_max' => 'Muistutuksia enintään', 'auto_raportti' => 'Muistutusten yhteenveto', 'poista_tiedot' => 'Poista tiedot lisäosan poistossa',
-        'loki_kk' => 'Muutoslokin säilytys (kk)', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
+        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
         if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot'), true)) return $v === '1' ? 'kyllä' : 'ei';
@@ -170,6 +171,15 @@ function jr_page_settings() {
                 </template>
                 <p><button type="button" class="button" id="jr-laji-add">+ Lisää jäsenluokka</button></p>
                 <p class="description">Jos poistat luokan, sen jäsenet siirtyvät välilehdelle ”Ilman jäsenluokkaa”, josta heille voi valita uuden luokan joukkona. Luokan voi nimetä uudelleen – jäsenet pysyvät siinä.</p>
+            </div>
+
+            <div class="jr-panel" id="jr-paperi-asetukset">
+                <h2>Paperilaskut</h2>
+                <p class="description">Paperilaskun saavat jäsenet, joille on valittu ”Haluaa laskun paperilla”, sekä jäsenet ilman sähköpostia.</p>
+                <p><label for="jr-postimaksu">Postimaksu (€)</label>
+                   <input type="text" id="jr-postimaksu" name="postimaksu" inputmode="decimal" style="max-width:140px" value="<?php echo esc_attr(number_format((float) $s['postimaksu'], 2, ',', '')); ?>" placeholder="0,00">
+                   <span class="description">Lisätään jäsenmaksuun vain paperilaskun saajille, esim. postimerkin ja kirjekuoren hinta. 0 = ei postimaksua. Summaa voi muuttaa laskua tehdessä.
+                   Postimaksu näkyy laskussa omana rivinään, ja se on mukana QR- ja viivakoodin summassa. Sähköpostilaskuihin sitä ei lisätä.</span></p>
             </div>
 
             <div class="jr-panel" id="jr-lisakentat">

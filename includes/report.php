@@ -80,11 +80,14 @@ function jr_report_data($year) {
 
     // Kassaan vuoden aikana (maksupäivän mukaan, myös aiempien vuosien laskuista)
     $kassa = $wpdb->get_results($wpdb->prepare(
-        "SELECT l.nimi, COUNT(*) AS n, SUM(COALESCE(r.maksettu_summa, r.summa)) AS summa FROM $rt r JOIN $lt l ON l.id = r.lasku_id "
+        "SELECT l.nimi, COUNT(*) AS n, SUM(COALESCE(r.maksettu_summa, r.summa)) AS summa, SUM(r.postimaksu) AS posti FROM $rt r JOIN $lt l ON l.id = r.lasku_id "
         . "WHERE r.maksettu BETWEEN %s AND %s GROUP BY l.id, l.nimi ORDER BY MIN(l.laskupvm), l.id", $alku, $loppu
     ));
 
-    return compact('year', 'raja', 'edel', 'j', 'ero_ei_pvm', 'ei_liitt', 'laskut', 'luokat', 'kassa', 'today');
+    $posti = 0;
+    foreach ($kassa as $k) $posti += (float) $k->posti;
+
+    return compact('year', 'raja', 'edel', 'j', 'ero_ei_pvm', 'ei_liitt', 'laskut', 'luokat', 'kassa', 'posti', 'today');
 }
 
 function jr_report_laji_label($k) {
@@ -129,9 +132,9 @@ function jr_handle_report_xlsx() {
         array(JR_Xlsx::text('Yhteensä', JR_Xlsx::S_BOLD), $sumf('B'), $sumf('C'), $sumf('D', true), $sumf('E', true), $sumf('F', true)));
 
     $rows = array();
-    foreach ($d['kassa'] as $k) $rows[] = array($T($k->nimi), (int) $k->n, JR_Xlsx::money($k->summa));
-    $x->add_sheet('Kertymä ' . $year, array('Lasku', 'Maksuja', 'Kertynyt € (maksupäivä ' . $year . ')'), $rows, array(30, 10, 26),
-        array(JR_Xlsx::text('Yhteensä', JR_Xlsx::S_BOLD), $sumf('B'), $sumf('C', true)));
+    foreach ($d['kassa'] as $k) $rows[] = array($T($k->nimi), (int) $k->n, JR_Xlsx::money($k->summa), JR_Xlsx::money($k->posti), JR_Xlsx::money($k->summa - $k->posti));
+    $x->add_sheet('Kertymä ' . $year, array('Lasku', 'Maksuja', 'Kertynyt € (maksupäivä ' . $year . ')', 'Josta postimaksuja €', 'Jäsenmaksuja €'), $rows, array(30, 10, 26, 20, 16),
+        array(JR_Xlsx::text('Yhteensä', JR_Xlsx::S_BOLD), $sumf('B'), $sumf('C', true), $sumf('D', true), $sumf('E', true)));
 
     $bin = $x->build();
     jr_log('vienti', 0, 'vienti', 'Vuosiraportti ' . $year . ' Exceliin');
@@ -240,13 +243,16 @@ function jr_page_report() {
                 <p class="jr-muted">Vuonna <?php echo (int) $year; ?> ei kirjattu maksuja.</p>
             <?php else: ?>
             <table class="widefat striped jr-table jr-num">
-                <thead><tr><th>Lasku</th><th>Maksuja</th><th>Kertynyt</th></tr></thead>
+                <?php $pc = $d['posti'] > 0; ?>
+                <thead><tr><th>Lasku</th><th>Maksuja</th><th>Kertynyt</th><?php if ($pc): ?><th>Josta postimaksuja</th><th>Jäsenmaksuja</th><?php endif; ?></tr></thead>
                 <tbody>
                 <?php foreach ($d['kassa'] as $k): ?>
-                    <tr><td><?php echo esc_html($k->nimi); ?></td><td><?php echo (int) $k->n; ?></td><td><?php echo esc_html(jr_money($k->summa)); ?></td></tr>
+                    <tr><td><?php echo esc_html($k->nimi); ?></td><td><?php echo (int) $k->n; ?></td><td><?php echo esc_html(jr_money($k->summa)); ?></td>
+                        <?php if ($pc): ?><td><?php echo esc_html(jr_money($k->posti)); ?></td><td><?php echo esc_html(jr_money($k->summa - $k->posti)); ?></td><?php endif; ?></tr>
                 <?php endforeach; ?>
                 </tbody>
-                <tfoot><tr><th>Yhteensä</th><th><?php echo (int) $sum($d['kassa'], 'n'); ?></th><th><?php echo esc_html(jr_money($kassa)); ?></th></tr></tfoot>
+                <tfoot><tr><th>Yhteensä</th><th><?php echo (int) $sum($d['kassa'], 'n'); ?></th><th><?php echo esc_html(jr_money($kassa)); ?></th>
+                    <?php if ($pc): ?><th><?php echo esc_html(jr_money($d['posti'])); ?></th><th><?php echo esc_html(jr_money($kassa - $d['posti'])); ?></th><?php endif; ?></tr></tfoot>
             </table>
             <p class="description">Maksupäivän mukaan vuonna <?php echo (int) $year; ?> kirjatut maksut, myös aiempien vuosien laskuista. Vertaa kirjanpidon jäsenmaksutuottoihin.</p>
             <?php endif; ?>

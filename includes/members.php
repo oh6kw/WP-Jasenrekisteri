@@ -287,7 +287,7 @@ function jr_member_form($id) {
             $lajit = jr_jasenlajit(); ?>
         <fieldset class="jr-fieldset" id="jr-laskulle">
             <legend>Jäsenmaksu jo tehdyltä laskulta</legend>
-            <p class="description"><?php echo $m ? 'Jäsen ei ole alla olevilla laskuilla.' : 'Jos jäsen liittyy jäsenmaksulaskujen lähettämisen jälkeen, hänet voi lisätä jo tehdylle laskulle.'; ?> Hän saa oman viitenumeron, ja eräpäivä on vähintään kolmen viikon päästä. Summaa voi muuttaa, esim. jos kauden aikana liittyvältä peritään vain osa jäsenmaksusta.</p>
+            <p class="description"><?php echo $m ? 'Jäsen ei ole alla olevilla laskuilla.' : 'Jos jäsen liittyy jäsenmaksulaskujen lähettämisen jälkeen, hänet voi lisätä jo tehdylle laskulle.'; ?> Hän saa oman viitenumeron, ja eräpäivä on vähintään kolmen viikon päästä. Summaa voi muuttaa, esim. jos kauden aikana liittyvältä peritään vain osa jäsenmaksusta. Paperilaskun saajalle summaan lisätään laskun postimaksu.</p>
             <?php foreach ($ehdokkaat as $l):
                 $hinnat = jr_lasku_hinnat($l);
                 $map = array('' => (float) $l->summa);
