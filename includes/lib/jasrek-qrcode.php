@@ -1,9 +1,10 @@
 <?php
-// Vendored from https://github.com/kazuhikoarase/qrcode-generator (MIT). Class and constant names prefixed with JR_ to avoid clashes with other plugins.
+// Vendored from https://github.com/kazuhikoarase/qrcode-generator (MIT). Class and constant names prefixed with JASREK_ to avoid clashes with other plugins.
+// Modified: unused image/HTML/SVG output functions removed, errors raised as exceptions.
 if (!defined("ABSPATH")) exit;
 
 //---------------------------------------------------------------
-// JR_QRCode for PHP5
+// JASREK_QRCode for PHP5
 //
 // Copyright (c) 2009 Kazuhiko Arase
 //
@@ -19,13 +20,13 @@ if (!defined("ABSPATH")) exit;
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------
-// JR_QRCode
+// JASREK_QRCode
 //---------------------------------------------------------------
 
-define("JR_QR_PAD0", 0xEC);
-define("JR_QR_PAD1", 0x11);
+define("JASREK_QR_PAD0", 0xEC);
+define("JASREK_QR_PAD1", 0x11);
 
-class JR_QRCode {
+class JASREK_QRCode {
 
     var $typeNumber;
 
@@ -39,7 +40,7 @@ class JR_QRCode {
 
     function __construct() {
         $this->typeNumber = 1;
-        $this->errorCorrectLevel = JR_QR_ERROR_CORRECT_LEVEL_H;
+        $this->errorCorrectLevel = JASREK_QR_ERROR_CORRECT_LEVEL_H;
         $this->qrDataList = array();
     }
 
@@ -62,29 +63,29 @@ class JR_QRCode {
     function addData($data, $mode = 0) {
 
         if ($mode == 0) {
-            $mode = JR_QRUtil::getMode($data);
+            $mode = JASREK_QRUtil::getMode($data);
         }
 
         switch($mode) {
 
-        case JR_QR_MODE_NUMBER :
-            $this->addDataImpl(new JR_QRNumber($data) );
+        case JASREK_QR_MODE_NUMBER :
+            $this->addDataImpl(new JASREK_QRNumber($data) );
             break;
 
-        case JR_QR_MODE_ALPHA_NUM :
-            $this->addDataImpl(new JR_QRAlphaNum($data) );
+        case JASREK_QR_MODE_ALPHA_NUM :
+            $this->addDataImpl(new JASREK_QRAlphaNum($data) );
             break;
 
-        case JR_QR_MODE_8BIT_BYTE :
-            $this->addDataImpl(new JR_QR8BitByte($data) );
+        case JASREK_QR_MODE_8BIT_BYTE :
+            $this->addDataImpl(new JASREK_QR8BitByte($data) );
             break;
 
-        case JR_QR_MODE_KANJI :
-            $this->addDataImpl(new JR_QRKanji($data) );
+        case JASREK_QR_MODE_KANJI :
+            $this->addDataImpl(new JASREK_QRKanji($data) );
             break;
 
         default :
-            trigger_error("mode:$mode", E_USER_ERROR);
+            throw new Exception(esc_html("mode:$mode"));
         }
     }
 
@@ -139,7 +140,7 @@ class JR_QRCode {
 
             $this->makeImpl(true, $i);
 
-            $lostPoint = JR_QRUtil::getLostPoint($this);
+            $lostPoint = JASREK_QRUtil::getLostPoint($this);
 
             if ($i == 0 || $minLostPoint > $lostPoint) {
                 $minLostPoint = $lostPoint;
@@ -164,7 +165,7 @@ class JR_QRCode {
 
         $this->modules = array();
         for ($i = 0; $i < $this->moduleCount; $i++) {
-            $this->modules[] = JR_QRCode::createNullArray($this->moduleCount);
+            $this->modules[] = JASREK_QRCode::createNullArray($this->moduleCount);
         }
 
         $this->setupPositionProbePattern(0, 0);
@@ -182,7 +183,7 @@ class JR_QRCode {
 
         $dataArray = $this->qrDataList;
 
-        $data = JR_QRCode::createData($this->typeNumber, $this->errorCorrectLevel, $dataArray);
+        $data = JASREK_QRCode::createData($this->typeNumber, $this->errorCorrectLevel, $dataArray);
 
         $this->mapData($data, $maskPattern);
     }
@@ -210,7 +211,7 @@ class JR_QRCode {
                             $dark = ( ( ($data[$byteIndex] >> $bitIndex) & 1) == 1);
                         }
 
-                        if (JR_QRUtil::getMask($maskPattern, $row, $col - $c)) {
+                        if (JASREK_QRUtil::getMask($maskPattern, $row, $col - $c)) {
                             $dark = !$dark;
                         }
 
@@ -237,7 +238,7 @@ class JR_QRCode {
 
     function setupPositionAdjustPattern() {
 
-        $pos = JR_QRUtil::getPatternPosition($this->typeNumber);
+        $pos = JASREK_QRUtil::getPatternPosition($this->typeNumber);
 
         for ($i = 0; $i < count($pos); $i++) {
 
@@ -295,7 +296,7 @@ class JR_QRCode {
 
     function setupTypeNumber($test) {
 
-        $bits = JR_QRUtil::getBCHTypeNumber($this->typeNumber);
+        $bits = JASREK_QRUtil::getBCHTypeNumber($this->typeNumber);
 
         for ($i = 0; $i < 18; $i++) {
             $mod = (!$test && ( ($bits >> $i) & 1) == 1);
@@ -307,7 +308,7 @@ class JR_QRCode {
     function setupTypeInfo($test, $maskPattern) {
 
         $data = ($this->errorCorrectLevel << 3) | $maskPattern;
-        $bits = JR_QRUtil::getBCHTypeInfo($data);
+        $bits = JASREK_QRUtil::getBCHTypeInfo($data);
 
         for ($i = 0; $i < 15; $i++) {
 
@@ -335,12 +336,12 @@ class JR_QRCode {
 
     function createData($typeNumber, $errorCorrectLevel, $dataArray) {
 
-        $rsBlocks = JR_QRRSBlock::getRSBlocks($typeNumber, $errorCorrectLevel);
+        $rsBlocks = JASREK_QRRSBlock::getRSBlocks($typeNumber, $errorCorrectLevel);
 
-        $buffer = new JR_QRBitBuffer();
+        $buffer = new JASREK_QRBitBuffer();
 
         for ($i = 0; $i < count($dataArray); $i++) {
-            /** @var \JR_QRData $data */
+            /** @var \JASREK_QRData $data */
             $data = $dataArray[$i];
             $buffer->put($data->getMode(), 4);
             $buffer->put($data->getLength(), $data->getLengthInBits($typeNumber) );
@@ -353,11 +354,11 @@ class JR_QRCode {
         }
 
         if ($buffer->getLengthInBits() > $totalDataCount * 8) {
-            trigger_error("code length overflow. ("
+            throw new Exception(esc_html("code length overflow. ("
                 . $buffer->getLengthInBits()
                 . ">"
                 .  $totalDataCount * 8
-                . ")", E_USER_ERROR);
+                . ")"));
         }
 
         // end code.
@@ -376,20 +377,20 @@ class JR_QRCode {
             if ($buffer->getLengthInBits() >= $totalDataCount * 8) {
                 break;
             }
-            $buffer->put(JR_QR_PAD0, 8);
+            $buffer->put(JASREK_QR_PAD0, 8);
 
             if ($buffer->getLengthInBits() >= $totalDataCount * 8) {
                 break;
             }
-            $buffer->put(JR_QR_PAD1, 8);
+            $buffer->put(JASREK_QR_PAD1, 8);
         }
 
-        return JR_QRCode::createBytes($buffer, $rsBlocks);
+        return JASREK_QRCode::createBytes($buffer, $rsBlocks);
     }
 
     /**
-     * @param \JR_QRBitBuffer $buffer
-     * @param \JR_QRRSBlock[] $rsBlocks
+     * @param \JASREK_QRBitBuffer $buffer
+     * @param \JASREK_QRRSBlock[] $rsBlocks
      *
      * @return array
      */
@@ -400,8 +401,8 @@ class JR_QRCode {
         $maxDcCount = 0;
         $maxEcCount = 0;
 
-        $dcdata = JR_QRCode::createNullArray(count($rsBlocks) );
-        $ecdata = JR_QRCode::createNullArray(count($rsBlocks) );
+        $dcdata = JASREK_QRCode::createNullArray(count($rsBlocks) );
+        $ecdata = JASREK_QRCode::createNullArray(count($rsBlocks) );
 
         $rsBlockCount = count($rsBlocks);
         for ($r = 0; $r < $rsBlockCount; $r++) {
@@ -412,7 +413,7 @@ class JR_QRCode {
             $maxDcCount = max($maxDcCount, $dcCount);
             $maxEcCount = max($maxEcCount, $ecCount);
 
-            $dcdata[$r] = JR_QRCode::createNullArray($dcCount);
+            $dcdata[$r] = JASREK_QRCode::createNullArray($dcCount);
             $dcDataCount = count($dcdata[$r]);
             for ($i = 0; $i < $dcDataCount; $i++) {
                 $bdata = $buffer->getBuffer();
@@ -420,11 +421,11 @@ class JR_QRCode {
             }
             $offset += $dcCount;
 
-            $rsPoly = JR_QRUtil::getErrorCorrectPolynomial($ecCount);
-            $rawPoly = new JR_QRPolynomial($dcdata[$r], $rsPoly->getLength() - 1);
+            $rsPoly = JASREK_QRUtil::getErrorCorrectPolynomial($ecCount);
+            $rawPoly = new JASREK_QRPolynomial($dcdata[$r], $rsPoly->getLength() - 1);
 
             $modPoly = $rawPoly->mod($rsPoly);
-            $ecdata[$r] = JR_QRCode::createNullArray($rsPoly->getLength() - 1);
+            $ecdata[$r] = JASREK_QRCode::createNullArray($rsPoly->getLength() - 1);
 
             $ecDataCount = count($ecdata[$r]);
             for ($i = 0; $i < $ecDataCount; $i++) {
@@ -438,7 +439,7 @@ class JR_QRCode {
             $totalCodeCount += $rsBlocks[$i]->getTotalCount();
         }
 
-        $data = JR_QRCode::createNullArray($totalCodeCount);
+        $data = JASREK_QRCode::createNullArray($totalCodeCount);
 
         $index = 0;
 
@@ -463,9 +464,9 @@ class JR_QRCode {
 
     static function getMinimumQRCode($data, $errorCorrectLevel) {
 
-        $mode = JR_QRUtil::getMode($data);
+        $mode = JASREK_QRUtil::getMode($data);
 
-        $qr = new JR_QRCode();
+        $qr = new JASREK_QRCode();
         $qr->setErrorCorrectLevel($errorCorrectLevel);
         $qr->addData($data, $mode);
 
@@ -473,7 +474,7 @@ class JR_QRCode {
         $length = $qrData->getLength();
 
         for ($typeNumber = 1; $typeNumber <= 40; $typeNumber++) {
-            if ($length <= JR_QRUtil::getMaxLength($typeNumber, $mode, $errorCorrectLevel) ) {
+            if ($length <= JASREK_QRUtil::getMaxLength($typeNumber, $mode, $errorCorrectLevel) ) {
                 $qr->setTypeNumber($typeNumber);
                 break;
             }
@@ -487,106 +488,24 @@ class JR_QRCode {
     // added $fg (foreground), $bg (background), and $bgtrans (use transparent bg) parameters
     // also added some simple error checking on parameters
     // updated 2015.07.27 ~ DoktorJ
-    function createImage($size = 2, $margin = 2, $fg = 0x000000, $bg = 0xFFFFFF, $bgtrans = false) {
-
-        // size/margin EC
-        if (!is_numeric($size)) $size = 2;
-        if (!is_numeric($margin)) $margin = 2;
-        if ($size < 1) $size = 1;
-        if ($margin < 0) $margin = 0;
-
-        $image_size = $this->getModuleCount() * $size + $margin * 2;
-
-        $image = imagecreatetruecolor($image_size, $image_size);
-
-        // fg/bg EC
-        if ($fg < 0 || $fg > 0xFFFFFF) $fg = 0x0;
-        if ($bg < 0 || $bg > 0xFFFFFF) $bg = 0xFFFFFF;
-
-        // convert hexadecimal RGB to arrays for imagecolorallocate
-        $fgrgb = $this->hex2rgb($fg);
-        $bgrgb = $this->hex2rgb($bg);
-
-        // replace $black and $white with $fgc and $bgc
-        $fgc = imagecolorallocate($image, $fgrgb['r'], $fgrgb['g'], $fgrgb['b']);
-        $bgc = imagecolorallocate($image, $bgrgb['r'], $bgrgb['g'], $bgrgb['b']);
-        if ($bgtrans) imagecolortransparent($image, $bgc);
-
-        // update $white to $bgc
-        imagefilledrectangle($image, 0, 0, $image_size, $image_size, $bgc);
-
-        for ($r = 0; $r < $this->getModuleCount(); $r++) {
-            for ($c = 0; $c < $this->getModuleCount(); $c++) {
-                if ($this->isDark($r, $c) ) {
-
-                    // update $black to $fgc
-                    imagefilledrectangle($image,
-                        $margin + $c * $size,
-                        $margin + $r * $size,
-                        $margin + ($c + 1) * $size - 1,
-                        $margin + ($r + 1) * $size - 1,
-                        $fgc);
-                }
-            }
-        }
-
-        return $image;
-    }
-
-    function printHTML($size = "2px") {
-
-        $style = "border-style:none;border-collapse:collapse;margin:0px;padding:0px;";
-
-        print("<table style='$style'>");
-
-        for ($r = 0; $r < $this->getModuleCount(); $r++) {
-
-            print("<tr style='$style'>");
-
-            for ($c = 0; $c < $this->getModuleCount(); $c++) {
-                $color = $this->isDark($r, $c)? "#000000" : "#ffffff";
-                print("<td style='$style;width:$size;height:$size;background-color:$color'></td>");
-            }
-
-            print("</tr>");
-        }
-
-        print("</table>");
-    }
-
-    public function printSVG($size = 2)
-    {
-        $width = $this->getModuleCount() * $size;
-        $height = $width;
-        print('<svg width="' . $width . '" height="' . $height . '" viewBox="0 0 ' . $width . ' ' . $height . '" xmlns="http://www.w3.org/2000/svg">');
-
-        for ($r = 0; $r < $this->getModuleCount(); $r++) {
-            for ($c = 0; $c < $this->getModuleCount(); $c++) {
-                $color = $this->isDark($r, $c) ? "#000000" : "#ffffff";
-                print('<rect x="' . ($c * $size) . '" y="' . ($r * $size) . '" width="' . $size . '" height="' . $size . '" fill="' . $color . '" shape-rendering="crispEdges"/>');
-            }
-        }
-
-        print("</svg>");
-    }
 }
 
 //---------------------------------------------------------------
-// JR_QRUtil
+// JASREK_QRUtil
 //---------------------------------------------------------------
 
-define("JR_QR_G15", (1 << 10) | (1 << 8) | (1 << 5)
+define("JASREK_QR_G15", (1 << 10) | (1 << 8) | (1 << 5)
     | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0) );
 
-define("JR_QR_G18", (1 << 12) | (1 << 11) | (1 << 10)
+define("JASREK_QR_G18", (1 << 12) | (1 << 11) | (1 << 10)
     | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0) );
 
-define("JR_QR_G15_MASK", (1 << 14) | (1 << 12) | (1 << 10)
+define("JASREK_QR_G15_MASK", (1 << 14) | (1 << 12) | (1 << 10)
     | (1 << 4) | (1 << 1) );
 
-class JR_QRUtil {
+class JASREK_QRUtil {
 
-    static $JR_QR_MAX_LENGTH = array(
+    static $JASREK_QR_MAX_LENGTH = array(
         array( array(41,  25,  17,  10),  array(34,  20,  14,  8),   array(27,  16,  11,  7),  array(17,  10,  7,   4) ),
         array( array(77,  47,  32,  20),  array(63,  38,  26,  16),  array(48,  29,  20,  12), array(34,  20,  14,  8) ),
         array( array(127, 77,  53,  32),  array(101, 61,  42,  26),  array(77,  47,  32,  20), array(58,  35,  24,  15) ),
@@ -599,7 +518,7 @@ class JR_QRUtil {
         array( array(652, 395, 271, 167), array(513, 311, 213, 131), array(364, 221, 151, 93), array(288, 174, 119, 74) )
     );
 
-    static $JR_QR_PATTERN_POSITION_TABLE = array(
+    static $JASREK_QR_PATTERN_POSITION_TABLE = array(
         array(),
         array(6, 18),
         array(6, 22),
@@ -643,7 +562,7 @@ class JR_QRUtil {
     );
 
     static function getPatternPosition($typeNumber) {
-        return self::$JR_QR_PATTERN_POSITION_TABLE[$typeNumber - 1];
+        return self::$JASREK_QR_PATTERN_POSITION_TABLE[$typeNumber - 1];
     }
 
     static function getMaxLength($typeNumber, $mode, $errorCorrectLevel) {
@@ -653,32 +572,32 @@ class JR_QRUtil {
         $m = 0;
 
         switch($errorCorrectLevel) {
-        case JR_QR_ERROR_CORRECT_LEVEL_L : $e = 0; break;
-        case JR_QR_ERROR_CORRECT_LEVEL_M : $e = 1; break;
-        case JR_QR_ERROR_CORRECT_LEVEL_Q : $e = 2; break;
-        case JR_QR_ERROR_CORRECT_LEVEL_H : $e = 3; break;
+        case JASREK_QR_ERROR_CORRECT_LEVEL_L : $e = 0; break;
+        case JASREK_QR_ERROR_CORRECT_LEVEL_M : $e = 1; break;
+        case JASREK_QR_ERROR_CORRECT_LEVEL_Q : $e = 2; break;
+        case JASREK_QR_ERROR_CORRECT_LEVEL_H : $e = 3; break;
         default :
-            trigger_error("e:$errorCorrectLevel", E_USER_ERROR);
+            throw new Exception(esc_html("e:$errorCorrectLevel"));
         }
 
         switch($mode) {
-        case JR_QR_MODE_NUMBER    : $m = 0; break;
-        case JR_QR_MODE_ALPHA_NUM : $m = 1; break;
-        case JR_QR_MODE_8BIT_BYTE : $m = 2; break;
-        case JR_QR_MODE_KANJI     : $m = 3; break;
+        case JASREK_QR_MODE_NUMBER    : $m = 0; break;
+        case JASREK_QR_MODE_ALPHA_NUM : $m = 1; break;
+        case JASREK_QR_MODE_8BIT_BYTE : $m = 2; break;
+        case JASREK_QR_MODE_KANJI     : $m = 3; break;
         default :
-            trigger_error("m:$mode", E_USER_ERROR);
+            throw new Exception(esc_html("m:$mode"));
         }
 
-        return self::$JR_QR_MAX_LENGTH[$t][$e][$m];
+        return self::$JASREK_QR_MAX_LENGTH[$t][$e][$m];
     }
 
     static function getErrorCorrectPolynomial($errorCorrectLength) {
 
-        $a = new JR_QRPolynomial(array(1) );
+        $a = new JASREK_QRPolynomial(array(1) );
 
         for ($i = 0; $i < $errorCorrectLength; $i++) {
-            $a = $a->multiply(new JR_QRPolynomial(array(1, JR_QRMath::gexp($i) ) ) );
+            $a = $a->multiply(new JASREK_QRPolynomial(array(1, JASREK_QRMath::gexp($i) ) ) );
         }
 
         return $a;
@@ -688,22 +607,22 @@ class JR_QRUtil {
 
         switch ($maskPattern) {
 
-        case JR_QR_MASK_PATTERN000 : return ($i + $j) % 2 == 0;
-        case JR_QR_MASK_PATTERN001 : return $i % 2 == 0;
-        case JR_QR_MASK_PATTERN010 : return $j % 3 == 0;
-        case JR_QR_MASK_PATTERN011 : return ($i + $j) % 3 == 0;
-        case JR_QR_MASK_PATTERN100 : return (floor($i / 2) + floor($j / 3) ) % 2 == 0;
-        case JR_QR_MASK_PATTERN101 : return ($i * $j) % 2 + ($i * $j) % 3 == 0;
-        case JR_QR_MASK_PATTERN110 : return ( ($i * $j) % 2 + ($i * $j) % 3) % 2 == 0;
-        case JR_QR_MASK_PATTERN111 : return ( ($i * $j) % 3 + ($i + $j) % 2) % 2 == 0;
+        case JASREK_QR_MASK_PATTERN000 : return ($i + $j) % 2 == 0;
+        case JASREK_QR_MASK_PATTERN001 : return $i % 2 == 0;
+        case JASREK_QR_MASK_PATTERN010 : return $j % 3 == 0;
+        case JASREK_QR_MASK_PATTERN011 : return ($i + $j) % 3 == 0;
+        case JASREK_QR_MASK_PATTERN100 : return (floor($i / 2) + floor($j / 3) ) % 2 == 0;
+        case JASREK_QR_MASK_PATTERN101 : return ($i * $j) % 2 + ($i * $j) % 3 == 0;
+        case JASREK_QR_MASK_PATTERN110 : return ( ($i * $j) % 2 + ($i * $j) % 3) % 2 == 0;
+        case JASREK_QR_MASK_PATTERN111 : return ( ($i * $j) % 3 + ($i + $j) % 2) % 2 == 0;
 
         default :
-            trigger_error("mask:$maskPattern", E_USER_ERROR);
+            throw new Exception(esc_html("mask:$maskPattern"));
         }
     }
 
     /**
-     * @param \JR_QRCode $qrCode
+     * @param \JASREK_QRCode $qrCode
      *
      * @return float|int
      */
@@ -811,22 +730,22 @@ class JR_QRUtil {
     }
 
     static function getMode($s) {
-        if (JR_QRUtil::isAlphaNum($s) ) {
-            if (JR_QRUtil::isNumber($s) ) {
-                return JR_QR_MODE_NUMBER;
+        if (JASREK_QRUtil::isAlphaNum($s) ) {
+            if (JASREK_QRUtil::isNumber($s) ) {
+                return JASREK_QR_MODE_NUMBER;
             }
-            return JR_QR_MODE_ALPHA_NUM;
-        } else if (JR_QRUtil::isKanji($s) ) {
-            return JR_QR_MODE_KANJI;
+            return JASREK_QR_MODE_ALPHA_NUM;
+        } else if (JASREK_QRUtil::isKanji($s) ) {
+            return JASREK_QR_MODE_KANJI;
         } else {
-            return JR_QR_MODE_8BIT_BYTE;
+            return JASREK_QR_MODE_8BIT_BYTE;
         }
     }
 
     static function isNumber($s) {
         for ($i = 0; $i < strlen($s); $i++) {
             $c = ord($s[$i]);
-            if (!(JR_QRUtil::toCharCode('0') <= $c && $c <= JR_QRUtil::toCharCode('9') ) ) {
+            if (!(JASREK_QRUtil::toCharCode('0') <= $c && $c <= JASREK_QRUtil::toCharCode('9') ) ) {
                 return false;
             }
         }
@@ -836,8 +755,8 @@ class JR_QRUtil {
     static function isAlphaNum($s) {
         for ($i = 0; $i < strlen($s); $i++) {
             $c = ord($s[$i]);
-            if (!(JR_QRUtil::toCharCode('0') <= $c && $c <= JR_QRUtil::toCharCode('9') )
-                && !(JR_QRUtil::toCharCode('A') <= $c && $c <= JR_QRUtil::toCharCode('Z') )
+            if (!(JASREK_QRUtil::toCharCode('0') <= $c && $c <= JASREK_QRUtil::toCharCode('9') )
+                && !(JASREK_QRUtil::toCharCode('A') <= $c && $c <= JASREK_QRUtil::toCharCode('Z') )
                     && strpos(" $%*+-./:", $s[$i]) === false) {
                 return false;
             }
@@ -875,16 +794,16 @@ class JR_QRUtil {
 
     static function getBCHTypeInfo($data) {
         $d = $data << 10;
-        while (JR_QRUtil::getBCHDigit($d) - JR_QRUtil::getBCHDigit(JR_QR_G15) >= 0) {
-            $d ^= (JR_QR_G15 << (JR_QRUtil::getBCHDigit($d) - JR_QRUtil::getBCHDigit(JR_QR_G15) ) );
+        while (JASREK_QRUtil::getBCHDigit($d) - JASREK_QRUtil::getBCHDigit(JASREK_QR_G15) >= 0) {
+            $d ^= (JASREK_QR_G15 << (JASREK_QRUtil::getBCHDigit($d) - JASREK_QRUtil::getBCHDigit(JASREK_QR_G15) ) );
         }
-        return ( ($data << 10) | $d) ^ JR_QR_G15_MASK;
+        return ( ($data << 10) | $d) ^ JASREK_QR_G15_MASK;
     }
 
     static function getBCHTypeNumber($data) {
         $d = $data << 12;
-        while (JR_QRUtil::getBCHDigit($d) - JR_QRUtil::getBCHDigit(JR_QR_G18) >= 0) {
-            $d ^= (JR_QR_G18 << (JR_QRUtil::getBCHDigit($d) - JR_QRUtil::getBCHDigit(JR_QR_G18) ) );
+        while (JASREK_QRUtil::getBCHDigit($d) - JASREK_QRUtil::getBCHDigit(JASREK_QR_G18) >= 0) {
+            $d ^= (JASREK_QR_G18 << (JASREK_QRUtil::getBCHDigit($d) - JASREK_QRUtil::getBCHDigit(JASREK_QR_G18) ) );
         }
         return ($data << 12) | $d;
     }
@@ -903,15 +822,15 @@ class JR_QRUtil {
 }
 
 //---------------------------------------------------------------
-// JR_QRRSBlock
+// JASREK_QRRSBlock
 //---------------------------------------------------------------
 
-class JR_QRRSBlock {
+class JASREK_QRRSBlock {
 
     var $totalCount;
     var $dataCount;
 
-    static $JR_QR_RS_BLOCK_TABLE = array(
+    static $JASREK_QR_RS_BLOCK_TABLE = array(
 
         // L
         // M
@@ -1175,7 +1094,7 @@ class JR_QRRSBlock {
 
     static function getRSBlocks($typeNumber, $errorCorrectLevel) {
 
-        $rsBlock = JR_QRRSBlock::getRsBlockTable($typeNumber, $errorCorrectLevel);
+        $rsBlock = JASREK_QRRSBlock::getRsBlockTable($typeNumber, $errorCorrectLevel);
         $length = count($rsBlock) / 3;
 
         $list = array();
@@ -1187,7 +1106,7 @@ class JR_QRRSBlock {
             $dataCount  = $rsBlock[$i * 3 + 2];
 
             for ($j = 0; $j < $count; $j++) {
-                $list[] = new JR_QRRSBlock($totalCount, $dataCount);
+                $list[] = new JASREK_QRRSBlock($totalCount, $dataCount);
             }
         }
 
@@ -1197,28 +1116,28 @@ class JR_QRRSBlock {
     static function getRsBlockTable($typeNumber, $errorCorrectLevel) {
 
         switch($errorCorrectLevel) {
-        case JR_QR_ERROR_CORRECT_LEVEL_L :
-            return self::$JR_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 0];
-        case JR_QR_ERROR_CORRECT_LEVEL_M :
-            return self::$JR_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 1];
-        case JR_QR_ERROR_CORRECT_LEVEL_Q :
-            return self::$JR_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 2];
-        case JR_QR_ERROR_CORRECT_LEVEL_H :
-            return self::$JR_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 3];
+        case JASREK_QR_ERROR_CORRECT_LEVEL_L :
+            return self::$JASREK_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 0];
+        case JASREK_QR_ERROR_CORRECT_LEVEL_M :
+            return self::$JASREK_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 1];
+        case JASREK_QR_ERROR_CORRECT_LEVEL_Q :
+            return self::$JASREK_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 2];
+        case JASREK_QR_ERROR_CORRECT_LEVEL_H :
+            return self::$JASREK_QR_RS_BLOCK_TABLE[($typeNumber - 1) * 4 + 3];
         default :
-            trigger_error("tn:$typeNumber/ecl:$errorCorrectLevel", E_USER_ERROR);
+            throw new Exception(esc_html("tn:$typeNumber/ecl:$errorCorrectLevel"));
         }
     }
 }
 
 //---------------------------------------------------------------
-// JR_QRNumber
+// JASREK_QRNumber
 //---------------------------------------------------------------
 
-class JR_QRNumber extends JR_QRData {
+class JASREK_QRNumber extends JASREK_QRData {
 
     function __construct($data) {
-        parent::__construct(JR_QR_MODE_NUMBER, $data);
+        parent::__construct(JASREK_QR_MODE_NUMBER, $data);
     }
 
     function write(&$buffer) {
@@ -1228,7 +1147,7 @@ class JR_QRNumber extends JR_QRData {
         $i = 0;
 
         while ($i + 2 < strlen($data) ) {
-            $num = JR_QRNumber::parseInt(substr($data, $i, 3) );
+            $num = JASREK_QRNumber::parseInt(substr($data, $i, 3) );
             $buffer->put($num, 10);
             $i += 3;
         }
@@ -1236,10 +1155,10 @@ class JR_QRNumber extends JR_QRData {
         if ($i < strlen($data) ) {
 
             if (strlen($data) - $i == 1) {
-                $num = JR_QRNumber::parseInt(substr($data, $i, $i + 1) );
+                $num = JASREK_QRNumber::parseInt(substr($data, $i, $i + 1) );
                 $buffer->put($num, 4);
             } else if (strlen($data) - $i == 2) {
-                $num = JR_QRNumber::parseInt(substr($data, $i, $i + 2) );
+                $num = JASREK_QRNumber::parseInt(substr($data, $i, $i + 2) );
                 $buffer->put($num, 7);
             }
         }
@@ -1249,29 +1168,29 @@ class JR_QRNumber extends JR_QRData {
 
         $num = 0;
         for ($i = 0; $i < strlen($s); $i++) {
-            $num = $num * 10 + JR_QRNumber::parseIntAt(ord($s[$i]) );
+            $num = $num * 10 + JASREK_QRNumber::parseIntAt(ord($s[$i]) );
         }
         return $num;
     }
 
     static function parseIntAt($c) {
 
-        if (JR_QRUtil::toCharCode('0') <= $c && $c <= JR_QRUtil::toCharCode('9') ) {
-            return $c - JR_QRUtil::toCharCode('0');
+        if (JASREK_QRUtil::toCharCode('0') <= $c && $c <= JASREK_QRUtil::toCharCode('9') ) {
+            return $c - JASREK_QRUtil::toCharCode('0');
         }
 
-        trigger_error("illegal char : $c", E_USER_ERROR);
+        throw new Exception(esc_html("illegal char : $c"));
     }
 }
 
 //---------------------------------------------------------------
-// JR_QRKanji
+// JASREK_QRKanji
 //---------------------------------------------------------------
 
-class JR_QRKanji extends JR_QRData {
+class JASREK_QRKanji extends JASREK_QRData {
 
     function __construct($data) {
-        parent::__construct(JR_QR_MODE_KANJI, $data);
+        parent::__construct(JASREK_QR_MODE_KANJI, $data);
     }
 
     function write(&$buffer) {
@@ -1289,7 +1208,7 @@ class JR_QRKanji extends JR_QRData {
             } else if (0xE040 <= $c && $c <= 0xEBBF) {
                 $c -= 0xC140;
             } else {
-                trigger_error("illegal char at " . ($i + 1) . "/$c", E_USER_ERROR);
+                throw new Exception(esc_html("illegal char at " . ($i + 1) . "/$c"));
             }
 
             $c = ( ($c >> 8) & 0xff) * 0xC0 + ($c & 0xff);
@@ -1300,7 +1219,7 @@ class JR_QRKanji extends JR_QRData {
         }
 
         if ($i < strlen($data) ) {
-            trigger_error("illegal char at " . ($i + 1), E_USER_ERROR);
+            throw new Exception(esc_html("illegal char at " . ($i + 1)));
         }
     }
 
@@ -1310,13 +1229,13 @@ class JR_QRKanji extends JR_QRData {
 }
 
 //---------------------------------------------------------------
-// JR_QRAlphaNum
+// JASREK_QRAlphaNum
 //---------------------------------------------------------------
 
-class JR_QRAlphaNum extends JR_QRData {
+class JASREK_QRAlphaNum extends JASREK_QRData {
 
     function __construct($data) {
-        parent::__construct(JR_QR_MODE_ALPHA_NUM, $data);
+        parent::__construct(JASREK_QR_MODE_ALPHA_NUM, $data);
     }
 
     function write(&$buffer) {
@@ -1325,37 +1244,37 @@ class JR_QRAlphaNum extends JR_QRData {
         $c = $this->getData();
 
         while ($i + 1 < strlen($c) ) {
-            $buffer->put(JR_QRAlphaNum::getCode(ord($c[$i]) ) * 45
-                + JR_QRAlphaNum::getCode(ord($c[$i + 1]) ), 11);
+            $buffer->put(JASREK_QRAlphaNum::getCode(ord($c[$i]) ) * 45
+                + JASREK_QRAlphaNum::getCode(ord($c[$i + 1]) ), 11);
             $i += 2;
         }
 
         if ($i < strlen($c) ) {
-            $buffer->put(JR_QRAlphaNum::getCode(ord($c[$i])), 6);
+            $buffer->put(JASREK_QRAlphaNum::getCode(ord($c[$i])), 6);
         }
     }
 
     static function getCode($c) {
 
-        if (JR_QRUtil::toCharCode('0') <= $c
-                && $c <= JR_QRUtil::toCharCode('9') ) {
-            return $c - JR_QRUtil::toCharCode('0');
-        } else if (JR_QRUtil::toCharCode('A') <= $c
-                && $c <= JR_QRUtil::toCharCode('Z') ) {
-            return $c - JR_QRUtil::toCharCode('A') + 10;
+        if (JASREK_QRUtil::toCharCode('0') <= $c
+                && $c <= JASREK_QRUtil::toCharCode('9') ) {
+            return $c - JASREK_QRUtil::toCharCode('0');
+        } else if (JASREK_QRUtil::toCharCode('A') <= $c
+                && $c <= JASREK_QRUtil::toCharCode('Z') ) {
+            return $c - JASREK_QRUtil::toCharCode('A') + 10;
         } else {
             switch ($c) {
-            case JR_QRUtil::toCharCode(' ') : return 36;
-            case JR_QRUtil::toCharCode('$') : return 37;
-            case JR_QRUtil::toCharCode('%') : return 38;
-            case JR_QRUtil::toCharCode('*') : return 39;
-            case JR_QRUtil::toCharCode('+') : return 40;
-            case JR_QRUtil::toCharCode('-') : return 41;
-            case JR_QRUtil::toCharCode('.') : return 42;
-            case JR_QRUtil::toCharCode('/') : return 43;
-            case JR_QRUtil::toCharCode(':') : return 44;
+            case JASREK_QRUtil::toCharCode(' ') : return 36;
+            case JASREK_QRUtil::toCharCode('$') : return 37;
+            case JASREK_QRUtil::toCharCode('%') : return 38;
+            case JASREK_QRUtil::toCharCode('*') : return 39;
+            case JASREK_QRUtil::toCharCode('+') : return 40;
+            case JASREK_QRUtil::toCharCode('-') : return 41;
+            case JASREK_QRUtil::toCharCode('.') : return 42;
+            case JASREK_QRUtil::toCharCode('/') : return 43;
+            case JASREK_QRUtil::toCharCode(':') : return 44;
             default :
-                trigger_error("illegal char : $c", E_USER_ERROR);
+                throw new Exception(esc_html("illegal char : $c"));
             }
         }
 
@@ -1363,13 +1282,13 @@ class JR_QRAlphaNum extends JR_QRData {
 }
 
 //---------------------------------------------------------------
-// JR_QR8BitByte
+// JASREK_QR8BitByte
 //---------------------------------------------------------------
 
-class JR_QR8BitByte extends JR_QRData {
+class JASREK_QR8BitByte extends JASREK_QRData {
 
     function __construct($data) {
-        parent::__construct(JR_QR_MODE_8BIT_BYTE, $data);
+        parent::__construct(JASREK_QR_MODE_8BIT_BYTE, $data);
     }
 
     function write(&$buffer) {
@@ -1383,10 +1302,10 @@ class JR_QR8BitByte extends JR_QRData {
 }
 
 //---------------------------------------------------------------
-// JR_QRData
+// JASREK_QRData
 //---------------------------------------------------------------
 
-abstract class JR_QRData {
+abstract class JASREK_QRData {
 
     var $mode;
 
@@ -1413,7 +1332,7 @@ abstract class JR_QRData {
     }
 
     /**
-     * @param \JR_QRBitBuffer $buffer
+     * @param \JASREK_QRBitBuffer $buffer
      */
     abstract function write(&$buffer);
 
@@ -1424,12 +1343,12 @@ abstract class JR_QRData {
             // 1 - 9
 
             switch($this->mode) {
-            case JR_QR_MODE_NUMBER     : return 10;
-            case JR_QR_MODE_ALPHA_NUM     : return 9;
-            case JR_QR_MODE_8BIT_BYTE    : return 8;
-            case JR_QR_MODE_KANJI      : return 8;
+            case JASREK_QR_MODE_NUMBER     : return 10;
+            case JASREK_QR_MODE_ALPHA_NUM     : return 9;
+            case JASREK_QR_MODE_8BIT_BYTE    : return 8;
+            case JASREK_QR_MODE_KANJI      : return 8;
             default :
-                trigger_error("mode:$this->mode", E_USER_ERROR);
+                throw new Exception(esc_html("mode:$this->mode"));
             }
 
         } else if ($type < 27) {
@@ -1437,12 +1356,12 @@ abstract class JR_QRData {
             // 10 - 26
 
             switch($this->mode) {
-            case JR_QR_MODE_NUMBER     : return 12;
-            case JR_QR_MODE_ALPHA_NUM     : return 11;
-            case JR_QR_MODE_8BIT_BYTE    : return 16;
-            case JR_QR_MODE_KANJI      : return 10;
+            case JASREK_QR_MODE_NUMBER     : return 12;
+            case JASREK_QR_MODE_ALPHA_NUM     : return 11;
+            case JASREK_QR_MODE_8BIT_BYTE    : return 16;
+            case JASREK_QR_MODE_KANJI      : return 10;
             default :
-                trigger_error("mode:$this->mode", E_USER_ERROR);
+                throw new Exception(esc_html("mode:$this->mode"));
             }
 
         } else if ($type < 41) {
@@ -1450,49 +1369,49 @@ abstract class JR_QRData {
             // 27 - 40
 
             switch($this->mode) {
-            case JR_QR_MODE_NUMBER     : return 14;
-            case JR_QR_MODE_ALPHA_NUM    : return 13;
-            case JR_QR_MODE_8BIT_BYTE    : return 16;
-            case JR_QR_MODE_KANJI      : return 12;
+            case JASREK_QR_MODE_NUMBER     : return 14;
+            case JASREK_QR_MODE_ALPHA_NUM    : return 13;
+            case JASREK_QR_MODE_8BIT_BYTE    : return 16;
+            case JASREK_QR_MODE_KANJI      : return 12;
             default :
-                trigger_error("mode:$this->mode", E_USER_ERROR);
+                throw new Exception(esc_html("mode:$this->mode"));
             }
 
         } else {
-            trigger_error("mode:$this->mode", E_USER_ERROR);
+            throw new Exception(esc_html("mode:$this->mode"));
         }
     }
 
 }
 
 //---------------------------------------------------------------
-// JR_QRMath
+// JASREK_QRMath
 //---------------------------------------------------------------
 
-class JR_QRMath {
+class JASREK_QRMath {
 
-    static $JR_QR_MATH_EXP_TABLE = null;
-    static $JR_QR_MATH_LOG_TABLE = null;
+    static $JASREK_QR_MATH_EXP_TABLE = null;
+    static $JASREK_QR_MATH_LOG_TABLE = null;
 
     static function init() {
 
-        self::$JR_QR_MATH_EXP_TABLE = JR_QRMath::createNumArray(256);
+        self::$JASREK_QR_MATH_EXP_TABLE = JASREK_QRMath::createNumArray(256);
 
         for ($i = 0; $i < 8; $i++) {
-            self::$JR_QR_MATH_EXP_TABLE[$i] = 1 << $i;
+            self::$JASREK_QR_MATH_EXP_TABLE[$i] = 1 << $i;
         }
 
         for ($i = 8; $i < 256; $i++) {
-            self::$JR_QR_MATH_EXP_TABLE[$i] = self::$JR_QR_MATH_EXP_TABLE[$i - 4]
-                ^ self::$JR_QR_MATH_EXP_TABLE[$i - 5]
-                ^ self::$JR_QR_MATH_EXP_TABLE[$i - 6]
-                ^ self::$JR_QR_MATH_EXP_TABLE[$i - 8];
+            self::$JASREK_QR_MATH_EXP_TABLE[$i] = self::$JASREK_QR_MATH_EXP_TABLE[$i - 4]
+                ^ self::$JASREK_QR_MATH_EXP_TABLE[$i - 5]
+                ^ self::$JASREK_QR_MATH_EXP_TABLE[$i - 6]
+                ^ self::$JASREK_QR_MATH_EXP_TABLE[$i - 8];
         }
 
-        self::$JR_QR_MATH_LOG_TABLE = JR_QRMath::createNumArray(256);
+        self::$JASREK_QR_MATH_LOG_TABLE = JASREK_QRMath::createNumArray(256);
 
         for ($i = 0; $i < 255; $i++) {
-            self::$JR_QR_MATH_LOG_TABLE[self::$JR_QR_MATH_EXP_TABLE[$i] ] = $i;
+            self::$JASREK_QR_MATH_LOG_TABLE[self::$JASREK_QR_MATH_EXP_TABLE[$i] ] = $i;
         }
     }
 
@@ -1507,10 +1426,10 @@ class JR_QRMath {
     static function glog($n) {
 
         if ($n < 1) {
-            trigger_error("log($n)", E_USER_ERROR);
+            throw new Exception(esc_html("log($n)"));
         }
 
-        return self::$JR_QR_MATH_LOG_TABLE[$n];
+        return self::$JASREK_QR_MATH_LOG_TABLE[$n];
     }
 
     static function gexp($n) {
@@ -1523,18 +1442,18 @@ class JR_QRMath {
             $n -= 255;
         }
 
-        return self::$JR_QR_MATH_EXP_TABLE[$n];
+        return self::$JASREK_QR_MATH_EXP_TABLE[$n];
     }
 }
 
 // init static table
-JR_QRMath::init();
+JASREK_QRMath::init();
 
 //---------------------------------------------------------------
-// JR_QRPolynomial
+// JASREK_QRPolynomial
 //---------------------------------------------------------------
 
-class JR_QRPolynomial {
+class JASREK_QRPolynomial {
 
     var $num;
 
@@ -1546,7 +1465,7 @@ class JR_QRPolynomial {
             $offset++;
         }
 
-        $this->num = JR_QRMath::createNumArray(count($num) - $offset + $shift);
+        $this->num = JASREK_QRMath::createNumArray(count($num) - $offset + $shift);
         for ($i = 0; $i < count($num) - $offset; $i++) {
             $this->num[$i] = $num[$i + $offset];
         }
@@ -1587,36 +1506,36 @@ class JR_QRPolynomial {
             if ($i > 0) {
                 $buffer .= ",";
             }
-            $buffer .= JR_QRMath::glog($this->get($i) );
+            $buffer .= JASREK_QRMath::glog($this->get($i) );
         }
 
         return $buffer;
     }
 
     /**
-     * @param \JR_QRPolynomial $e
+     * @param \JASREK_QRPolynomial $e
      *
-     * @return \JR_QRPolynomial
+     * @return \JASREK_QRPolynomial
      */
     function multiply($e) {
 
-        $num = JR_QRMath::createNumArray($this->getLength() + $e->getLength() - 1);
+        $num = JASREK_QRMath::createNumArray($this->getLength() + $e->getLength() - 1);
 
         for ($i = 0; $i < $this->getLength(); $i++) {
-            $vi = JR_QRMath::glog($this->get($i) );
+            $vi = JASREK_QRMath::glog($this->get($i) );
 
             for ($j = 0; $j < $e->getLength(); $j++) {
-                $num[$i + $j] ^= JR_QRMath::gexp($vi + JR_QRMath::glog($e->get($j) ) );
+                $num[$i + $j] ^= JASREK_QRMath::gexp($vi + JASREK_QRMath::glog($e->get($j) ) );
             }
         }
 
-        return new JR_QRPolynomial($num);
+        return new JASREK_QRPolynomial($num);
     }
 
     /**
-     * @param \JR_QRPolynomial $e
+     * @param \JASREK_QRPolynomial $e
      *
-     * @return $this|\JR_QRPolynomial
+     * @return $this|\JASREK_QRPolynomial
      */
     function mod($e) {
 
@@ -1624,18 +1543,18 @@ class JR_QRPolynomial {
             return $this;
         }
 
-        $ratio = JR_QRMath::glog($this->get(0) ) - JR_QRMath::glog($e->get(0) );
+        $ratio = JASREK_QRMath::glog($this->get(0) ) - JASREK_QRMath::glog($e->get(0) );
 
-        $num = JR_QRMath::createNumArray($this->getLength() );
+        $num = JASREK_QRMath::createNumArray($this->getLength() );
         for ($i = 0; $i < $this->getLength(); $i++) {
             $num[$i] = $this->get($i);
         }
 
         for ($i = 0; $i < $e->getLength(); $i++) {
-            $num[$i] ^= JR_QRMath::gexp(JR_QRMath::glog($e->get($i) ) + $ratio);
+            $num[$i] ^= JASREK_QRMath::gexp(JASREK_QRMath::glog($e->get($i) ) + $ratio);
         }
 
-        $newPolynomial = new JR_QRPolynomial($num);
+        $newPolynomial = new JASREK_QRPolynomial($num);
         return $newPolynomial->mod($e);
     }
 }
@@ -1644,42 +1563,42 @@ class JR_QRPolynomial {
 // Mode
 //---------------------------------------------------------------
 
-define("JR_QR_MODE_NUMBER", 1 << 0);
-define("JR_QR_MODE_ALPHA_NUM", 1 << 1);
-define("JR_QR_MODE_8BIT_BYTE", 1 << 2);
-define("JR_QR_MODE_KANJI", 1 << 3);
+define("JASREK_QR_MODE_NUMBER", 1 << 0);
+define("JASREK_QR_MODE_ALPHA_NUM", 1 << 1);
+define("JASREK_QR_MODE_8BIT_BYTE", 1 << 2);
+define("JASREK_QR_MODE_KANJI", 1 << 3);
 
 //---------------------------------------------------------------
 // MaskPattern
 //---------------------------------------------------------------
 
-define("JR_QR_MASK_PATTERN000", 0);
-define("JR_QR_MASK_PATTERN001", 1);
-define("JR_QR_MASK_PATTERN010", 2);
-define("JR_QR_MASK_PATTERN011", 3);
-define("JR_QR_MASK_PATTERN100", 4);
-define("JR_QR_MASK_PATTERN101", 5);
-define("JR_QR_MASK_PATTERN110", 6);
-define("JR_QR_MASK_PATTERN111", 7);
+define("JASREK_QR_MASK_PATTERN000", 0);
+define("JASREK_QR_MASK_PATTERN001", 1);
+define("JASREK_QR_MASK_PATTERN010", 2);
+define("JASREK_QR_MASK_PATTERN011", 3);
+define("JASREK_QR_MASK_PATTERN100", 4);
+define("JASREK_QR_MASK_PATTERN101", 5);
+define("JASREK_QR_MASK_PATTERN110", 6);
+define("JASREK_QR_MASK_PATTERN111", 7);
 
 //---------------------------------------------------------------
 // ErrorCorrectLevel
 
 // 7%.
-define("JR_QR_ERROR_CORRECT_LEVEL_L", 1);
+define("JASREK_QR_ERROR_CORRECT_LEVEL_L", 1);
 // 15%.
-define("JR_QR_ERROR_CORRECT_LEVEL_M", 0);
+define("JASREK_QR_ERROR_CORRECT_LEVEL_M", 0);
 // 25%.
-define("JR_QR_ERROR_CORRECT_LEVEL_Q", 3);
+define("JASREK_QR_ERROR_CORRECT_LEVEL_Q", 3);
 // 30%.
-define("JR_QR_ERROR_CORRECT_LEVEL_H", 2);
+define("JASREK_QR_ERROR_CORRECT_LEVEL_H", 2);
 
 
 //---------------------------------------------------------------
-// JR_QRBitBuffer
+// JASREK_QRBitBuffer
 //---------------------------------------------------------------
 
-class JR_QRBitBuffer {
+class JASREK_QRBitBuffer {
 
     var $buffer;
     var $length;

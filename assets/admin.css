@@ -1,53 +1,53 @@
 /* Jäsenrekisteri – hallinnan tyylit */
-.jr-wrap {
-    --jr-accent: #1d3557;
-    --jr-ok: #1a7f37;      --jr-ok-bg: #e6f4ea;
-    --jr-warn: #9a6700;    --jr-warn-bg: #fff4d6;
-    --jr-err: #b42318;     --jr-err-bg: #fdecea;
-    --jr-info: #1f5fa8;    --jr-info-bg: #e8f0fb;
-    --jr-muted: #646970;   --jr-muted-bg: #f0f0f1;
-    --jr-border: #dcdcde;
+.jasrek-wrap {
+    --jasrek-accent: #1d3557;
+    --jasrek-ok: #1a7f37;      --jasrek-ok-bg: #e6f4ea;
+    --jasrek-warn: #9a6700;    --jasrek-warn-bg: #fff4d6;
+    --jasrek-err: #b42318;     --jasrek-err-bg: #fdecea;
+    --jasrek-info: #1f5fa8;    --jasrek-info-bg: #e8f0fb;
+    --jasrek-muted: #646970;   --jasrek-muted-bg: #f0f0f1;
+    --jasrek-border: #dcdcde;
     max-width: 1280px;
 }
 
 /* Paneelit ja kortit */
-.jr-panel {
+.jasrek-panel {
     background: #fff;
-    border: 1px solid var(--jr-border);
+    border: 1px solid var(--jasrek-border);
     border-radius: 8px;
     padding: 16px 20px;
     margin: 16px 0;
 }
-.jr-panel h2 { margin-top: 0; font-size: 1.15em; }
-.jr-panel > summary { cursor: pointer; }
-.jr-panel[open] > summary { margin-bottom: 12px; }
+.jasrek-panel h2 { margin-top: 0; font-size: 1.15em; }
+.jasrek-panel > summary { cursor: pointer; }
+.jasrek-panel[open] > summary { margin-bottom: 12px; }
 
-.jr-cards {
+.jasrek-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
     gap: 12px;
     margin: 16px 0;
 }
-.jr-card {
+.jasrek-card {
     background: #fff;
-    border: 1px solid var(--jr-border);
-    border-left: 4px solid var(--jr-accent);
+    border: 1px solid var(--jasrek-border);
+    border-left: 4px solid var(--jasrek-accent);
     border-radius: 8px;
     padding: 12px 16px;
     display: flex;
     flex-direction: column;
 }
-.jr-card-num { font-size: 22px; font-weight: 600; line-height: 1.3; color: #1d2327; }
-.jr-card-label { color: var(--jr-muted); font-size: 13px; }
-.jr-card-ok   { border-left-color: var(--jr-ok); }
-.jr-card-warn { border-left-color: #dba617; }
-.jr-card-err  { border-left-color: var(--jr-err); }
+.jasrek-card-num { font-size: 22px; font-weight: 600; line-height: 1.3; color: #1d2327; }
+.jasrek-card-label { color: var(--jasrek-muted); font-size: 13px; }
+.jasrek-card-ok   { border-left-color: var(--jasrek-ok); }
+.jasrek-card-warn { border-left-color: #dba617; }
+.jasrek-card-err  { border-left-color: var(--jasrek-err); }
 
-.jr-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
-@media (max-width: 960px) { .jr-columns { grid-template-columns: 1fr; } }
+.jasrek-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; align-items: start; }
+@media (max-width: 960px) { .jasrek-columns { grid-template-columns: 1fr; } }
 
 /* Työkalurivi */
-.jr-toolbar {
+.jasrek-toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -55,172 +55,172 @@
     gap: 8px;
     margin: 8px 0;
 }
-.jr-toolbar .subsubsub { margin: 0; float: none; }
-.jr-toolbar-right { display: flex; gap: 8px; align-items: center; }
-.jr-tabs li + li::before { content: "|"; color: #a7aaad; padding: 0 4px; }
-.jr-search { min-width: 320px; }
+.jasrek-toolbar .subsubsub { margin: 0; float: none; }
+.jasrek-toolbar-right { display: flex; gap: 8px; align-items: center; }
+.jasrek-tabs li + li::before { content: "|"; color: #a7aaad; padding: 0 4px; }
+.jasrek-search { min-width: 320px; }
 
 /* Taulukot */
-.jr-table td, .jr-table th { vertical-align: middle; }
-.jr-table .jr-col-id { width: 48px; }
-.jr-table .jr-col-actions { text-align: right; white-space: nowrap; }
-.jr-table .jr-col-actions .button { margin: 2px 0 2px 4px; }
-.jr-name { font-weight: 600; }
-.jr-sub { color: var(--jr-muted); font-size: 12px; margin-top: 2px; }
-.jr-err { color: var(--jr-err); }
-.jr-empty { text-align: center; color: var(--jr-muted); padding: 24px !important; }
-.jr-muted { color: var(--jr-muted); }
-.jr-count { margin-top: 8px; }
-.jr-call {
+.jasrek-table td, .jasrek-table th { vertical-align: middle; }
+.jasrek-table .jasrek-col-id { width: 48px; }
+.jasrek-table .jasrek-col-actions { text-align: right; white-space: nowrap; }
+.jasrek-table .jasrek-col-actions .button { margin: 2px 0 2px 4px; }
+.jasrek-name { font-weight: 600; }
+.jasrek-sub { color: var(--jasrek-muted); font-size: 12px; margin-top: 2px; }
+.jasrek-err { color: var(--jasrek-err); }
+.jasrek-empty { text-align: center; color: var(--jasrek-muted); padding: 24px !important; }
+.jasrek-muted { color: var(--jasrek-muted); }
+.jasrek-count { margin-top: 8px; }
+.jasrek-call {
     display: inline-block;
     font-family: Consolas, Menlo, monospace;
     font-weight: 600;
     letter-spacing: .03em;
     background: #f0f6fc;
-    color: var(--jr-accent);
+    color: var(--jasrek-accent);
     border-radius: 4px;
     padding: 0 6px;
     margin-left: 4px;
 }
-.jr-ref { background: transparent; padding: 0; font-size: 13px; white-space: nowrap; }
+.jasrek-ref { background: transparent; padding: 0; font-size: 13px; white-space: nowrap; }
 
 /* Merkit */
-.jr-badge {
+.jasrek-badge {
     display: inline-block;
     font-size: 12px;
     line-height: 1.6;
     padding: 0 8px;
     border-radius: 999px;
     white-space: nowrap;
-    background: var(--jr-muted-bg);
-    color: var(--jr-muted);
+    background: var(--jasrek-muted-bg);
+    color: var(--jasrek-muted);
 }
-.jr-badge-ok    { background: var(--jr-ok-bg);   color: var(--jr-ok); }
-.jr-badge-warn  { background: var(--jr-warn-bg); color: var(--jr-warn); }
-.jr-badge-err   { background: var(--jr-err-bg);  color: var(--jr-err); }
-.jr-badge-info  { background: var(--jr-info-bg); color: var(--jr-info); }
-.jr-badge-lg    { font-size: 13px; padding: 4px 12px; }
+.jasrek-badge-ok    { background: var(--jasrek-ok-bg);   color: var(--jasrek-ok); }
+.jasrek-badge-warn  { background: var(--jasrek-warn-bg); color: var(--jasrek-warn); }
+.jasrek-badge-err   { background: var(--jasrek-err-bg);  color: var(--jasrek-err); }
+.jasrek-badge-info  { background: var(--jasrek-info-bg); color: var(--jasrek-info); }
+.jasrek-badge-lg    { font-size: 13px; padding: 4px 12px; }
 
-.jr-btn-danger { color: var(--jr-err) !important; border-color: #e0b4b0 !important; }
-.jr-btn-danger:hover { background: var(--jr-err-bg) !important; }
+.jasrek-btn-danger { color: var(--jasrek-err) !important; border-color: #e0b4b0 !important; }
+.jasrek-btn-danger:hover { background: var(--jasrek-err-bg) !important; }
 
 /* Lomakkeet */
-.jr-form label { display: block; font-weight: 600; margin-bottom: 4px; }
-.jr-form label.jr-radio, .jr-pick-list label, .jr-member-pick label { font-weight: normal; }
-.jr-form input[type=text], .jr-form input[type=email], .jr-form input[type=tel],
-.jr-form input[type=date], .jr-form select, .jr-form textarea { width: 100%; max-width: 100%; }
-.jr-form textarea { font-family: inherit; }
-.jr-form .description { display: block; margin-top: 4px; }
-.jr-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 20px; }
-.jr-span-2 { grid-column: span 2; }
-@media (max-width: 600px) { .jr-span-2 { grid-column: auto; } }
-.jr-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
-.jr-fieldset { border: 1px solid var(--jr-border); border-radius: 6px; padding: 8px 16px 12px; margin: 16px 0; }
-.jr-fieldset legend { font-weight: 600; padding: 0 6px; }
-.jr-radio { margin: 6px 0; }
-.jr-hint { background: var(--jr-warn-bg); color: #6b4b00; border-radius: 6px; padding: 8px 12px; }
+.jasrek-form label { display: block; font-weight: 600; margin-bottom: 4px; }
+.jasrek-form label.jasrek-radio, .jasrek-pick-list label, .jasrek-member-pick label { font-weight: normal; }
+.jasrek-form input[type=text], .jasrek-form input[type=email], .jasrek-form input[type=tel],
+.jasrek-form input[type=date], .jasrek-form select, .jasrek-form textarea { width: 100%; max-width: 100%; }
+.jasrek-form textarea { font-family: inherit; }
+.jasrek-form .description { display: block; margin-top: 4px; }
+.jasrek-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0 20px; }
+.jasrek-span-2 { grid-column: span 2; }
+@media (max-width: 600px) { .jasrek-span-2 { grid-column: auto; } }
+.jasrek-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.jasrek-fieldset { border: 1px solid var(--jasrek-border); border-radius: 6px; padding: 8px 16px 12px; margin: 16px 0; }
+.jasrek-fieldset legend { font-weight: 600; padding: 0 6px; }
+.jasrek-radio { margin: 6px 0; }
+.jasrek-hint { background: var(--jasrek-warn-bg); color: #6b4b00; border-radius: 6px; padding: 8px 12px; }
 
-.jr-member-pick { margin-top: 8px; }
-.jr-member-pick > p { display: flex; gap: 12px; align-items: center; }
-.jr-member-pick > p label { display: inline; }
-.jr-pick-list {
+.jasrek-member-pick { margin-top: 8px; }
+.jasrek-member-pick > p { display: flex; gap: 12px; align-items: center; }
+.jasrek-member-pick > p label { display: inline; }
+.jasrek-pick-list {
     max-height: 320px;
     overflow: auto;
-    border: 1px solid var(--jr-border);
+    border: 1px solid var(--jasrek-border);
     border-radius: 6px;
     padding: 6px 10px;
     columns: 2 260px;
 }
-.jr-pick-list label { display: block; padding: 3px 0; break-inside: avoid; }
+.jasrek-pick-list label { display: block; padding: 3px 0; break-inside: avoid; }
 
 /* Lähetys ja edistyminen */
-.jr-send-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.jr-progress { margin-top: 14px; }
-.jr-progress-bar { height: 10px; background: var(--jr-muted-bg); border-radius: 999px; overflow: hidden; }
-.jr-progress-bar span { display: block; height: 100%; width: 0; background: var(--jr-accent); transition: width .3s ease; }
-.jr-progress.is-error .jr-progress-bar span { background: #dba617; }
-.jr-progress-text { margin: 8px 0 0; }
-.jr-errors { color: var(--jr-err); margin: 6px 0 0 18px; list-style: disc; }
+.jasrek-send-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.jasrek-progress { margin-top: 14px; }
+.jasrek-progress-bar { height: 10px; background: var(--jasrek-muted-bg); border-radius: 999px; overflow: hidden; }
+.jasrek-progress-bar span { display: block; height: 100%; width: 0; background: var(--jasrek-accent); transition: width .3s ease; }
+.jasrek-progress.is-error .jasrek-progress-bar span { background: #dba617; }
+.jasrek-progress-text { margin: 8px 0 0; }
+.jasrek-errors { color: var(--jasrek-err); margin: 6px 0 0 18px; list-style: disc; }
 
-.jr-meter { display: inline-block; vertical-align: middle; width: 70px; height: 6px; background: var(--jr-muted-bg); border-radius: 999px; overflow: hidden; margin-right: 6px; }
-.jr-meter span { display: block; height: 100%; background: var(--jr-ok); }
+.jasrek-meter { display: inline-block; vertical-align: middle; width: 70px; height: 6px; background: var(--jasrek-muted-bg); border-radius: 999px; overflow: hidden; margin-right: 6px; }
+.jasrek-meter span { display: block; height: 100%; background: var(--jasrek-ok); }
 
-.jr-bulk { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
-.jr-bulk input[type=date] { width: auto; }
+.jasrek-bulk { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 10px 0; }
+.jasrek-bulk input[type=date] { width: auto; }
 
-.jr-empty-state { text-align: center; padding: 40px 20px; }
+.jasrek-empty-state { text-align: center; padding: 40px 20px; }
 
 /* 3.1 */
-.jr-badge-purple { background: #f1ebfb; color: #6b3fa0; }
-.jr-testbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--jr-border); }
-.jr-testbox label { font-weight: 600; margin: 0; }
-.jr-form .jr-testbox input[type=email], .jr-testbox input[type=email] { width: 280px; max-width: 100%; }
-.jr-testbox .description { flex-basis: 100%; margin: 0; }
-.jr-badge-orange { background: #fdebd8; color: #b54708; margin-top: 3px; }
+.jasrek-badge-purple { background: #f1ebfb; color: #6b3fa0; }
+.jasrek-testbox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--jasrek-border); }
+.jasrek-testbox label { font-weight: 600; margin: 0; }
+.jasrek-form .jasrek-testbox input[type=email], .jasrek-testbox input[type=email] { width: 280px; max-width: 100%; }
+.jasrek-testbox .description { flex-basis: 100%; margin: 0; }
+.jasrek-badge-orange { background: #fdebd8; color: #b54708; margin-top: 3px; }
 
 /* 4.0 */
-.jr-badge-laji { background: #e7f3f1; color: #0b6e5f; }
-.jr-lajit { max-width: 640px; margin-bottom: 8px; }
-.jr-lajit input[type=text] { width: 100%; }
-.jr-lajit td { vertical-align: middle; }
-.jr-laji-del { color: var(--jr-err); font-size: 16px; text-decoration: none; }
-.jr-hinnat td { padding: 4px 12px 4px 0; vertical-align: middle; }
-.jr-hinnat input[type=text] { width: 110px !important; }
-.jr-import-table td, .jr-import-table th { font-size: 13px; }
-.jr-import-table select { max-width: 160px; }
-.jr-row-ok td { background: #f3faf5 !important; }
-.jr-upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-.jr-radio.jr-indent { margin-left: 24px; }
+.jasrek-badge-laji { background: #e7f3f1; color: #0b6e5f; }
+.jasrek-lajit { max-width: 640px; margin-bottom: 8px; }
+.jasrek-lajit input[type=text] { width: 100%; }
+.jasrek-lajit td { vertical-align: middle; }
+.jasrek-laji-del { color: var(--jasrek-err); font-size: 16px; text-decoration: none; }
+.jasrek-hinnat td { padding: 4px 12px 4px 0; vertical-align: middle; }
+.jasrek-hinnat input[type=text] { width: 110px !important; }
+.jasrek-import-table td, .jasrek-import-table th { font-size: 13px; }
+.jasrek-import-table select { max-width: 160px; }
+.jasrek-row-ok td { background: #f3faf5 !important; }
+.jasrek-upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.jasrek-radio.jasrek-indent { margin-left: 24px; }
 
 /* 4.3 */
-.jr-laskulle-rivi { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 6px 0; border-bottom: 1px solid #f0f0f1; }
-.jr-laskulle-rivi .jr-radio { margin: 0; }
-.jr-laskulle-kentat { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.jr-form .jr-laskulle-kentat label { display: inline; font-weight: normal; margin: 0 0 0 6px; }
-.jr-form .jr-laskulle-kentat input[type=text] { width: 90px; }
-.jr-form .jr-laskulle-kentat input[type=date] { width: auto; }
-.jr-about { max-width: 820px; }
-.jr-about dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin: 0; }
-.jr-about dt { font-weight: 600; color: var(--jr-muted); }
-.jr-about dd { margin: 0; }
-.jr-kofi { display: inline-flex; align-items: center; gap: 8px; background: #72a4f2; color: #fff !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
-.jr-kofi:hover { background: #5b8fe0; }
+.jasrek-laskulle-rivi { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 6px 0; border-bottom: 1px solid #f0f0f1; }
+.jasrek-laskulle-rivi .jasrek-radio { margin: 0; }
+.jasrek-laskulle-kentat { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jasrek-form .jasrek-laskulle-kentat label { display: inline; font-weight: normal; margin: 0 0 0 6px; }
+.jasrek-form .jasrek-laskulle-kentat input[type=text] { width: 90px; }
+.jasrek-form .jasrek-laskulle-kentat input[type=date] { width: auto; }
+.jasrek-about { max-width: 820px; }
+.jasrek-about dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin: 0; }
+.jasrek-about dt { font-weight: 600; color: var(--jasrek-muted); }
+.jasrek-about dd { margin: 0; }
+.jasrek-kofi { display: inline-flex; align-items: center; gap: 8px; background: #72a4f2; color: #fff !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
+.jasrek-kofi:hover { background: #5b8fe0; }
 
 /* 4.4: klikattavat paikkamerkit */
-.jr-phs { display: block; margin-top: 6px; line-height: 2; }
-.jr-ph {
+.jasrek-phs { display: block; margin-top: 6px; line-height: 2; }
+.jasrek-ph {
     font-family: Consolas, Menlo, monospace; font-size: 12px;
-    background: #f0f6fc; color: var(--jr-accent); border: 1px solid #c5d9ed; border-radius: 4px;
+    background: #f0f6fc; color: var(--jasrek-accent); border: 1px solid #c5d9ed; border-radius: 4px;
     padding: 1px 7px; margin: 0 2px 2px 0; cursor: pointer; line-height: 1.6;
     transition: background .15s, border-color .15s;
 }
-.jr-ph:hover, .jr-ph:focus { background: #dcebfa; border-color: #2271b1; outline: none; }
-.jr-ph:focus-visible { box-shadow: 0 0 0 2px #2271b1; }
-.jr-ph.jr-ph-ok { background: var(--jr-ok-bg); border-color: var(--jr-ok); color: var(--jr-ok); }
+.jasrek-ph:hover, .jasrek-ph:focus { background: #dcebfa; border-color: #2271b1; outline: none; }
+.jasrek-ph:focus-visible { box-shadow: 0 0 0 2px #2271b1; }
+.jasrek-ph.jasrek-ph-ok { background: var(--jasrek-ok-bg); border-color: var(--jasrek-ok); color: var(--jasrek-ok); }
 
 /* 4.6: muutosloki, paperilaskut, vuosiraportti */
-.jr-log-changes { margin: 4px 0 0 0; padding: 0; list-style: none; font-size: 12px; }
-.jr-log-changes li { margin: 1px 0; }
-.jr-log-field { color: var(--jr-muted); }
-.jr-log-changes del { color: var(--jr-err); background: var(--jr-err-bg); text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
-.jr-log-changes ins { color: var(--jr-ok); background: var(--jr-ok-bg); text-decoration: none; padding: 0 3px; border-radius: 3px; }
-.jr-log .jr-badge { margin-right: 6px; }
-.jr-log-jasen { background: var(--jr-info-bg); color: var(--jr-info); }
-.jr-log-maksu { background: var(--jr-ok-bg); color: var(--jr-ok); }
-.jr-log-lasku { background: #e7f3f1; color: #0b6e5f; }
-.jr-log-asetukset { background: #f1ebfb; color: #6b3fa0; }
-.jr-log-viesti { background: #fdebd8; color: #b54708; }
-.jr-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.jr-inline { display: inline-flex; gap: 8px; align-items: center; margin-left: 8px; vertical-align: middle; }
-.jr-report-sub { color: var(--jr-muted); margin-top: 4px; }
-.jr-num td:not(:first-child), .jr-num th:not(:first-child) { text-align: right; }
-.jr-num tfoot th { font-weight: 600; }
-.jr-report h3 { margin: 20px 0 8px; font-size: 1em; }
+.jasrek-log-changes { margin: 4px 0 0 0; padding: 0; list-style: none; font-size: 12px; }
+.jasrek-log-changes li { margin: 1px 0; }
+.jasrek-log-field { color: var(--jasrek-muted); }
+.jasrek-log-changes del { color: var(--jasrek-err); background: var(--jasrek-err-bg); text-decoration: line-through; padding: 0 3px; border-radius: 3px; }
+.jasrek-log-changes ins { color: var(--jasrek-ok); background: var(--jasrek-ok-bg); text-decoration: none; padding: 0 3px; border-radius: 3px; }
+.jasrek-log .jasrek-badge { margin-right: 6px; }
+.jasrek-log-jasen { background: var(--jasrek-info-bg); color: var(--jasrek-info); }
+.jasrek-log-maksu { background: var(--jasrek-ok-bg); color: var(--jasrek-ok); }
+.jasrek-log-lasku { background: #e7f3f1; color: #0b6e5f; }
+.jasrek-log-asetukset { background: #f1ebfb; color: #6b3fa0; }
+.jasrek-log-viesti { background: #fdebd8; color: #b54708; }
+.jasrek-pager { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.jasrek-inline { display: inline-flex; gap: 8px; align-items: center; margin-left: 8px; vertical-align: middle; }
+.jasrek-report-sub { color: var(--jasrek-muted); margin-top: 4px; }
+.jasrek-num td:not(:first-child), .jasrek-num th:not(:first-child) { text-align: right; }
+.jasrek-num tfoot th { font-weight: 600; }
+.jasrek-report h3 { margin: 20px 0 8px; font-size: 1em; }
 @media print {
-    #adminmenumain, #wpadminbar, #wpfooter, .jr-noprint, .notice, .update-nag, #screen-meta-links { display: none !important; }
+    #adminmenumain, #wpadminbar, #wpfooter, .jasrek-noprint, .notice, .update-nag, #screen-meta-links { display: none !important; }
     #wpcontent, #wpbody-content { margin: 0 !important; padding: 0 !important; }
     html.wp-toolbar { padding-top: 0 !important; }
-    .jr-wrap { max-width: none; }
-    .jr-panel, .jr-card { border-color: #999; break-inside: avoid; }
-    .jr-report .jr-panel { page-break-inside: avoid; }
+    .jasrek-wrap { max-width: none; }
+    .jasrek-panel, .jasrek-card { border-color: #999; break-inside: avoid; }
+    .jasrek-report .jasrek-panel { page-break-inside: avoid; }
 }

@@ -1,5 +1,29 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.2 (2026-10-13)
+
+### Korjaus: postimaksun erittely paperilaskussa
+- Paperilaskussa luki saatteessa virheellisesti, että jäsenmaksu on 9,00 €, vaikka jäsenmaksu oli 5,00 € ja postimaksu 4,00 €. Syy: paikkamerkki `{summa}` tarkoitti maksettavaa kokonaissummaa, ja saatteissa sitä käytetään yleensä jäsenmaksun kohdalla.
+- **`{summa}` on nyt jäsenmaksu ilman postimaksua**, kuten saatteissa on tapana kirjoittaa (”Jäsenmaksu tässä luokassa: {summa}”). Sähköpostilaskuissa ei ole postimaksua, joten niissä mikään ei muutu.
+- Uusi paikkamerkki **`{maksettava}`**: maksettava yhteensä (paperilaskussa jäsenmaksu + postimaksu). `{postimaksu}` toimii edelleen. Vuoden 4.6.1 `{jasenmaksu}` toimii edelleen samana kuin `{summa}`.
+- Paperilaskun **yläosan tiedoissa** näkyvät nyt erikseen *Jäsenmaksu*, *Postimaksu* ja *Maksettava* (aiemmin vain ”Summa”).
+- Jos saate ei mainitse postimaksua (`{postimaksu}` tai `{maksettava}`), saatteen perään lisätään automaattisesti lihavoitu rivi: ”Paperilaskun postimaksu 4,00 € on lisätty jäsenmaksuun 5,00 €. Maksettava yhteensä 9,00 €.”
+- Ikkunakuoren ikkunassa ei enää toistu yhdistyksen nimi kahteen kertaan. Asetuksiin (*Paperilaskut*) tuli kenttä **Yhdistyksen postiosoite**, joka tulostetaan pienellä palautusosoitteeksi vastaanottajan yläpuolelle. Tyhjänä palautusriviä ei tulosteta.
+
+### WordPress.orgin lisäosahakemistoa varten
+- **Englanninkielinen `readme.txt`** WordPress.orgin muodossa: kuvaus, asennus, usein kysytyt kysymykset, kuvakaappaukset ja muutokset. Readme on vaatinut englantia heinäkuusta 2025.
+- **Yksilöllinen etuliite `jasrek_`** kaikille funktioille, vakioille (`JASREK_`), luokille, asetuksille, välimuistille, ajastuksille, lomakkeiden toiminnoille ja CSS-luokille (aiemmin `jr_`). **Asetukset siirtyvät automaattisesti**: vanhat `jr_settings` ja `jr_db_version` kopioidaan uusille nimille ja poistetaan, ja vanha muistutusajastus korvataan uudella. Hallintasivujen osoitteet muuttuivat (esim. `page=jasrek-laskutus`), joten vanhat kirjanmerkit pitää päivittää.
+- **”Update URI” poistettu** lisäosan otsakkeesta. WordPress.orgin lisäosat päivittyvät vain WordPress.orgin kautta.
+- **Vähimmäisversio WordPress 6.2** (aiemmin 5.8). Tarvitaan SQL-tunnisteiden turvalliseen sitomiseen (`%i`). ”Tested up to: 7.1”.
+- **[Plugin Check](https://wordpress.org/plugins/plugin-check/) menee läpi ilman virheitä ja varoituksia.** Ennen korjauksia löydöksiä oli 191 virhettä ja 421 varoitusta. Korjaukset:
+  - Kaikki tulostettava tieto escapataan (`esc_html`, `wp_kses_post`).
+  - Kaikki SQL-kyselyt kulkevat `$wpdb->prepare()`-kutsun kautta. Taulujen nimet luetaan `$wpdb`-olion ominaisuuksista (kuten WordPressin omat taulut), IN-listat sidotaan paikkamerkeillä, ja dynaamiset WHERE-ehdot kootaan SQL-literaaleista, joiden arvot sidotaan erikseen. Laskurivikyselyt kulkevat yhden apufunktion (`jasrek_get_rivit`) kautta.
+  - Pyyntöparametrit (`$_GET`, `$_POST`, `$_FILES`) luetaan keskitetyillä apufunktioilla, jotka sanitoivat arvot. Lomakkeiden nonce-tarkistus tehdään ennen tietojen käsittelyä.
+  - `date()` → `gmdate()`. `utf8_encode()` (vanhentunut PHP 8.2:ssa) korvattu `mb_convert_encoding`/`iconv`-muunnoksella.
+  - QR-koodikirjastosta poistettu käyttämättömät kuva-, HTML- ja SVG-tulostusfunktiot. Virheet nostetaan poikkeuksina, ja laskussa on aina vähintään virtuaaliviivakoodi.
+- **Hakemiston kuvat** kansiossa `.wordpress-org`: ikoni, banneri ja 8 kuvakaappausta.
+- **Automaattinen vienti WordPress.orgiin:** GitHubin julkaisu vie version hakemistoon, kun repositorion salaisuuksiin on lisätty `SVN_USERNAME` ja `SVN_PASSWORD`. Jo viety versio ohitetaan.
+
 ## 4.6.1 (2026-10-13)
 
 ### Uutta: postimaksu paperilaskuihin

@@ -65,3 +65,41 @@ jobs:
         with:
           name: jasenrekisteri
           path: jasenrekisteri.zip
+
+  wordpress-org:
+    # Vienti WordPress.orgin lisäosahakemistoon. Toimii vasta, kun repositorion asetuksiin
+    # (Settings → Secrets and variables → Actions) on lisätty SVN_USERNAME ja SVN_PASSWORD.
+    needs: julkaisu
+    if: github.event_name != 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    concurrency: wordpress-org
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tarkista tunnukset ja versio
+        id: check
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          TAG: ${{ github.event.release.tag_name || github.ref_name }}
+        run: |
+          VERSIO="${TAG#v}"
+          echo "versio=$VERSIO" >> "$GITHUB_OUTPUT"
+          if [ -z "$SVN_USERNAME" ]; then
+            echo "SVN-tunnuksia ei ole asetettu – vienti WordPress.orgiin ohitetaan."
+            echo "vie=false" >> "$GITHUB_OUTPUT"
+          elif svn ls "https://plugins.svn.wordpress.org/jasenrekisteri/tags/$VERSIO" > /dev/null 2>&1; then
+            echo "Versio $VERSIO on jo WordPress.orgissa – ohitetaan."
+            echo "vie=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "vie=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Vie WordPress.orgiin
+        if: steps.check.outputs.vie == 'true'
+        uses: 10up/action-wordpress-plugin-deploy@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SLUG: jasenrekisteri
+          VERSION: ${{ steps.check.outputs.versio }}
+          ASSETS_DIR: .wordpress-org

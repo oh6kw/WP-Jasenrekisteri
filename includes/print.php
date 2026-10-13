@@ -1,5 +1,6 @@
 <?php
 if (!defined('ABSPATH')) exit;
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin's own custom tables (members, invoices, audit log). The data is admin-only and changes on every write, so object caching is not used.
 
 /*
  * Paperilaskut: tulostettava A4-lasku ikkunakuoreen (C5 tai DL, ikkuna vasemmalla ylhäällä)
@@ -7,59 +8,59 @@ if (!defined('ABSPATH')) exit;
  */
 
 /** Tulostusnäkymän osoite. $args: rivi, joukko (postittamattomat|muistutukset|kaikki), muistutus, tulosta. */
-function jr_print_url($lasku_id, $args = array()) {
-    return wp_nonce_url(add_query_arg(array_merge(array('action' => 'jr_print', 'id' => (int) $lasku_id), $args), admin_url('admin-post.php')), 'jr_print_' . (int) $lasku_id);
+function jasrek_print_url($lasku_id, $args = array()) {
+    return wp_nonce_url(add_query_arg(array_merge(array('action' => 'jasrek_print', 'id' => (int) $lasku_id), $args), admin_url('admin-post.php')), 'jasrek_print_' . (int) $lasku_id);
 }
 
 /** Laskun paperilaskurivit valitun joukon mukaan. */
-function jr_paper_rows($lasku, $joukko) {
+function jasrek_paper_rows($lasku, $joukko) {
     global $wpdb;
-    $rows = $wpdb->get_results($wpdb->prepare(jr_rivi_select_sql() . 'WHERE r.lasku_id = %d ORDER BY m.sukunimi, m.etunimi, r.nimi', $lasku->id));
+    $rows = jasrek_get_rivit('WHERE r.lasku_id = %d ORDER BY m.sukunimi, m.etunimi, r.nimi', array($lasku->id));
     $today = current_time('Y-m-d');
     return array_values(array_filter($rows, function ($r) use ($lasku, $joukko, $today) {
-        if (!jr_is_paperi($r)) return false;
+        if (!jasrek_is_paperi($r)) return false;
         if ($joukko === 'postittamattomat') return !$r->lahetetty;
-        if ($joukko === 'muistutukset') return $r->lahetetty && !$r->maksettu && jr_rivi_era($lasku, $r) < $today;
+        if ($joukko === 'muistutukset') return $r->lahetetty && !$r->maksettu && jasrek_rivi_era($lasku, $r) < $today;
         return true;
     }));
 }
 
-add_action('admin_post_jr_print', 'jr_handle_print');
-function jr_handle_print() {
-    $id = intval(isset($_GET['id']) ? $_GET['id'] : 0);
-    jr_check('jr_print_' . $id);
+add_action('admin_post_jasrek_print', 'jasrek_handle_print');
+function jasrek_handle_print() {
+    $id = jasrek_get_int('id');
+    jasrek_check('jasrek_print_' . $id);
     global $wpdb;
-    $lasku = jr_get_lasku($id);
+    $lasku = jasrek_get_lasku($id);
     if (!$lasku) wp_die('Laskua ei löytynyt.');
 
-    $rivi   = isset($_GET['rivi']) ? intval($_GET['rivi']) : 0;
-    $joukko = isset($_GET['joukko']) ? sanitize_key($_GET['joukko']) : '';
-    $muist  = !empty($_GET['muistutus']) || $joukko === 'muistutukset';
+    $rivi   = jasrek_get_int('rivi', 0);
+    $joukko = sanitize_key(jasrek_get('joukko', ''));
+    $muist  = !empty(jasrek_get('muistutus')) || $joukko === 'muistutukset';
     if ($rivi) {
-        $r = $wpdb->get_row($wpdb->prepare(jr_rivi_select_sql() . 'WHERE r.id = %d AND r.lasku_id = %d', $rivi, $id));
+        $r = jasrek_get_rivit('WHERE r.id = %d AND r.lasku_id = %d', array($rivi, $id), true);
         $rows = $r ? array($r) : array();
     } else {
-        $rows = jr_paper_rows($lasku, in_array($joukko, array('postittamattomat', 'muistutukset'), true) ? $joukko : 'kaikki');
+        $rows = jasrek_paper_rows($lasku, in_array($joukko, array('postittamattomat', 'muistutukset'), true) ? $joukko : 'kaikki');
     }
     nocache_headers();
     header('Content-Type: text/html; charset=UTF-8');
-    echo jr_print_document($lasku, $rows, $muist, !empty($_GET['tulosta'])); // phpcs:ignore -- valmiiksi escapattu HTML
+    echo jasrek_print_document($lasku, $rows, $muist, !empty(jasrek_get('tulosta'))); // phpcs:ignore -- valmiiksi escapattu HTML
     exit;
 }
 
-add_action('admin_post_jr_paper_mark', 'jr_handle_paper_mark');
-function jr_handle_paper_mark() {
-    $lasku_id = intval(jr_post('lasku_id', 0));
-    jr_check('jr_paper_mark_' . $lasku_id);
+add_action('admin_post_jasrek_paper_mark', 'jasrek_handle_paper_mark');
+function jasrek_handle_paper_mark() {
+    $lasku_id = intval(jasrek_post('lasku_id', 0));
+    jasrek_check('jasrek_paper_mark_' . $lasku_id);
     global $wpdb;
-    $lasku = jr_get_lasku($lasku_id);
-    if (!$lasku) jr_redirect('jr-laskutus');
-    $ids = array_filter(array_map('intval', (array) (isset($_POST['rivit']) ? $_POST['rivit'] : array())));
-    if (!$ids) jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jr_msg' => 'nothing_selected'));
-    $muist = jr_post('tapa') === 'muistutus';
+    $lasku = jasrek_get_lasku($lasku_id);
+    if (!$lasku) jasrek_redirect('jasrek-laskutus');
+    $ids = jasrek_post_ids('rivit');
+    if (!$ids) jasrek_redirect('jasrek-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jasrek_msg' => 'nothing_selected'));
+    $muist = jasrek_post('tapa') === 'muistutus';
     $now = current_time('mysql');
     $n = 0;
-    $rows = $wpdb->get_results($wpdb->prepare(jr_rivi_select_sql() . 'WHERE r.lasku_id = %d AND r.id IN (' . implode(',', $ids) . ')', $lasku_id));
+    $rows = jasrek_get_rivit('WHERE r.lasku_id = %d AND r.id IN (' . jasrek_in_placeholders($ids) . ')', array_merge(array($lasku_id), $ids));
     foreach ($rows as $r) {
         if ($muist) {
             if ($r->maksettu) continue;
@@ -68,16 +69,16 @@ function jr_handle_paper_mark() {
         } else {
             $upd = array('lahetetty' => $now, 'viim_yritys' => $now, 'virhe' => null);
         }
-        $wpdb->update(jr_t('rivit'), $upd, array('id' => $r->id));
-        jr_log_rivi($r, $muist ? 'muistutus_postitettu' : 'postitettu', 'paperilla', $lasku);
+        $wpdb->update(jasrek_t('rivit'), $upd, array('id' => $r->id));
+        jasrek_log_rivi($r, $muist ? 'muistutus_postitettu' : 'postitettu', 'paperilla', $lasku);
         $n++;
     }
-    jr_redirect('jr-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jr_msg' => $muist ? 'paper_reminded' : 'paper_marked', 'jr_n' => $n));
+    jasrek_redirect('jasrek-laskutus', array('view' => 'lasku', 'id' => $lasku_id, 'jasrek_msg' => $muist ? 'paper_reminded' : 'paper_marked', 'jasrek_n' => $n));
 }
 
 /** Postiosoitteen rivit: nimi ja osoite pilkkujen kohdalta riveiksi. */
-function jr_address_lines($r) {
-    $p = jr_rivi_person($r);
+function jasrek_address_lines($r) {
+    $p = jasrek_rivi_person($r);
     $lines = array($p['nimi']);
     foreach (preg_split('/\s*[,\n]\s*/', (string) (isset($r->osoite) ? $r->osoite : '')) as $l) {
         if (trim($l) !== '') $lines[] = trim($l);
@@ -85,13 +86,13 @@ function jr_address_lines($r) {
     return $lines;
 }
 
-function jr_print_document($lasku, $rows, $reminder, $autoprint) {
-    $s = jr_settings();
+function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
+    $s = jasrek_settings();
     $title = ($reminder ? 'Maksumuistutukset: ' : 'Paperilaskut: ') . $lasku->nimi;
     $ids = array_map(function ($r) { return (int) $r->id; }, $rows);
     $no_addr = array();
-    foreach ($rows as $r) if (count(jr_address_lines($r)) < 2) $no_addr[] = jr_rivi_person($r)['nimi'];
-    $back = admin_url('admin.php?page=jr-laskutus&view=lasku&id=' . (int) $lasku->id);
+    foreach ($rows as $r) if (count(jasrek_address_lines($r)) < 2) $no_addr[] = jasrek_rivi_person($r)['nimi'];
+    $back = admin_url('admin.php?page=jasrek-laskutus&view=lasku&id=' . (int) $lasku->id);
 
     ob_start(); ?>
 <!DOCTYPE html>
@@ -102,13 +103,13 @@ function jr_print_document($lasku, $rows, $reminder, $autoprint) {
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1f2933; font-size: 10.5pt; line-height: 1.45; }
-.jr-tools { position: sticky; top: 0; z-index: 5; background: #1d3557; color: #fff; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; font-size: 14px; }
-.jr-tools a { color: #fff; }
-.jr-tools button { font-size: 14px; padding: 6px 14px; border-radius: 4px; border: 0; cursor: pointer; background: #fff; color: #1d3557; font-weight: bold; }
-.jr-tools button.jr-sec { background: transparent; color: #fff; border: 1px solid #fff; font-weight: normal; }
-.jr-tools form { display: inline; margin: 0; }
-.jr-tools .jr-warn { background: #fff4d6; color: #6b4b00; padding: 4px 10px; border-radius: 4px; flex-basis: 100%; }
-.jr-tools .jr-info { opacity: .85; font-size: 13px; flex-basis: 100%; }
+.jasrek-tools { position: sticky; top: 0; z-index: 5; background: #1d3557; color: #fff; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; font-size: 14px; }
+.jasrek-tools a { color: #fff; }
+.jasrek-tools button { font-size: 14px; padding: 6px 14px; border-radius: 4px; border: 0; cursor: pointer; background: #fff; color: #1d3557; font-weight: bold; }
+.jasrek-tools button.jasrek-sec { background: transparent; color: #fff; border: 1px solid #fff; font-weight: normal; }
+.jasrek-tools form { display: inline; margin: 0; }
+.jasrek-tools .jasrek-warn { background: #fff4d6; color: #6b4b00; padding: 4px 10px; border-radius: 4px; flex-basis: 100%; }
+.jasrek-tools .jasrek-info { opacity: .85; font-size: 13px; flex-basis: 100%; }
 .sivu { width: 210mm; height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 0 15mm 12mm 20mm; page-break-after: always; break-after: page; }
 .sivu:last-child { page-break-after: auto; break-after: auto; }
 .taitto { position: absolute; left: 4mm; width: 4mm; border-top: 0.3pt solid #999; }
@@ -127,6 +128,7 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
 .tiedot .vahva { font-weight: bold; }
 .mono { font-family: Consolas, Menlo, "Courier New", monospace; }
 .saate { margin: 0 0 6mm; }
+.postihuom { margin: -2mm 0 6mm; font-weight: bold; }
 .erittely { width: 100%; border-collapse: collapse; margin: 0 0 4mm; }
 .erittely th { text-align: left; font-size: 9pt; color: #555; border-bottom: 0.6pt solid #333; padding: 1.5mm 0; }
 .erittely td { padding: 2mm 0; border-bottom: 0.3pt solid #ccc; }
@@ -148,47 +150,48 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
 .tyhja { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; }
 @media print {
     body { background: #fff; }
-    .jr-tools { display: none; }
+    .jasrek-tools { display: none; }
     .sivu { margin: 0; box-shadow: none; }
 }
 </style></head>
 <body<?php echo $autoprint && $rows ? ' onload="window.print()"' : ''; ?>>
-<div class="jr-tools">
+<div class="jasrek-tools">
     <strong><?php echo esc_html($title); ?></strong>
     <span><?php echo count($rows); ?> kpl</span>
     <?php if ($rows): ?>
     <button type="button" onclick="window.print()">🖨 Tulosta</button>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-        <input type="hidden" name="action" value="jr_paper_mark">
+        <input type="hidden" name="action" value="jasrek_paper_mark">
         <input type="hidden" name="lasku_id" value="<?php echo (int) $lasku->id; ?>">
         <input type="hidden" name="tapa" value="<?php echo $reminder ? 'muistutus' : 'lasku'; ?>">
-        <?php wp_nonce_field('jr_paper_mark_' . $lasku->id); ?>
+        <?php wp_nonce_field('jasrek_paper_mark_' . $lasku->id); ?>
         <?php foreach ($ids as $rid): ?><input type="hidden" name="rivit[]" value="<?php echo (int) $rid; ?>"><?php endforeach; ?>
-        <button type="submit" class="jr-sec" onclick="return confirm('Merkitäänkö <?php echo count($rows); ?> <?php echo $reminder ? 'muistutusta' : 'laskua'; ?> postitetuksi tänään?')">✓ Merkitse <?php echo count($rows) === 1 ? 'postitetuksi' : 'kaikki postitetuiksi'; ?></button>
+        <button type="submit" class="jasrek-sec" onclick="return confirm('Merkitäänkö <?php echo count($rows); ?> <?php echo $reminder ? 'muistutusta' : 'laskua'; ?> postitetuksi tänään?')">✓ Merkitse <?php echo count($rows) === 1 ? 'postitetuksi' : 'kaikki postitetuiksi'; ?></button>
     </form>
     <?php endif; ?>
     <a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a>
-    <?php if ($rows): ?><span class="jr-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).</span><?php endif; ?>
-    <?php if ($no_addr): ?><span class="jr-warn">⚠ Osoite puuttuu: <?php echo esc_html(implode(', ', $no_addr)); ?>. Lisää osoite jäsenen tietoihin ennen tulostusta.</span><?php endif; ?>
+    <?php if ($rows): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).</span><?php endif; ?>
+    <?php if ($no_addr): ?><span class="jasrek-warn">⚠ Osoite puuttuu: <?php echo esc_html(implode(', ', $no_addr)); ?>. Lisää osoite jäsenen tietoihin ennen tulostusta.</span><?php endif; ?>
 </div>
 <?php if (!$rows): ?>
     <div class="tyhja"><p>Ei tulostettavia laskuja tässä joukossa.</p><p><a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a></p></div>
 <?php endif; ?>
-<?php foreach ($rows as $r) echo jr_print_page($lasku, $r, $reminder, $s); // phpcs:ignore ?>
+<?php foreach ($rows as $r) echo jasrek_print_page($lasku, $r, $reminder, $s); // phpcs:ignore ?>
 </body></html>
     <?php
     return ob_get_clean();
 }
 
 /** Yksi A4-sivu. */
-function jr_print_page($lasku, $r, $reminder, $s) {
-    $vars = jr_invoice_vars($lasku, $r);
+function jasrek_print_page($lasku, $r, $reminder, $s) {
+    $vars = jasrek_invoice_vars($lasku, $r);
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
-    $images = jr_invoice_images($lasku, $r);
-    $vvk = jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jr_rivi_era($lasku, $r));
-    $addr = jr_address_lines($r);
-    $luokka = isset($r->jasenlaji) ? jr_laji_nimi((string) $r->jasenlaji) : '';
-    $palautus = $s['yhdistys'];
+    $images = jasrek_invoice_images($lasku, $r);
+    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
+    $addr = jasrek_address_lines($r);
+    $luokka = isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '';
+    // Palautusosoite ikkunaan vain, jos yhdistyksen postiosoite on annettu (muuten nimi toistuisi turhaan)
+    $palautus = trim((string) $s['postiosoite']) !== '' ? $s['yhdistys'] . ', ' . preg_replace('/\s*\n\s*/', ', ', trim($s['postiosoite'])) : '';
     $yt = trim(preg_replace('/\s*\n\s*/', ' · ', (string) $s['yhteystiedot']));
 
     $h  = '<div class="sivu">';
@@ -196,25 +199,33 @@ function jr_print_page($lasku, $r, $reminder, $s) {
     $h .= '<span class="taitto" style="top:99mm"></span><span class="taitto" style="top:148.5mm"></span><span class="taitto" style="top:198mm"></span>';
     $h .= '<div class="ylaosa">';
     $h .= '<div class="lahettaja">' . esc_html($s['yhdistys']) . '</div>';
-    $h .= '<div class="ikkuna"><div class="palautus">' . esc_html($palautus) . '</div><div class="vastaanottaja">';
+    $h .= '<div class="ikkuna">' . ($palautus !== '' ? '<div class="palautus">' . esc_html($palautus) . '</div>' : '') . '<div class="vastaanottaja">';
     foreach ($addr as $i => $l) $h .= ($i ? '<br>' : '') . ($i === 0 ? '<strong>' . esc_html($l) . '</strong>' : esc_html($l));
     if (count($addr) < 2) $h .= '<br><span class="puuttuu">(osoite puuttuu)</span>';
     $h .= '</div></div>';
     $h .= '<div class="tiedot"><div class="laji">' . ($reminder ? 'MAKSUMUISTUTUS' : 'LASKU') . '</div><table>';
-    $h .= '<tr><td>Päiväys</td><td>' . esc_html($reminder ? jr_date(current_time('Y-m-d')) : $vars['laskupvm']) . '</td></tr>';
+    $h .= '<tr><td>Päiväys</td><td>' . esc_html($reminder ? jasrek_date(current_time('Y-m-d')) : $vars['laskupvm']) . '</td></tr>';
     if ($reminder) $h .= '<tr><td>Alkuperäinen lasku</td><td>' . esc_html($vars['laskupvm']) . '</td></tr>';
-    if (jr_tunnus_on() && $vars['tunnus'] !== '') $h .= '<tr><td>' . esc_html(jr_tunnus_nimi()) . '</td><td>' . esc_html($vars['tunnus']) . '</td></tr>';
+    if (jasrek_tunnus_on() && $vars['tunnus'] !== '') $h .= '<tr><td>' . esc_html(jasrek_tunnus_nimi()) . '</td><td>' . esc_html($vars['tunnus']) . '</td></tr>';
     $h .= '<tr><td>Viitenumero</td><td class="vahva mono">' . esc_html($vars['viite']) . '</td></tr>';
     $h .= '<tr><td>Eräpäivä</td><td class="vahva">' . esc_html($vars['erapaiva']) . '</td></tr>';
-    $h .= '<tr><td>Summa</td><td class="vahva">' . esc_html($vars['summa']) . '</td></tr>';
+    if (jasrek_rivi_postimaksu($r) > 0) {
+        $h .= '<tr><td>Jäsenmaksu</td><td>' . esc_html($vars['jasenmaksu']) . '</td></tr>';
+        $h .= '<tr><td>Postimaksu</td><td>' . esc_html($vars['postimaksu']) . '</td></tr>';
+        $h .= '<tr><td>Maksettava</td><td class="vahva">' . esc_html($vars['maksettava']) . '</td></tr>';
+    } else {
+        $h .= '<tr><td>Summa</td><td class="vahva">' . esc_html($vars['maksettava']) . '</td></tr>';
+    }
     $h .= '</table></div></div>';
 
-    $h .= '<div class="saate">' . jr_fill($text, $vars) . '</div>';
+    $h .= '<div class="saate">' . jasrek_fill($text, $vars) . '</div>';
+    $note = jasrek_postimaksu_note($text, $r, $vars);
+    if ($note !== '') $h .= '<p class="postihuom">' . esc_html($note) . '</p>';
     $h .= '<table class="erittely"><thead><tr><th>Erittely</th><th class="summa">Summa</th></tr></thead><tbody>';
     $h .= '<tr><td>' . esc_html($lasku->nimi) . ' – ' . esc_html($vars['nimi']) . ($luokka !== '' ? ' (' . esc_html($luokka) . ')' : '') . '</td><td class="summa">' . esc_html($vars['jasenmaksu']) . '</td></tr>';
-    if (jr_rivi_postimaksu($r) > 0) $h .= '<tr><td>Postimaksu (paperilasku)</td><td class="summa">' . esc_html($vars['postimaksu']) . '</td></tr>';
+    if (jasrek_rivi_postimaksu($r) > 0) $h .= '<tr><td>Postimaksu (paperilasku)</td><td class="summa">' . esc_html($vars['postimaksu']) . '</td></tr>';
     $h .= '</tbody></table>';
-    $h .= '<div class="yhteensa"><span>Maksettava viimeistään ' . esc_html($vars['erapaiva']) . '</span><strong>' . esc_html($vars['summa']) . '</strong></div>';
+    $h .= '<div class="yhteensa"><span>Maksettava viimeistään ' . esc_html($vars['erapaiva']) . '</span><strong>' . esc_html($vars['maksettava']) . '</strong></div>';
 
     $h .= '<div class="alaosa"><div class="maksurivi">';
     if (isset($images['jrqr'])) {
@@ -226,7 +237,7 @@ function jr_print_page($lasku, $r, $reminder, $s) {
         . ($s['bic'] !== '' ? '<tr><td>BIC</td><td>' . esc_html($s['bic']) . '</td></tr>' : '')
         . '<tr><td>Viitenumero</td><td class="mono"><strong>' . esc_html($vars['viite']) . '</strong></td></tr>'
         . '<tr><td>Eräpäivä</td><td>' . esc_html($vars['erapaiva']) . '</td></tr>'
-        . '<tr><td>Euro</td><td><strong>' . esc_html($vars['summa']) . '</strong></td></tr>'
+        . '<tr><td>Euro</td><td><strong>' . esc_html($vars['maksettava']) . '</strong></td></tr>'
         . '</table>'
         . (isset($images['jrqr']) ? '<div class="huom">Skannaa QR-koodi pankkisovelluksella, niin maksun tiedot täyttyvät valmiiksi.</div>' : '')
         . '</div></div>';

@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) exit;
  */
 
 /** Kansainvälinen RF-viite (ISO 11649) kotimaisesta viitteestä. */
-function jr_rf_viite($viite) {
+function jasrek_rf_viite($viite) {
     $ref = preg_replace('/\D/', '', (string) $viite);
     if ($ref === '') return '';
     $num = $ref . '2715' . '00'; // R=27, F=15, tarkiste 00
@@ -19,7 +19,7 @@ function jr_rf_viite($viite) {
 }
 
 /** RF-viite takaisin kotimaiseksi (tiliotteiden kohdistusta varten). Palauttaa numerot ilman etunollia. */
-function jr_normalize_viite($s) {
+function jasrek_normalize_viite($s) {
     $s = strtoupper(preg_replace('/\s+/', '', (string) $s));
     if (strpos($s, 'RF') === 0) $s = substr($s, 4);
     $s = preg_replace('/\D/', '', $s);
@@ -27,10 +27,10 @@ function jr_normalize_viite($s) {
 }
 
 /** EPC QR -koodin sisältö. */
-function jr_epc_payload($lasku, $r) {
-    $s = jr_settings();
-    $iban = jr_iban_clean($s['iban']);
-    if (!jr_iban_valid($iban) || (float) $r->summa <= 0 || (float) $r->summa > 999999.99) return '';
+function jasrek_epc_payload($lasku, $r) {
+    $s = jasrek_settings();
+    $iban = jasrek_iban_clean($s['iban']);
+    if (!jasrek_iban_valid($iban) || (float) $r->summa <= 0 || (float) $r->summa > 999999.99) return '';
     $clean = function ($t, $max) {
         $t = trim(preg_replace('/[\r\n]+/', ' ', (string) $t));
         return function_exists('mb_substr') ? mb_substr($t, 0, $max) : substr($t, 0, $max);
@@ -46,7 +46,7 @@ function jr_epc_payload($lasku, $r) {
         $iban,
         'EUR' . number_format((float) $r->summa, 2, '.', ''),
         '',                            // tarkoituskoodi
-        jr_rf_viite($r->viite),        // rakenteinen viite (RF)
+        jasrek_rf_viite($r->viite),        // rakenteinen viite (RF)
         '',                            // vapaa viesti (ei käytetä, kun viite on annettu)
         $clean($lasku->nimi, 70),      // tieto maksajalle
     );
@@ -56,7 +56,7 @@ function jr_epc_payload($lasku, $r) {
 /* ---------------------------- PNG ---------------------------- */
 
 /** Muodostaa mustavalkoisen PNG-kuvan rivilistasta (jokainen rivi = taulukko true/false). */
-function jr_png_from_rows($rows, $scale_x, $scale_y) {
+function jasrek_png_from_rows($rows, $scale_x, $scale_y) {
     $h = count($rows);
     $w = $h ? count($rows[0]) : 0;
     $raw = '';
@@ -76,22 +76,26 @@ function jr_png_from_rows($rows, $scale_x, $scale_y) {
 }
 
 /** EPC QR -koodi PNG:nä. */
-function jr_qr_png($payload, $scale = 5, $margin = 4) {
+function jasrek_qr_png($payload, $scale = 5, $margin = 4) {
     if ($payload === '') return '';
-    require_once JR_DIR . 'includes/lib/jr-qrcode.php';
+    require_once JASREK_DIR . 'includes/lib/jasrek-qrcode.php';
     // Tavutila (UTF-8), virheenkorjaus M kuten EPC-standardi suosittelee
-    $mode  = JR_QR_MODE_8BIT_BYTE;
-    $level = JR_QR_ERROR_CORRECT_LEVEL_M;
-    $qr = new JR_QRCode();
-    $qr->setErrorCorrectLevel($level);
-    $qr->addData($payload, $mode);
-    $type = 0;
-    for ($t = 1; $t <= 40; $t++) {
-        if (strlen($payload) <= JR_QRUtil::getMaxLength($t, $mode, $level)) { $type = $t; break; }
+    $mode  = JASREK_QR_MODE_8BIT_BYTE;
+    $level = JASREK_QR_ERROR_CORRECT_LEVEL_M;
+    try {
+        $qr = new JASREK_QRCode();
+        $qr->setErrorCorrectLevel($level);
+        $qr->addData($payload, $mode);
+        $type = 0;
+        for ($t = 1; $t <= 40; $t++) {
+            if (strlen($payload) <= JASREK_QRUtil::getMaxLength($t, $mode, $level)) { $type = $t; break; }
+        }
+        if (!$type) return '';
+        $qr->setTypeNumber($type);
+        $qr->make();
+    } catch (Exception $e) {
+        return ''; // QR-koodia ei voitu muodostaa – laskussa on silti virtuaaliviivakoodi
     }
-    if (!$type) return '';
-    $qr->setTypeNumber($type);
-    $qr->make();
     $n = $qr->getModuleCount();
     $rows = array();
     for ($y = -$margin; $y < $n + $margin; $y++) {
@@ -101,11 +105,11 @@ function jr_qr_png($payload, $scale = 5, $margin = 4) {
         }
         $rows[] = $row;
     }
-    return jr_png_from_rows($rows, $scale, $scale);
+    return jasrek_png_from_rows($rows, $scale, $scale);
 }
 
 /** Code 128 -kuviot (palkki/väli-leveydet), arvot 0–106. */
-function jr_code128_patterns() {
+function jasrek_code128_patterns() {
     return explode(' ', '212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 '
         . '221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 '
         . '221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 '
@@ -120,9 +124,9 @@ function jr_code128_patterns() {
 }
 
 /** Pankkiviivakoodi (Code 128 C) PNG:nä virtuaaliviivakoodin numeroista. */
-function jr_barcode_png($digits, $module = 2, $height = 60) {
+function jasrek_barcode_png($digits, $module = 2, $height = 60) {
     if ($digits === '' || strlen($digits) % 2 !== 0 || !ctype_digit($digits)) return '';
-    $p = jr_code128_patterns();
+    $p = jasrek_code128_patterns();
     $values = array(105); // Start C
     foreach (str_split($digits, 2) as $pair) $values[] = (int) $pair;
     $sum = 105;
@@ -139,20 +143,20 @@ function jr_barcode_png($digits, $module = 2, $height = 60) {
         }
     }
     $mods = array_merge($mods, array_fill(0, 10, false));
-    return jr_png_from_rows(array($mods), $module, $height);
+    return jasrek_png_from_rows(array($mods), $module, $height);
 }
 
 /** Laskun kuvat: ['jrqr' => png, 'jrbar' => png] asetusten mukaan. */
-function jr_invoice_images($lasku, $r) {
-    $s = jr_settings();
+function jasrek_invoice_images($lasku, $r) {
+    $s = jasrek_settings();
     $mode = $s['maksukoodi'];
     $out = array();
     if ($mode === 'qr' || $mode === 'molemmat') {
-        $png = jr_qr_png(jr_epc_payload($lasku, $r));
+        $png = jasrek_qr_png(jasrek_epc_payload($lasku, $r));
         if ($png !== '') $out['jrqr'] = $png;
     }
     if ($mode === 'viivakoodi' || $mode === 'molemmat') {
-        $png = jr_barcode_png(jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jr_rivi_era($lasku, $r)));
+        $png = jasrek_barcode_png(jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r)));
         if ($png !== '') $out['jrbar'] = $png;
     }
     return $out;

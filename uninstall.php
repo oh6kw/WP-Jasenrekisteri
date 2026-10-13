@@ -5,35 +5,38 @@
  * tai kysely, joka näytetään lisäosaa poistettaessa käytöstä). Oletuksena tiedot säilyvät.
  */
 if (!defined('WP_UNINSTALL_PLUGIN')) exit;
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin's own custom tables (members, invoices, audit log). The data is admin-only and changes on every write, so object caching is not used.
 
-function jr_uninstall_site() {
+function jasrek_uninstall_site() {
     global $wpdb;
-    wp_clear_scheduled_hook('jr_auto_muistutus');
+    wp_clear_scheduled_hook('jasrek_auto_muistutus');
+    wp_clear_scheduled_hook('jr_auto_muistutus'); // ennen versiota 4.6.2
 
-    $s = get_option('jr_settings');
+    $s = get_option('jasrek_settings', get_option('jr_settings'));
     if (!is_array($s) || !isset($s['poista_tiedot']) || $s['poista_tiedot'] !== '1') {
         return; // Säilytetään jäsenet, laskut ja asetukset – lisäosan voi asentaa uudelleen ja jatkaa siitä.
     }
 
     foreach (array('jasenrekisteri_laskurivit', 'jasenrekisteri_laskut', 'jasenrekisteri_loki', 'jasenrekisteri') as $t) {
-        $wpdb->query('DROP TABLE IF EXISTS `' . esc_sql($wpdb->prefix . $t) . '`');
+        $wpdb->query('DROP TABLE IF EXISTS `' . esc_sql($wpdb->prefix . $t) . '`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared -- removing the plugin's own tables on uninstall, only when the admin has chosen to delete the data.
     }
-    delete_option('jr_settings');
-    delete_option('jr_db_version');
+    foreach (array('jasrek_settings', 'jasrek_db_version', 'jr_settings', 'jr_db_version') as $o) delete_option($o);
     // Väliaikaiset tiedot (keskeneräiset tuonnit ja lähetykset)
-    $wpdb->query($wpdb->prepare(
-        "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
-        $wpdb->esc_like('_transient_jr_') . '%',
-        $wpdb->esc_like('_transient_timeout_jr_') . '%'
-    ));
+    foreach (array('jasrek_', 'jr_') as $prefix) {
+        $wpdb->query($wpdb->prepare(
+            "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s OR option_name LIKE %s",
+            $wpdb->esc_like('_transient_' . $prefix) . '%',
+            $wpdb->esc_like('_transient_timeout_' . $prefix) . '%'
+        ));
+    }
 }
 
 if (is_multisite()) {
     foreach (get_sites(array('fields' => 'ids', 'number' => 0)) as $blog_id) {
         switch_to_blog($blog_id);
-        jr_uninstall_site();
+        jasrek_uninstall_site();
         restore_current_blog();
     }
 } else {
-    jr_uninstall_site();
+    jasrek_uninstall_site();
 }

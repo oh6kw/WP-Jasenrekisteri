@@ -9,7 +9,7 @@ if (!defined('ABSPATH')) exit;
  * Solu voi olla tavallinen arvo (merkkijono → teksti, int/float → luku) tai taulukko
  * array('v' => arvo, 't' => 's|n|d|f', 's' => tyyli), ks. apufunktiot alla.
  */
-class JR_Xlsx {
+class JASREK_Xlsx {
 
     // Tyylit (cellXfs-indeksit styles.xml:ssä)
     const S_DEFAULT = 0, S_HEADER = 1, S_MONEY = 2, S_DATE = 3, S_OK = 4, S_ERR = 5,

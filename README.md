@@ -5,7 +5,7 @@ Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisil
 Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella, ja tulosta paperilaskut niille, jotka niitä haluavat. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
 
 [![Versio](https://img.shields.io/github/v/release/oh6kw/WP-Jasenrekisteri?label=versio)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest)
-![WordPress 5.8+](https://img.shields.io/badge/WordPress-5.8%2B-21759b)
+![WordPress 6.2+](https://img.shields.io/badge/WordPress-6.2%2B-21759b)
 ![PHP 7.4+](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
 [![Lisenssi: AGPL v3](https://img.shields.io/badge/lisenssi-AGPL--3.0-blue)](LICENSE)
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-tarjoa%20kahvit-72a4f2?logo=ko-fi&logoColor=white)](https://ko-fi.com/oh6kw)
@@ -34,7 +34,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Ennen lähetystä voi esikatsella laskun ja lähettää testilaskun valittuun osoitteeseen.
 - Lähetys tehdään pienissä erissä edistymispalkin kanssa, joten suurikaan jäsenmäärä ei aiheuta aikakatkaisuja. Jo lähetettyjä laskuja ei lähetetä uudelleen.
 - **Paperilaskut:** jäsenelle voi valita ”Haluaa laskun paperilla”. Hänelle ja jäsenille, joilla ei ole sähköpostia, ei lähetetä sähköpostia, vaan laskun sivulla on oma lista, josta laskut tulostetaan A4-paperille ikkunakuoreen sopiviksi (QR- ja pankkiviivakoodeineen) ja merkitään postitetuiksi. Myös paperiset maksumuistutukset.
-- **Postimaksu:** asetuksissa voi määrittää postimaksun (esim. 2,50 €), joka lisätään vain paperilaskun saajien laskuihin. Se näkyy laskussa omana rivinään ja on mukana QR- ja viivakoodin summassa, ja vuosiraportti erittelee kertyneet postimaksut.
+- **Postimaksu:** asetuksissa voi määrittää postimaksun (esim. 2,50 €), joka lisätään vain paperilaskun saajien laskuihin. Laskun yläosassa näkyvät erikseen jäsenmaksu, postimaksu ja maksettava, ja QR- ja viivakoodissa on kokonaissumma. Vuosiraportti erittelee kertyneet postimaksut. Saatetekstissä `{summa}` on jäsenmaksu ja `{maksettava}` maksettava yhteensä. Ikkunakuoren palautusosoitteen voi antaa asetuksissa.
 - Maksumuistutukset käsin tai automaattisesti, esim. 14 päivää eräpäivän jälkeen ja enintään 2 kertaa. Rahastonhoitaja saa halutessaan yhteenvedon lähetetyistä muistutuksista.
 
 **Maksujen kirjaus**
@@ -125,9 +125,15 @@ Jäsenrekisteri sisältää henkilötietoja. Rekisterinpitäjä on yhdistys, ja 
 
 ![Poiston kysely](docs/kuvat/10-poisto.png)
 
+## WordPress.org
+
+Lisäosa on valmisteltu WordPressin viralliseen lisäosahakemistoon: englanninkielinen `readme.txt`, yksilöllinen etuliite `jasrek_`, ja [Plugin Check](https://wordpress.org/plugins/plugin-check/) -tarkastus menee läpi ilman virheitä ja varoituksia. Hakemiston kuvat (ikoni, banneri ja kuvakaappaukset) ovat kansiossa `.wordpress-org`.
+
+Kun lisäosa on hyväksytty hakemistoon, GitHubin julkaisu vie version automaattisesti WordPress.orgiin, kunhan repositorion asetuksiin (*Settings → Secrets and variables → Actions*) on lisätty WordPress.orgin `SVN_USERNAME` ja `SVN_PASSWORD`.
+
 ## Vaatimukset
 
-- WordPress 5.8 tai uudempi
+- WordPress 6.2 tai uudempi
 - PHP 7.4 tai uudempi
 - MySQL / MariaDB
 - Toimiva sähköpostin lähetys (SMTP-lisäosa suositeltava)
@@ -138,6 +144,7 @@ Jäsenrekisteri sisältää henkilötietoja. Rekisterinpitäjä on yhdistys, ja 
 ```
 jasenrekisteri.php          Lisäosan pääsivu, valikot ja kytkennät
 uninstall.php               Tietojen poisto lisäosan poiston yhteydessä (jos valittu)
+readme.txt                  WordPress.orgin lisäosahakemiston kuvaus (englanniksi)
 includes/
   install.php               Tietokantataulut ja versiopäivitykset
   helpers.php               Asetukset, viitenumero, IBAN, virtuaaliviivakoodi, CSV, sähköposti
@@ -156,7 +163,7 @@ includes/
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
-  lib/jr-qrcode.php         QR-koodikirjasto (MIT)
+  lib/jasrek-qrcode.php     QR-koodikirjasto (MIT)
 assets/                     Hallinnan CSS ja JavaScript
 ```
 

@@ -2,8 +2,8 @@
 if (!defined('ABSPATH')) exit;
 
 /** Yhteinen sähköpostipohja (inline-tyylit, toimii myös Outlookissa ja puhelimella). */
-function jr_email_layout($title, $inner) {
-    $s = jr_settings();
+function jasrek_email_layout($title, $inner) {
+    $s = jasrek_settings();
     $footer = $s['yhteystiedot'] !== '' ? nl2br(esc_html($s['yhteystiedot'])) : esc_html($s['yhdistys']);
     if ($s['ytunnus'] !== '') $footer .= '<br>Y-tunnus ' . esc_html($s['ytunnus']);
 
@@ -19,7 +19,7 @@ function jr_email_layout($title, $inner) {
 }
 
 /** Laskurivin henkilötiedot: ensisijaisesti jäsenrekisterin nykyiset tiedot, muuten laskulle tallennetut. */
-function jr_rivi_person($r) {
+function jasrek_rivi_person($r) {
     $etu  = isset($r->etunimi) && $r->etunimi !== null ? $r->etunimi : strtok((string) $r->nimi, ' ');
     $suku = isset($r->sukunimi) && $r->sukunimi !== null ? $r->sukunimi : trim(substr((string) $r->nimi, strlen((string) $etu)));
     return array(
@@ -27,34 +27,46 @@ function jr_rivi_person($r) {
         'sukunimi' => (string) $suku,
         'nimi'     => trim($etu . ' ' . $suku),
         'tunnus'   => isset($r->tunnus) ? (string) $r->tunnus : '',
-        'jasenlaji'=> isset($r->jasenlaji) ? jr_laji_nimi((string) $r->jasenlaji) : '',
-        'jasenluokka' => (isset($r->jasenlaji) && jr_laji_nimi((string) $r->jasenlaji) !== '') ? jr_laji_nimi((string) $r->jasenlaji) : 'Jäsen',
+        'jasenlaji'=> isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '',
+        'jasenluokka' => (isset($r->jasenlaji) && jasrek_laji_nimi((string) $r->jasenlaji) !== '') ? jasrek_laji_nimi((string) $r->jasenlaji) : 'Jäsen',
     );
 }
 
-function jr_invoice_vars($lasku, $r) {
-    $s = jr_settings();
-    $p = jr_rivi_person($r);
+function jasrek_invoice_vars($lasku, $r) {
+    $s = jasrek_settings();
+    $p = jasrek_rivi_person($r);
     return array_merge($p, array(
         'laskun_nimi' => $lasku->nimi,
-        'summa'       => jr_money($r->summa),
-        'jasenmaksu'  => jr_money(jr_rivi_jasenmaksu($r)),
-        'postimaksu'  => jr_money(jr_rivi_postimaksu($r)),
-        'viite'       => jr_viite_format($r->viite),
-        'erapaiva'    => jr_date(jr_rivi_era($lasku, $r)),
-        'laskupvm'    => jr_date($lasku->laskupvm),
-        'iban'        => jr_iban_format($s['iban']),
+        // {summa} = jäsenmaksu (ilman paperilaskun postimaksua), {maksettava} = maksettava yhteensä
+        'summa'       => jasrek_money(jasrek_rivi_jasenmaksu($r)),
+        'maksettava'  => jasrek_money($r->summa),
+        'jasenmaksu'  => jasrek_money(jasrek_rivi_jasenmaksu($r)),
+        'postimaksu'  => jasrek_money(jasrek_rivi_postimaksu($r)),
+        'viite'       => jasrek_viite_format($r->viite),
+        'erapaiva'    => jasrek_date(jasrek_rivi_era($lasku, $r)),
+        'laskupvm'    => jasrek_date($lasku->laskupvm),
+        'iban'        => jasrek_iban_format($s['iban']),
         'saaja'       => $s['yhdistys'],
         'yhdistys'    => $s['yhdistys'],
     ));
 }
 
 /**
+ * Postimaksun selite saatteen perään, jos laskussa on postimaksu eikä saate mainitse sitä
+ * paikkamerkeillä {postimaksu} tai {maksettava}.
+ */
+function jasrek_postimaksu_note($text, $r, $vars) {
+    if (jasrek_rivi_postimaksu($r) <= 0) return '';
+    if (strpos($text, '{postimaksu}') !== false || strpos($text, '{maksettava}') !== false) return '';
+    return sprintf('Paperilaskun postimaksu %s on lisätty jäsenmaksuun %s. Maksettava yhteensä %s.', $vars['postimaksu'], $vars['jasenmaksu'], $vars['maksettava']);
+}
+
+/**
  * @param string $img 'cid' = kuvat upotetaan sähköpostin liitteinä, 'data' = esikatselu selaimessa.
  */
-function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
-    $s    = jr_settings();
-    $vars = jr_invoice_vars($lasku, $r);
+function jasrek_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
+    $s    = jasrek_settings();
+    $vars = jasrek_invoice_vars($lasku, $r);
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
 
     $row = function ($label, $value, $strong = false) {
@@ -62,15 +74,17 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
             . '<td style="padding:8px 0;border-bottom:1px solid #e6e9ee;' . ($strong ? 'font-weight:bold;' : '') . '">' . $value . '</td></tr>';
     };
 
-    $jasen = esc_html($vars['nimi']) . (jr_tunnus_on() && $vars['tunnus'] !== '' ? ' (' . esc_html($vars['tunnus']) . ')' : '');
+    $jasen = esc_html($vars['nimi']) . (jasrek_tunnus_on() && $vars['tunnus'] !== '' ? ' (' . esc_html($vars['tunnus']) . ')' : '');
 
-    $html  = '<p style="margin:0 0 20px;">' . jr_fill($text, $vars) . '</p>';
+    $html  = '<p style="margin:0 0 20px;">' . jasrek_fill($text, $vars) . '</p>';
+    $note  = jasrek_postimaksu_note($text, $r, $vars);
+    if ($note !== '') $html .= '<p style="margin:0 0 20px;font-weight:bold;">' . esc_html($note) . '</p>';
     $html .= '<div style="font-size:12px;letter-spacing:.08em;color:#6b7785;text-transform:uppercase;margin:0 0 4px;">'
            . ($reminder ? 'Maksumuistutus' : 'Lasku') . '</div>';
     $html .= '<div style="font-size:20px;font-weight:bold;margin:0 0 12px;">' . esc_html($lasku->nimi) . '</div>';
     $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:15px;">';
     $html .= $row('Jäsen', $jasen);
-    $luokka = isset($r->jasenlaji) ? jr_laji_nimi((string) $r->jasenlaji) : '';
+    $luokka = isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '';
     if ($luokka !== '') $html .= $row('Jäsenluokka', esc_html($luokka));
     $html .= $row('Laskun päiväys', esc_html($vars['laskupvm']));
     $html .= $row('Saaja', esc_html($s['yhdistys']));
@@ -78,7 +92,7 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
     if ($s['bic'] !== '') $html .= $row('BIC', esc_html($s['bic']));
     $html .= $row('Viitenumero', '<span style="font-family:Consolas,Menlo,monospace;">' . esc_html($vars['viite']) . '</span>', true);
     $html .= $row('Eräpäivä', esc_html($vars['erapaiva']), true);
-    if (jr_rivi_postimaksu($r) > 0) {
+    if (jasrek_rivi_postimaksu($r) > 0) {
         $html .= $row('Jäsenmaksu', esc_html($vars['jasenmaksu']));
         $html .= $row('Postimaksu (paperilasku)', esc_html($vars['postimaksu']));
     }
@@ -86,10 +100,10 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
 
     $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0 0;background:#eaf2fb;border-radius:6px;">'
            . '<tr><td style="padding:14px 18px;font-size:15px;">Maksettava</td>'
-           . '<td align="right" style="padding:14px 18px;font-size:22px;font-weight:bold;color:#1d3557;">' . esc_html($vars['summa']) . '</td></tr></table>';
+           . '<td align="right" style="padding:14px 18px;font-size:22px;font-weight:bold;color:#1d3557;">' . esc_html($vars['maksettava']) . '</td></tr></table>';
 
     // QR-koodi ja/tai pankkiviivakoodi asetusten mukaan
-    $images = jr_invoice_images($lasku, $r);
+    $images = jasrek_invoice_images($lasku, $r);
     $src = function ($cid) use ($images, $img) {
         return $img === 'data' ? 'data:image/png;base64,' . base64_encode($images[$cid]) : 'cid:' . $cid;
     };
@@ -105,7 +119,7 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
         $html .= '<div style="margin:18px 0 0;"><img src="' . esc_attr($src('jrbar')) . '" width="' . $bw . '" height="50" alt="Pankkiviivakoodi" style="display:block;width:' . $bw . 'px;height:50px;"></div>';
     }
 
-    $vvk = jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jr_rivi_era($lasku, $r));
+    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
     if ($vvk !== '') {
         $html .= '<div style="margin:22px 0 0;padding:14px 16px;border:1px dashed #b8c2cc;border-radius:6px;">'
                . '<div style="font-size:13px;color:#6b7785;margin:0 0 6px;">Virtuaaliviivakoodi – kopioi pankkisovellukseen, niin maksun tiedot täyttyvät valmiiksi:</div>'
@@ -114,5 +128,5 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
 
     $html .= '<p style="margin:20px 0 0;font-size:13px;color:#6b7785;">Käytäthän maksaessasi viitenumeroa (ei viestiä), jotta maksu kohdistuu sinulle.</p>';
 
-    return jr_email_layout($lasku->nimi, $html);
+    return jasrek_email_layout($lasku->nimi, $html);
 }

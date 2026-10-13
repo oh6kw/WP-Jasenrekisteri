@@ -1,22 +1,40 @@
 <?php
 if (!defined('ABSPATH')) exit;
+// phpcs:disable WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching -- The plugin's own custom tables (members, invoices, audit log). The data is admin-only and changes on every write, so object caching is not used.
 
 /* ------------------------------------------------------------------
  * Taulut, asetukset, oikeudet
  * ------------------------------------------------------------------ */
 
-function jr_t($name) {
-    global $wpdb;
-    $map = array(
+function jasrek_table_names() {
+    return array(
         'jasenet' => 'jasenrekisteri',            // sama taulu kuin aiemmissa versioissa
         'laskut'  => 'jasenrekisteri_laskut',
         'rivit'   => 'jasenrekisteri_laskurivit',
         'loki'    => 'jasenrekisteri_loki',
     );
-    return $wpdb->prefix . $map[$name];
 }
 
-function jr_settings() {
+/**
+ * Taulujen nimet $wpdb-olion ominaisuuksina ($wpdb->jasrek_jasenet jne.), kuten WordPressin omat
+ * taulut ($wpdb->posts). SQL-kyselyissä taulun nimi luetaan aina tästä.
+ */
+function jasrek_register_tables() {
+    global $wpdb;
+    foreach (jasrek_table_names() as $key => $table) {
+        $wpdb->{'jasrek_' . $key} = $wpdb->prefix . $table;
+    }
+}
+jasrek_register_tables();
+add_action('switch_blog', 'jasrek_register_tables');
+
+function jasrek_t($name) {
+    global $wpdb;
+    $names = jasrek_table_names();
+    return $wpdb->prefix . $names[$name];
+}
+
+function jasrek_settings() {
     $defaults = array(
         'yhdistys'        => get_bloginfo('name'),
         'iban'            => '',
@@ -34,6 +52,7 @@ function jr_settings() {
         'lisakentat'      => array(),
         'loki_kk'         => '24',
         'postimaksu'      => '0',
+        'postiosoite'     => '',
         'auto_muistutus'  => '0',
         'auto_paivia'     => '14',
         'auto_max'        => '1',
@@ -42,7 +61,7 @@ function jr_settings() {
         'viesti_oletus'   => "Hei {etunimi},\n\nohessa {laskun_nimi}. Muistathan käyttää maksaessasi viitenumeroa, jotta maksusi kohdistuu oikein.\n\nKiitos, että olet mukana toiminnassa!\n\nYstävällisin terveisin\n{yhdistys}",
         'muistutus_teksti'=> "Hei {etunimi},\n\nemme ole vielä havainneet maksuasi alla olevaan laskuun. Jos olet jo maksanut, tämä viesti on aiheeton – kiitos!\n\nYstävällisin terveisin\n{yhdistys}",
     );
-    $saved = get_option('jr_settings', array());
+    $saved = get_option('jasrek_settings', array());
     $s = wp_parse_args(is_array($saved) ? $saved : array(), $defaults);
     // Tyhjäksi jätetyn tekstin tilalla käytetään oletusta, jottei lasku lähde ilman saatetta.
     foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi') as $k) {
@@ -52,52 +71,52 @@ function jr_settings() {
 }
 
 /** Onko lisätunniste (esim. jäsennumero) käytössä, ja millä nimellä. */
-function jr_tunnus_on() {
-    return jr_settings()['tunnus_kaytossa'] === '1';
+function jasrek_tunnus_on() {
+    return jasrek_settings()['tunnus_kaytossa'] === '1';
 }
-function jr_tunnus_nimi() {
-    $n = trim(jr_settings()['tunnus_nimi']);
+function jasrek_tunnus_nimi() {
+    $n = trim(jasrek_settings()['tunnus_nimi']);
     return $n !== '' ? $n : 'Tunnus';
 }
 
 /** Jäsenluokat: array(id => array('nimi' => ..., 'summa' => ...)). Summa 0 = ei laskuteta. */
-function jr_jasenlajit() {
-    $l = jr_settings()['jasenlajit'];
+function jasrek_jasenlajit() {
+    $l = jasrek_settings()['jasenlajit'];
     return is_array($l) ? $l : array();
 }
-function jr_laji_nimi($id) {
-    $l = jr_jasenlajit();
+function jasrek_laji_nimi($id) {
+    $l = jasrek_jasenlajit();
     return ($id !== '' && isset($l[$id])) ? $l[$id]['nimi'] : '';
 }
 /** Etsii jäsenluokan nimellä (kirjainkoolla ei väliä). */
-function jr_laji_by_name($nimi) {
+function jasrek_laji_by_name($nimi) {
     $nimi = function_exists('mb_strtolower') ? mb_strtolower(trim($nimi)) : strtolower(trim($nimi));
     if ($nimi === '') return '';
-    foreach (jr_jasenlajit() as $id => $l) {
+    foreach (jasrek_jasenlajit() as $id => $l) {
         $n = function_exists('mb_strtolower') ? mb_strtolower($l['nimi']) : strtolower($l['nimi']);
         if ($n === $nimi) return $id;
     }
     return null;
 }
 /** Jäsenen laskutettava summa: laskun hinta luokalle, muuten luokan nykyinen hinta, muuten oletussumma. */
-function jr_member_price($m, $hinnat, $oletus) {
+function jasrek_member_price($m, $hinnat, $oletus) {
     $laji = isset($m->jasenlaji) ? $m->jasenlaji : '';
     if ($laji !== '' && is_array($hinnat) && isset($hinnat[$laji])) return (float) $hinnat[$laji];
-    $lajit = jr_jasenlajit();
+    $lajit = jasrek_jasenlajit();
     if ($laji !== '' && isset($lajit[$laji])) return (float) $lajit[$laji]['summa'];
     return (float) $oletus;
 }
 /** Onko jäsenen luokan jäsenmaksu 0 € (esim. kunniajäsen)? */
-function jr_is_maksuvapaa($m) {
-    $lajit = jr_jasenlajit();
+function jasrek_is_maksuvapaa($m) {
+    $lajit = jasrek_jasenlajit();
     $laji  = isset($m->jasenlaji) ? $m->jasenlaji : '';
     return $laji !== '' && isset($lajit[$laji]) && (float) $lajit[$laji]['summa'] <= 0;
 }
-function jr_laji_badge($laji_id) {
-    $lajit = jr_jasenlajit();
+function jasrek_laji_badge($laji_id) {
+    $lajit = jasrek_jasenlajit();
     if ($laji_id === '' || !isset($lajit[$laji_id])) return '';
     $free = (float) $lajit[$laji_id]['summa'] <= 0;
-    return '<span class="jr-badge ' . ($free ? 'jr-badge-purple' : 'jr-badge-laji') . '"' . ($free ? ' title="Ei jäsenmaksua"' : '') . '>'
+    return '<span class="jasrek-badge ' . ($free ? 'jasrek-badge-purple' : 'jasrek-badge-laji') . '"' . ($free ? ' title="Ei jäsenmaksua"' : '') . '>'
         . esc_html($lajit[$laji_id]['nimi']) . '</span>';
 }
 
@@ -105,23 +124,23 @@ function jr_laji_badge($laji_id) {
  * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta', 'lista' => '1'|'0')).
  * Arvot tallennetaan jäsenelle JSON-muodossa (jasenet.lisakentat).
  */
-function jr_lisakentat() {
-    $l = jr_settings()['lisakentat'];
+function jasrek_lisakentat() {
+    $l = jasrek_settings()['lisakentat'];
     return is_array($l) ? $l : array();
 }
-function jr_member_lisa($m) {
+function jasrek_member_lisa($m) {
     $raw = is_object($m) && isset($m->lisakentat) ? $m->lisakentat : '';
     $d = $raw ? json_decode($raw, true) : array();
     return is_array($d) ? $d : array();
 }
 /** Lisäkentän arvo näytettäväksi: valintaruutu "✓"/"Kyllä", teksti sellaisenaan. */
-function jr_lisa_value($kentta, $v, $check = '✓') {
+function jasrek_lisa_value($kentta, $v, $check = '✓') {
     $v = (string) $v;
     if ($kentta['tyyppi'] === 'valinta') return $v !== '' ? $check : '';
     return $v;
 }
 /** Tulkitsee tuodun tai lomakkeen arvon lisäkentälle. */
-function jr_lisa_parse($kentta, $v) {
+function jasrek_lisa_parse($kentta, $v) {
     $v = trim((string) $v);
     if ($kentta['tyyppi'] === 'valinta') {
         $l = strtolower(remove_accents($v));
@@ -132,75 +151,128 @@ function jr_lisa_parse($kentta, $v) {
 }
 
 /** Saako jäsen laskun paperilla? Kyllä, jos hän on sitä pyytänyt tai häneltä puuttuu sähköposti. */
-function jr_is_paperi($r) {
+function jasrek_is_paperi($r) {
     $email = isset($r->to_email) ? $r->to_email : (isset($r->email) ? $r->email : '');
     return !empty($r->paperilasku) || (string) $email === '';
 }
 
 /** Asetuksissa määritelty postimaksu paperilaskuille (0 = ei postimaksua). */
-function jr_postimaksu_oletus() {
-    return max(0, round((float) jr_settings()['postimaksu'], 2));
+function jasrek_postimaksu_oletus() {
+    return max(0, round((float) jasrek_settings()['postimaksu'], 2));
 }
 /** Laskurivin postimaksu ja jäsenmaksu ilman postimaksua. */
-function jr_rivi_postimaksu($r) {
+function jasrek_rivi_postimaksu($r) {
     return isset($r->postimaksu) ? (float) $r->postimaksu : 0.0;
 }
-function jr_rivi_jasenmaksu($r) {
-    return (float) $r->summa - jr_rivi_postimaksu($r);
+function jasrek_rivi_jasenmaksu($r) {
+    return (float) $r->summa - jasrek_rivi_postimaksu($r);
 }
 
 /** Laskurivin eräpäivä: jäsenkohtainen (myöhemmin lisätty jäsen), muuten laskun eräpäivä. */
-function jr_rivi_era($lasku, $r) {
+function jasrek_rivi_era($lasku, $r) {
     return (!empty($r->erapaiva) && $r->erapaiva !== '0000-00-00') ? $r->erapaiva : $lasku->erapaiva;
 }
 /** Eräpäivä laskulle myöhemmin lisättävälle: laskun eräpäivä, tai 3 viikkoa tästä päivästä, jos se on jo lähellä tai mennyt. */
-function jr_late_era($lasku) {
+function jasrek_late_era($lasku) {
     $today = current_time('Y-m-d');
-    $min = date('Y-m-d', strtotime($today . ' +14 days'));
-    return $lasku->erapaiva >= $min ? $lasku->erapaiva : date('Y-m-d', strtotime($today . ' +21 days'));
+    $min = gmdate('Y-m-d', strtotime($today . ' +14 days'));
+    return $lasku->erapaiva >= $min ? $lasku->erapaiva : gmdate('Y-m-d', strtotime($today . ' +21 days'));
 }
 
 /** Jäsenyyden tila. Maksuvelvollisuus määräytyy jäsenluokasta (0 € = ei laskuteta). */
-function jr_tilat() {
+function jasrek_tilat() {
     return array(
         'aktiivinen' => 'Voimassa',
         'eronnut'    => 'Eronnut',
     );
 }
-function jr_tila_badge($tila) {
-    if ($tila === 'eronnut') return '<span class="jr-badge jr-badge-muted">eronnut</span>';
+function jasrek_tila_badge($tila) {
+    if ($tila === 'eronnut') return '<span class="jasrek-badge jasrek-badge-muted">eronnut</span>';
     return '';
 }
 /** SQL-ehto: kaikki voimassa olevat jäsenet. */
-function jr_sql_jasenet() {
+function jasrek_sql_jasenet() {
     return "tila <> 'eronnut'";
 }
 
 /** Tarkistaa oikeudet ja nonce-tunnisteen (CSRF-suojaus). */
-function jr_check($nonce_action) {
+function jasrek_check($nonce_action) {
     if (!current_user_can('manage_options')) {
         wp_die('Sinulla ei ole oikeuksia tähän toimintoon.', 403);
     }
     check_admin_referer($nonce_action);
 }
 
-function jr_redirect($page, $args = array()) {
+function jasrek_redirect($page, $args = array()) {
     $args = array_filter($args, function ($v) { return $v !== null && $v !== ''; });
     wp_safe_redirect(add_query_arg($args, admin_url('admin.php?page=' . $page)));
     exit;
 }
 
-function jr_post($key, $default = '') {
+/*
+ * Pyyntöparametrien luku. Lomakkeiden käsittelijät kutsuvat aina ensin jasrek_check() (oikeudet + nonce),
+ * joten POST-arvot luetaan vasta tarkistuksen jälkeen. GET-parametrit ovat näkymän valintoja (sivu, välilehti,
+ * suodatus) eivätkä muuta tietoja, joten niihin ei tarvita noncea.
+ */
+
+/** POST-arvo (merkkijono). Kutsuja sanitoi arvon käyttötarkoituksen mukaan (esim. sanitize_email, sanitize_textarea_field). */
+function jasrek_post($key, $default = '') {
+    // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce checked by jasrek_check() in every handler; sanitized by the caller.
     return isset($_POST[$key]) ? wp_unslash($_POST[$key]) : $default;
+}
+
+/** POST-taulukko, jonka jokainen arvo on siistitty tekstiksi (avaimet säilyvät). */
+function jasrek_post_array($key) {
+    $raw = isset($_POST[$key]) ? wp_unslash($_POST[$key]) : array(); // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- nonce checked by jasrek_check() in every handler; values sanitized below.
+    if (!is_array($raw)) return array();
+    $out = array();
+    foreach ($raw as $k => $v) {
+        if (is_array($v)) continue;
+        $out[is_int($k) ? $k : sanitize_key($k)] = sanitize_text_field($v);
+    }
+    return $out;
+}
+
+/** POST-taulukon positiiviset kokonaisluvut (esim. valitut rivit). */
+function jasrek_post_ids($key) {
+    return array_values(array_filter(array_map('absint', jasrek_post_array($key))));
+}
+
+/** GET-parametri tekstinä (näkymän valinta, ei muuta tietoja). */
+function jasrek_get($key, $default = '') {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- read-only view parameter.
+    return isset($_GET[$key]) ? sanitize_text_field(wp_unslash($_GET[$key])) : $default;
+}
+function jasrek_get_int($key, $default = 0) {
+    $v = jasrek_get($key, '');
+    return $v === '' ? $default : intval($v);
+}
+
+/** Kokonaisluku GET- tai POST-pyynnöstä. Käytetään kohteen tunnisteeseen, josta nonce-tarkistuksen nimi muodostetaan. */
+function jasrek_request_int($key) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- the id is part of the nonce action and is verified immediately by jasrek_check().
+    return isset($_REQUEST[$key]) ? intval($_REQUEST[$key]) : 0;
+}
+function jasrek_request_flag($key) {
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified by jasrek_check() in the handler.
+    return !empty($_REQUEST[$key]);
+}
+
+/** Ladattu tiedosto (vain tarkistettu, palvelimen väliaikainen tiedosto). */
+function jasrek_uploaded_file($key) {
+    if (empty($_FILES[$key]) || !is_array($_FILES[$key])) return null; // phpcs:ignore WordPress.Security.NonceVerification.Missing -- nonce checked by jasrek_check() before upload handling.
+    $f = $_FILES[$key]; // phpcs:ignore WordPress.Security.NonceVerification.Missing, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- validated below; only tmp_name, size, error and a sanitized name are used.
+    if (!isset($f['error'], $f['tmp_name'], $f['size']) || (int) $f['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($f['tmp_name'])) return null;
+    return array('tmp_name' => $f['tmp_name'], 'size' => (int) $f['size'], 'name' => sanitize_file_name(isset($f['name']) ? $f['name'] : 'tiedosto'));
 }
 
 /* ------------------------------------------------------------------
  * Ilmoitukset (Post/Redirect/Get -mallilla, ei uudelleenlähetystä F5:llä)
  * ------------------------------------------------------------------ */
 
-function jr_notice() {
-    if (empty($_GET['jr_msg'])) return;
-    $n = isset($_GET['jr_n']) ? intval($_GET['jr_n']) : 0;
+function jasrek_notice() {
+    if (empty(jasrek_get('jasrek_msg'))) return;
+    $n = jasrek_get_int('jasrek_n', 0);
     $msgs = array(
         'member_added'    => array('success', 'Jäsen lisätty.'),
         'member_updated'  => array('success', 'Jäsenen tiedot päivitetty.'),
@@ -209,7 +281,7 @@ function jr_notice() {
         'email_invalid'   => array('warning', 'Tiedot tallennettiin, mutta sähköpostiosoite oli virheellinen eikä sitä tallennettu.'),
         'lasku_invalid'   => array('error',   'Tarkista laskun nimi, summa ja eräpäivä.'),
         'no_recipients'   => array('error',   'Laskulle ei valittu yhtään jäsentä.'),
-        'lasku_created_skip' => array('success', sprintf('Lasku luotu %d jäsenelle. %d jäsentä ohitettiin, koska heidän jäsenmaksunsa on 0 € (esim. kunniajäsenet).', $n, isset($_GET['jr_s']) ? intval($_GET['jr_s']) : 0)),
+        'lasku_created_skip' => array('success', sprintf('Lasku luotu %d jäsenelle. %d jäsentä ohitettiin, koska heidän jäsenmaksunsa on 0 € (esim. kunniajäsenet).', $n, jasrek_get_int('jasrek_s', 0))),
         'lasku_created'   => array('success', sprintf('Lasku luotu %d jäsenelle. Tarkista tiedot, lähetä halutessasi testilasku itsellesi ja lähetä sitten laskut.', $n)),
         'lasku_updated'   => array('success', 'Laskun tiedot päivitetty.'),
         'lasku_deleted'   => array('success', 'Lasku poistettu.'),
@@ -218,23 +290,23 @@ function jr_notice() {
         'row_deleted'     => array('success', 'Jäsen poistettu tältä laskulta.'),
         'sent_one'        => array('success', 'Lasku lähetetty.'),
         'send_failed'     => array('error',   'Lähetys epäonnistui. Tarkista sähköpostiosoite ja sivuston sähköpostiasetukset.'),
-        'test_sent'       => array('success', 'Testiviesti lähetetty osoitteeseen ' . (isset($_GET['jr_to']) ? sanitize_email(wp_unslash($_GET['jr_to'])) : '') . '.'),
+        'test_sent'       => array('success', 'Testiviesti lähetetty osoitteeseen ' . sanitize_email(jasrek_get('jasrek_to')) . '.'),
         'test_invalid'    => array('error',   'Anna kelvollinen sähköpostiosoite testiviestille.'),
         'settings_saved'  => array('success', 'Asetukset tallennettu.'),
         'iban_invalid'    => array('warning', 'Asetukset tallennettu, mutta IBAN-tilinumero ei näytä oikealta. Tarkista se.'),
         'mail_invalid'    => array('error',   'Otsikko ja viesti ovat pakollisia.'),
         'nothing_selected'=> array('warning', 'Et valinnut yhtään riviä.'),
-        'member_invoiced' => array(empty($_GET['jr_e']) ? 'success' : 'warning', sprintf('Jäsen tallennettu ja lisätty %d laskulle.%s%s', $n,
-            !empty($_GET['jr_s']) ? ' Lasku lähetetty sähköpostilla.' : '',
-            !empty($_GET['jr_e']) ? ' Laskun lähetys epäonnistui – lähetä se laskun sivulta uudelleen.' : '')),
+        'member_invoiced' => array(empty(jasrek_get('jasrek_e')) ? 'success' : 'warning', sprintf('Jäsen tallennettu ja lisätty %d laskulle.%s%s', $n,
+            !empty(jasrek_get('jasrek_s')) ? ' Lasku lähetetty sähköpostilla.' : '',
+            !empty(jasrek_get('jasrek_e')) ? ' Laskun lähetys epäonnistui – lähetä se laskun sivulta uudelleen.' : '')),
         'feedback_sent'   => array('success', 'Kiitos palautteesta! Viesti lähetettiin kehittäjälle.'),
         'feedback_empty'  => array('error',   'Kirjoita viesti ennen lähettämistä.'),
         'feedback_wait'   => array('warning', 'Odota hetki ennen seuraavan palautteen lähettämistä.'),
         'members_bulk'    => array('success', sprintf('Muutettu %d jäsenen tiedot.', $n)),
         'csv_empty'       => array('error',   'Tiedostosta ei löytynyt rivejä. Tarkista, että ensimmäisellä rivillä on otsikot ja sen alla jäsenten tiedot.'),
         'members_imported'=> array('success', sprintf('Tuonti valmis: %d lisätty, %d päivitetty, %d ohitettu (jo rekisterissä), %d ohitettu puuttuvan nimen vuoksi.%s',
-            $n, isset($_GET['jr_u']) ? intval($_GET['jr_u']) : 0, isset($_GET['jr_s']) ? intval($_GET['jr_s']) : 0, isset($_GET['jr_e']) ? intval($_GET['jr_e']) : 0,
-            !empty($_GET['jr_l']) ? ' ' . intval($_GET['jr_l']) . ' riviltä jäsenluokkaa ei tunnistettu – lisää luokka asetuksiin ja valitse se jäsenelle.' : '')),
+            $n, jasrek_get_int('jasrek_u', 0), jasrek_get_int('jasrek_s', 0), jasrek_get_int('jasrek_e', 0),
+            !empty(jasrek_get('jasrek_l')) ? ' ' . jasrek_get_int('jasrek_l') . ' riviltä jäsenluokkaa ei tunnistettu – lisää luokka asetuksiin ja valitse se jäsenelle.' : '')),
         'upload_failed'   => array('error',   'Tiedoston lataus epäonnistui. Tarkista, että valitsit tiedoston (enintään 5 Mt).'),
         'no_payments'     => array('error',   'Tiedostosta ei löytynyt maksuja. Tarkista, että se on viitesiirtoaineisto (KTL), camt.054/053-XML tai tiliote CSV-muodossa, jossa on viite- ja summasarake.'),
         'payments_imported' => array('success', sprintf('%d laskua merkitty maksetuksi pankin tiedostosta.', $n)),
@@ -246,8 +318,9 @@ function jr_notice() {
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),
         'rows_failed'     => array('warning', sprintf('Lasku luotiin, mutta %d jäsenelle laskua ei voitu muodostaa (viitenumero oli jo käytössä). Ota yhteyttä ylläpitoon.', $n)),
     );
-    if (!isset($msgs[$_GET['jr_msg']])) return;
-    list($type, $text) = $msgs[$_GET['jr_msg']];
+    $key = sanitize_key(jasrek_get('jasrek_msg'));
+    if (!isset($msgs[$key])) return;
+    list($type, $text) = $msgs[$key];
     printf('<div class="notice notice-%s is-dismissible"><p>%s</p></div>', esc_attr($type), esc_html($text));
 }
 
@@ -255,22 +328,22 @@ function jr_notice() {
  * Muotoilut
  * ------------------------------------------------------------------ */
 
-function jr_money($amount) {
+function jasrek_money($amount) {
     return number_format((float) $amount, 2, ',', "\xC2\xA0") . "\xC2\xA0€";
 }
 
 /** Summa tai summaväli (jos jäsenlajeilla on eri hinnat). */
-function jr_summa_range($min, $max, $fallback) {
-    if ($min === null || $max === null) return jr_money($fallback);
-    if (abs((float) $min - (float) $max) < 0.005) return jr_money($min);
-    return number_format((float) $min, 2, ',', "\xC2\xA0") . '–' . jr_money($max);
+function jasrek_summa_range($min, $max, $fallback) {
+    if ($min === null || $max === null) return jasrek_money($fallback);
+    if (abs((float) $min - (float) $max) < 0.005) return jasrek_money($min);
+    return number_format((float) $min, 2, ',', "\xC2\xA0") . '–' . jasrek_money($max);
 }
 
 /**
  * Korjaa taulukkolaskennassa rikkoutuneen puhelinnumeron: 401234567 → 0401234567,
  * 358401234567 → +358401234567. Muihin muotoihin ei kosketa.
  */
-function jr_normalize_phone($p) {
+function jasrek_normalize_phone($p) {
     $p = trim((string) $p);
     if ($p === '' || !preg_match('/^[\d\s\-]+$/', $p)) return $p;
     $digits = preg_replace('/\D/', '', $p);
@@ -279,19 +352,19 @@ function jr_normalize_phone($p) {
     return $p;
 }
 
-function jr_parse_money($s) {
+function jasrek_parse_money($s) {
     $s = str_replace(array(' ', "\xC2\xA0", '€'), '', (string) $s);
     $s = str_replace(',', '.', $s);
     return is_numeric($s) ? round((float) $s, 2) : 0.0;
 }
 
-function jr_date($ymd) {
+function jasrek_date($ymd) {
     if (!$ymd || $ymd === '0000-00-00') return '';
     $ts = strtotime($ymd);
-    return $ts ? date('j.n.Y', $ts) : '';
+    return $ts ? gmdate('j.n.Y', $ts) : '';
 }
 
-function jr_date_or_null($s) {
+function jasrek_date_or_null($s) {
     $s = trim(sanitize_text_field(wp_unslash((string) $s)));
     if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
         return $s;
@@ -303,12 +376,12 @@ function jr_date_or_null($s) {
  * Pankkitiedot: IBAN, kotimainen viitenumero, virtuaaliviivakoodi
  * ------------------------------------------------------------------ */
 
-function jr_iban_clean($iban) {
+function jasrek_iban_clean($iban) {
     return strtoupper(preg_replace('/\s+/', '', (string) $iban));
 }
 
-function jr_iban_valid($iban) {
-    $iban = jr_iban_clean($iban);
+function jasrek_iban_valid($iban) {
+    $iban = jasrek_iban_clean($iban);
     if (!preg_match('/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/', $iban)) return false;
     $r = substr($iban, 4) . substr($iban, 0, 4);
     $mod = 0;
@@ -321,12 +394,12 @@ function jr_iban_valid($iban) {
     return $mod === 1;
 }
 
-function jr_iban_format($iban) {
-    return trim(chunk_split(jr_iban_clean($iban), 4, ' '));
+function jasrek_iban_format($iban) {
+    return trim(chunk_split(jasrek_iban_clean($iban), 4, ' '));
 }
 
 /** Suomalaisen viitenumeron tarkiste (painot 7-3-1 oikealta vasemmalle). */
-function jr_viite_tarkiste($base) {
+function jasrek_viite_tarkiste($base) {
     $weights = array(7, 3, 1);
     $sum = 0;
     $rev = strrev($base);
@@ -341,29 +414,29 @@ function jr_viite_tarkiste($base) {
  * Yksilöllinen viite: laskun numero + jäsenen ID (4 numeroa) + tarkiste.
  * Esim. lasku 3, jäsen 17 -> 3 0017 + tarkiste. Viitteestä näkee suoraan kenen maksu on kyseessä.
  */
-function jr_viite($lasku_id, $jasen_id) {
+function jasrek_viite($lasku_id, $jasen_id) {
     $base = sprintf('%d%04d', (int) $lasku_id, (int) $jasen_id);
-    return $base . jr_viite_tarkiste($base);
+    return $base . jasrek_viite_tarkiste($base);
 }
 
 /**
  * Yksilöllinen viite laskuriville. Jos perusmuotoinen viite on jo käytössä (mahdollista, kun
  * jäsenten ID:t ylittävät 9999), lisätään perään juokseva numero ennen tarkistetta.
  */
-function jr_unique_viite($lasku_id, $jasen_id) {
+function jasrek_unique_viite($lasku_id, $jasen_id) {
     global $wpdb;
-    $t = jr_t('rivit');
+    $t = jasrek_t('rivit');
     $base = sprintf('%d%04d', (int) $lasku_id, (int) $jasen_id);
     for ($k = 0; $k < 1000; $k++) {
         $b = $k === 0 ? $base : $base . $k;
-        $v = $b . jr_viite_tarkiste($b);
-        if (!$wpdb->get_var($wpdb->prepare("SELECT 1 FROM $t WHERE viite = %s", $v))) return $v;
+        $v = $b . jasrek_viite_tarkiste($b);
+        if (!$wpdb->get_var($wpdb->prepare("SELECT 1 FROM {$wpdb->jasrek_rivit} WHERE viite = %s", $v))) return $v;
     }
-    return $base . jr_viite_tarkiste($base);
+    return $base . jasrek_viite_tarkiste($base);
 }
 
 /** Viite viiden numeron ryhmiin oikealta, kuten pankit sen esittävät. */
-function jr_viite_format($viite) {
+function jasrek_viite_format($viite) {
     $v = preg_replace('/\D/', '', (string) $viite);
     return trim(strrev(chunk_split(strrev($v), 5, ' ')));
 }
@@ -373,15 +446,15 @@ function jr_viite_format($viite) {
  * Jäsen voi liittää tämän pankkisovellukseen, jolloin tilinumero, summa, viite ja eräpäivä täyttyvät itsestään.
  * Toimii vain suomalaisella IBANilla.
  */
-function jr_virtuaaliviivakoodi($iban, $summa, $viite, $erapaiva) {
-    $iban = jr_iban_clean($iban);
+function jasrek_virtuaaliviivakoodi($iban, $summa, $viite, $erapaiva) {
+    $iban = jasrek_iban_clean($iban);
     if (!preg_match('/^FI(\d{16})$/', $iban, $m)) return '';
     $cents = (int) round((float) $summa * 100);
     if ($cents <= 0 || $cents > 99999999) return '';
     $ref = preg_replace('/\D/', '', (string) $viite);
     if ($ref === '' || strlen($ref) > 20) return '';
     $ts  = $erapaiva ? strtotime($erapaiva) : false;
-    $due = $ts ? date('ymd', $ts) : '000000';
+    $due = $ts ? gmdate('ymd', $ts) : '000000';
     return '4' . $m[1]
         . sprintf('%06d', intdiv($cents, 100))
         . sprintf('%02d', $cents % 100)
@@ -394,13 +467,13 @@ function jr_virtuaaliviivakoodi($iban, $summa, $viite, $erapaiva) {
  * Sähköposti
  * ------------------------------------------------------------------ */
 
-$GLOBALS['jr_mail_error'] = '';
+$GLOBALS['jasrek_mail_error'] = '';
 add_action('wp_mail_failed', function ($error) {
-    $GLOBALS['jr_mail_error'] = $error->get_error_message();
+    $GLOBALS['jasrek_mail_error'] = $error->get_error_message();
 });
 
-function jr_mail($to, $subject, $html, $images = array()) {
-    $s = jr_settings();
+function jasrek_mail($to, $subject, $html, $images = array()) {
+    $s = jasrek_settings();
     $headers = array('Content-Type: text/html; charset=UTF-8');
     if ($s['lahettaja_email'] && is_email($s['lahettaja_email'])) {
         $name = str_replace(array("\r", "\n", '"', '<', '>'), '', $s['lahettaja_nimi']);
@@ -409,7 +482,7 @@ function jr_mail($to, $subject, $html, $images = array()) {
     if ($s['vastaus_email'] && is_email($s['vastaus_email'])) {
         $headers[] = 'Reply-To: ' . $s['vastaus_email'];
     }
-    $GLOBALS['jr_mail_error'] = '';
+    $GLOBALS['jasrek_mail_error'] = '';
     // Lisätään viestiin myös pelkkä tekstiversio (multipart/alternative). Moni roskapostisuodatin
     // suhtautuu epäluuloisesti pelkkään HTML-viestiin.
     $alt = function ($phpmailer) use ($html, $images) {
@@ -433,27 +506,27 @@ function jr_mail($to, $subject, $html, $images = array()) {
  * Klikattavat paikkamerkit tekstikentän alle: painike lisää merkin kohdistimen kohdalle.
  * $tyyppi: 'lasku' (laskut ja muistutukset) tai 'tiedote'.
  */
-function jr_placeholders($target_id, $tyyppi = 'lasku', $lisa = '') {
+function jasrek_placeholders($target_id, $tyyppi = 'lasku', $lisa = '') {
     $selitteet = array(
         'etunimi' => 'Etunimi', 'sukunimi' => 'Sukunimi', 'nimi' => 'Etu- ja sukunimi',
-        'tunnus' => jr_tunnus_nimi(), 'jasenluokka' => 'Jäsenluokka, esim. Nuorisojäsen',
-        'laskun_nimi' => 'Laskun nimi, esim. Jäsenmaksu 2027', 'summa' => 'Maksettava summa, esim. 25,00 € (paperilaskussa sisältää postimaksun)',
-        'jasenmaksu' => 'Jäsenmaksu ilman postimaksua', 'postimaksu' => 'Postimaksu (0,00 €, jos lasku tulee sähköpostilla)',
+        'tunnus' => jasrek_tunnus_nimi(), 'jasenluokka' => 'Jäsenluokka, esim. Nuorisojäsen',
+        'laskun_nimi' => 'Laskun nimi, esim. Jäsenmaksu 2027', 'summa' => 'Jäsenmaksu, esim. 25,00 € (ilman paperilaskun postimaksua)',
+        'maksettava' => 'Maksettava yhteensä (paperilaskussa jäsenmaksu + postimaksu)', 'postimaksu' => 'Postimaksu (0,00 €, jos lasku tulee sähköpostilla)',
         'viite' => 'Viitenumero', 'erapaiva' => 'Eräpäivä', 'yhdistys' => 'Yhdistyksen nimi',
     );
     $merkit = $tyyppi === 'tiedote'
         ? array('etunimi', 'sukunimi', 'nimi', 'tunnus', 'jasenluokka', 'yhdistys')
-        : array('etunimi', 'sukunimi', 'tunnus', 'jasenluokka', 'laskun_nimi', 'summa', 'jasenmaksu', 'viite', 'erapaiva', 'yhdistys');
-    if (!jr_tunnus_on()) $merkit = array_values(array_diff($merkit, array('tunnus')));
-    $out = '<span class="description jr-phs">Paikkamerkit – lisää klikkaamalla: ';
+        : array('etunimi', 'sukunimi', 'tunnus', 'jasenluokka', 'laskun_nimi', 'summa', 'maksettava', 'viite', 'erapaiva', 'yhdistys');
+    if (!jasrek_tunnus_on()) $merkit = array_values(array_diff($merkit, array('tunnus')));
+    $out = '<span class="description jasrek-phs">Paikkamerkit – lisää klikkaamalla: ';
     foreach ($merkit as $k) {
-        $out .= '<button type="button" class="jr-ph" data-target="#' . esc_attr($target_id) . '" data-ph="{' . esc_attr($k) . '}" title="' . esc_attr($selitteet[$k]) . '">{' . esc_html($k) . '}</button> ';
+        $out .= '<button type="button" class="jasrek-ph" data-target="#' . esc_attr($target_id) . '" data-ph="{' . esc_attr($k) . '}" title="' . esc_attr($selitteet[$k]) . '">{' . esc_html($k) . '}</button> ';
     }
     return $out . ($lisa !== '' ? esc_html($lisa) : '') . '</span>';
 }
 
 /** Korvaa {paikkamerkit} ja muuttaa tekstin turvalliseksi HTML:ksi. */
-function jr_fill($text, $vars) {
+function jasrek_fill($text, $vars) {
     $out = esc_html($text);
     foreach ($vars as $k => $v) {
         $out = str_replace('{' . $k . '}', esc_html((string) $v), $out);
@@ -465,12 +538,13 @@ function jr_fill($text, $vars) {
  * CSV-vienti (Excel-yhteensopiva: UTF-8 BOM ja puolipiste)
  * ------------------------------------------------------------------ */
 
-function jr_csv_output($filename, $header, $rows) {
+function jasrek_csv_output($filename, $header, $rows) {
     nocache_headers();
     header('Content-Type: text/csv; charset=UTF-8');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    $out = fopen('php://output', 'w');
-    fwrite($out, "\xEF\xBB\xBF");
+    // Kirjoitetaan suoraan selaimelle lähtevään virtaan (php://output), ei tiedostojärjestelmään.
+    $out = fopen('php://output', 'w'); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- php://output stream for a CSV download, not a file.
+    fwrite($out, "\xEF\xBB\xBF"); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fwrite -- UTF-8 BOM to the output stream.
     fputcsv($out, $header, ';');
     foreach ($rows as $row) {
         $row = array_map(function ($v) {
@@ -485,6 +559,6 @@ function jr_csv_output($filename, $header, $rows) {
         }, $row);
         fputcsv($out, $row, ';');
     }
-    fclose($out);
+    fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- output stream.
     exit;
 }
