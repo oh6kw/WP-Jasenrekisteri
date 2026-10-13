@@ -45,10 +45,38 @@ function jr_handle_save_member() {
         $msg = 'member_updated';
     } else {
         $wpdb->insert(jr_t('jasenet'), $data);
+        $id  = (int) $wpdb->insert_id;
         $msg = 'member_added';
     }
     if ($dup) $msg = 'member_duplicate';
     if ($raw_email !== '' && $email === '') $msg = 'email_invalid';
+
+    // Lisäys jo tehdylle laskulle (jäsen liittyi laskutuksen jälkeen)
+    $valitut = array_filter(array_map('intval', (array) (isset($_POST['lisaa_lasku']) ? $_POST['lisaa_lasku'] : array())));
+    if ($valitut && $id) {
+        $m = $wpdb->get_row($wpdb->prepare('SELECT * FROM ' . jr_t('jasenet') . ' WHERE id = %d', $id));
+        $summat = isset($_POST['lasku_summa']) ? (array) wp_unslash($_POST['lasku_summa']) : array();
+        $erat   = isset($_POST['lasku_era']) ? (array) wp_unslash($_POST['lasku_era']) : array();
+        $laheta = jr_post('laheta_heti') === '1';
+        $lisatty = 0; $lahetetty = 0; $virhe = 0;
+        foreach ($valitut as $lid) {
+            $lasku = jr_get_lasku($lid);
+            if (!$lasku) continue;
+            $summa = isset($summat[$lid]) ? min(999999.99, jr_parse_money($summat[$lid])) : 0;
+            if ($summa <= 0) continue;
+            $era = isset($erat[$lid]) ? jr_date_or_null($erat[$lid]) : null;
+            $rid = jr_add_member_to_lasku($lasku, $m, $summa, $era ? $era : jr_late_era($lasku));
+            if (!$rid) continue;
+            $lisatty++;
+            if ($laheta && $m->email) {
+                if (jr_send_rivi($lasku, jr_get_rivi($rid))) $lahetetty++; else $virhe++;
+            }
+        }
+        if ($lisatty) {
+            jr_redirect('jasenrekisteri', array('view' => 'edit', 'id' => $id, 'jr_msg' => 'member_invoiced',
+                'jr_n' => $lisatty, 'jr_s' => $lahetetty, 'jr_e' => $virhe));
+        }
+    }
 
     jr_redirect('jasenrekisteri', array('jr_msg' => $msg));
 }
@@ -183,6 +211,36 @@ function jr_member_form($id) {
         <p><label for="jr-lisatiedot">Lisätiedot</label>
            <textarea id="jr-lisatiedot" name="lisatiedot" rows="3"><?php echo esc_textarea($v('lisatiedot')); ?></textarea></p>
 
+        <?php
+        // Jo tehdyt laskut, joilla jäsen ei ole: esim. jäsen liittyy jäsenmaksulaskujen lähettämisen jälkeen.
+        $ehdokkaat = jr_laskut_ilman_jasenta($m ? $m->id : 0, 3);
+        if ($ehdokkaat):
+            $lajit = jr_jasenlajit(); ?>
+        <fieldset class="jr-fieldset" id="jr-laskulle">
+            <legend>Jäsenmaksu jo tehdyltä laskulta</legend>
+            <p class="description"><?php echo $m ? 'Jäsen ei ole alla olevilla laskuilla.' : 'Jos jäsen liittyy jäsenmaksulaskujen lähettämisen jälkeen, hänet voi lisätä jo tehdylle laskulle.'; ?> Hän saa oman viitenumeron, ja eräpäivä on vähintään kolmen viikon päästä. Summaa voi muuttaa, esim. jos kauden aikana liittyvältä peritään vain osa jäsenmaksusta.</p>
+            <?php foreach ($ehdokkaat as $l):
+                $hinnat = jr_lasku_hinnat($l);
+                $map = array('' => (float) $l->summa);
+                foreach ($lajit as $lid => $ll) $map[$lid] = isset($hinnat[$lid]) ? (float) $hinnat[$lid] : (float) $ll['summa'];
+                $mm = (object) array('jasenlaji' => (string) $v('jasenlaji', isset($cur_laji) ? $cur_laji : ''));
+                $hinta = jr_member_price($mm, $hinnat, $l->summa); ?>
+                <div class="jr-laskulle-rivi" data-hinnat="<?php echo esc_attr(wp_json_encode($map)); ?>">
+                    <label class="jr-radio"><input type="checkbox" name="lisaa_lasku[]" value="<?php echo esc_attr($l->id); ?>">
+                        Lisää laskulle <strong><?php echo esc_html($l->nimi); ?></strong>
+                        <span class="jr-muted">(laskutettu <?php echo esc_html(jr_date($l->laskupvm)); ?>, eräpäivä <?php echo esc_html(jr_date($l->erapaiva)); ?>)</span></label>
+                    <span class="jr-laskulle-kentat">
+                        <label for="jr-ls-<?php echo esc_attr($l->id); ?>">Summa</label>
+                        <input type="text" inputmode="decimal" id="jr-ls-<?php echo esc_attr($l->id); ?>" name="lasku_summa[<?php echo esc_attr($l->id); ?>]" value="<?php echo esc_attr(number_format($hinta, 2, ',', '')); ?>"> €
+                        <label for="jr-le-<?php echo esc_attr($l->id); ?>">Eräpäivä</label>
+                        <input type="date" id="jr-le-<?php echo esc_attr($l->id); ?>" name="lasku_era[<?php echo esc_attr($l->id); ?>]" value="<?php echo esc_attr(jr_late_era($l)); ?>">
+                    </span>
+                </div>
+            <?php endforeach; ?>
+            <label class="jr-radio"><input type="checkbox" name="laheta_heti" value="1" checked> Lähetä lasku heti sähköpostilla (jos jäsenellä on sähköpostiosoite)</label>
+        </fieldset>
+        <?php endif; ?>
+
         <p class="jr-actions">
             <button type="submit" class="button button-primary button-large"><?php echo $m ? 'Tallenna muutokset' : 'Lisää jäsen'; ?></button>
             <a class="button button-large" href="<?php echo esc_url(admin_url('admin.php?page=jasenrekisteri')); ?>">Peruuta</a>
@@ -196,7 +254,7 @@ function jr_member_form($id) {
 function jr_member_history($m) {
     global $wpdb;
     $rows = $wpdb->get_results($wpdb->prepare(
-        'SELECT r.*, l.nimi AS lasku_nimi, l.erapaiva FROM ' . jr_t('rivit') . ' r JOIN ' . jr_t('laskut') . ' l ON l.id = r.lasku_id WHERE r.jasen_id = %d ORDER BY l.id DESC',
+        'SELECT r.*, l.nimi AS lasku_nimi, COALESCE(r.erapaiva, l.erapaiva) AS era FROM ' . jr_t('rivit') . ' r JOIN ' . jr_t('laskut') . ' l ON l.id = r.lasku_id WHERE r.jasen_id = %d ORDER BY l.id DESC',
         $m->id
     ));
     $today = current_time('Y-m-d');
@@ -214,10 +272,10 @@ function jr_member_history($m) {
                     <td><a href="<?php echo esc_url(admin_url('admin.php?page=jr-laskutus&view=lasku&id=' . $r->lasku_id)); ?>"><?php echo esc_html($r->lasku_nimi); ?></a></td>
                     <td><code class="jr-ref"><?php echo esc_html(jr_viite_format($r->viite)); ?></code></td>
                     <td><?php echo esc_html(jr_money($r->summa)); ?></td>
-                    <td><?php echo esc_html(jr_date($r->erapaiva)); ?></td>
+                    <td><?php echo esc_html(jr_date($r->era)); ?></td>
                     <td><?php
                         if ($r->maksettu) echo '<span class="jr-badge jr-badge-ok">Maksettu ' . esc_html(jr_date($r->maksettu)) . '</span>';
-                        elseif ($r->erapaiva < $today) echo '<span class="jr-badge jr-badge-err">Erääntynyt</span>';
+                        elseif ($r->era < $today) echo '<span class="jr-badge jr-badge-err">Erääntynyt</span>';
                         else echo '<span class="jr-badge jr-badge-info">Avoin</span>';
                         if ($r->muistutettu) echo ' <span class="jr-badge jr-badge-orange">Muistutettu ' . ((int) $r->muistutuksia > 1 ? (int) $r->muistutuksia . '× ' : '') . esc_html(jr_date($r->muistutettu)) . '</span>';
                     ?></td>
@@ -280,7 +338,7 @@ function jr_member_list() {
 
     // Viimeisimmän laskun maksutilanne jäsenittäin
     $latest = $wpdb->get_row('SELECT * FROM ' . jr_t('laskut') . ' ORDER BY id DESC LIMIT 1');
-    $paystatus = $latest ? $wpdb->get_results($wpdb->prepare('SELECT jasen_id, maksettu FROM ' . jr_t('rivit') . ' WHERE lasku_id = %d', $latest->id), OBJECT_K) : array();
+    $paystatus = $latest ? $wpdb->get_results($wpdb->prepare('SELECT jasen_id, maksettu, erapaiva FROM ' . jr_t('rivit') . ' WHERE lasku_id = %d', $latest->id), OBJECT_K) : array();
     $today = current_time('Y-m-d');
 
     $base = admin_url('admin.php?page=jasenrekisteri');
@@ -371,7 +429,7 @@ function jr_member_list() {
                     if ($latest && isset($paystatus[$m->id])) {
                         if ($paystatus[$m->id]->maksettu) {
                             echo '<span class="jr-badge jr-badge-ok">Maksettu ' . esc_html(jr_date($paystatus[$m->id]->maksettu)) . '</span>';
-                        } elseif ($latest->erapaiva < $today) {
+                        } elseif (jr_rivi_era($latest, $paystatus[$m->id]) < $today) {
                             echo '<span class="jr-badge jr-badge-err">Erääntynyt</span>';
                         } else {
                             echo '<span class="jr-badge jr-badge-info">Avoin</span>';

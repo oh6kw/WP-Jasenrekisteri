@@ -97,6 +97,17 @@ function jr_laji_badge($laji_id) {
         . esc_html($lajit[$laji_id]['nimi']) . '</span>';
 }
 
+/** Laskurivin eräpäivä: jäsenkohtainen (myöhemmin lisätty jäsen), muuten laskun eräpäivä. */
+function jr_rivi_era($lasku, $r) {
+    return (!empty($r->erapaiva) && $r->erapaiva !== '0000-00-00') ? $r->erapaiva : $lasku->erapaiva;
+}
+/** Eräpäivä laskulle myöhemmin lisättävälle: laskun eräpäivä, tai 3 viikkoa tästä päivästä, jos se on jo lähellä tai mennyt. */
+function jr_late_era($lasku) {
+    $today = current_time('Y-m-d');
+    $min = date('Y-m-d', strtotime($today . ' +14 days'));
+    return $lasku->erapaiva >= $min ? $lasku->erapaiva : date('Y-m-d', strtotime($today . ' +21 days'));
+}
+
 /** Jäsenyyden tila. Maksuvelvollisuus määräytyy jäsenluokasta (0 € = ei laskuteta). */
 function jr_tilat() {
     return array(
@@ -161,6 +172,12 @@ function jr_notice() {
         'iban_invalid'    => array('warning', 'Asetukset tallennettu, mutta IBAN-tilinumero ei näytä oikealta. Tarkista se.'),
         'mail_invalid'    => array('error',   'Otsikko ja viesti ovat pakollisia.'),
         'nothing_selected'=> array('warning', 'Et valinnut yhtään riviä.'),
+        'member_invoiced' => array(empty($_GET['jr_e']) ? 'success' : 'warning', sprintf('Jäsen tallennettu ja lisätty %d laskulle.%s%s', $n,
+            !empty($_GET['jr_s']) ? ' Lasku lähetetty sähköpostilla.' : '',
+            !empty($_GET['jr_e']) ? ' Laskun lähetys epäonnistui – lähetä se laskun sivulta uudelleen.' : '')),
+        'feedback_sent'   => array('success', 'Kiitos palautteesta! Viesti lähetettiin kehittäjälle.'),
+        'feedback_empty'  => array('error',   'Kirjoita viesti ennen lähettämistä.'),
+        'feedback_wait'   => array('warning', 'Odota hetki ennen seuraavan palautteen lähettämistä.'),
         'members_bulk'    => array('success', sprintf('Muutettu %d jäsenen tiedot.', $n)),
         'csv_empty'       => array('error',   'Tiedostosta ei löytynyt rivejä. Tarkista, että ensimmäisellä rivillä on otsikot ja sen alla jäsenten tiedot.'),
         'members_imported'=> array('success', sprintf('Tuonti valmis: %d lisätty, %d päivitetty, %d ohitettu (jo rekisterissä), %d ohitettu puuttuvan nimen vuoksi.%s',

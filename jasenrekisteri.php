@@ -3,20 +3,23 @@
 Plugin Name: Jäsenrekisteri
 Plugin URI: https://github.com/oh6kw/WP-Jasenrekisteri
 Description: Yhdistyksen jäsenrekisteri: jäsenet ja jäsenluokat, jäsenmaksulaskut omilla viitenumeroilla, QR-koodi ja pankkiviivakoodi, maksujen tuonti pankista, muistutukset ja sähköpostitiedotteet.
-Version: 4.2
-Author: Jarno Jaskari OH6KW
+Version: 4.3.0
+Author: Jarno Jaskari OH6KW, Claude (Anthropic)
 Author URI: https://github.com/oh6kw
-License: GPL-2.0-or-later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+License: AGPL-3.0-or-later
+License URI: https://www.gnu.org/licenses/agpl-3.0.html
 Update URI: https://github.com/oh6kw/WP-Jasenrekisteri
 Requires at least: 5.8
 Requires PHP: 7.4
+
+Copyright (C) Jarno Jaskari OH6KW
+SPDX-License-Identifier: AGPL-3.0-or-later
 */
 
 if (!defined('ABSPATH')) exit; // Estetään suora pääsy tiedostoon
 
-define('JR_VERSION', '4.2');
-define('JR_DB_VERSION', '6');
+define('JR_VERSION', '4.3.0');
+define('JR_DB_VERSION', '7');
 define('JR_FILE', __FILE__);
 define('JR_DIR', plugin_dir_path(__FILE__));
 define('JR_URL', plugin_dir_url(__FILE__));
@@ -32,6 +35,7 @@ require_once JR_DIR . 'includes/import-payments.php';
 require_once JR_DIR . 'includes/mailer.php';
 require_once JR_DIR . 'includes/settings.php';
 require_once JR_DIR . 'includes/cron.php';
+require_once JR_DIR . 'includes/about.php';
 
 // Tietokanta luodaan aktivoinnissa ja päivitetään automaattisesti, kun plugin päivittyy.
 register_activation_hook(__FILE__, 'jr_install');
@@ -45,6 +49,7 @@ function jr_admin_menu() {
     add_submenu_page('jasenrekisteri', 'Jäsenmaksulaskutus', 'Laskutus', 'manage_options', 'jr-laskutus', 'jr_page_invoices');
     add_submenu_page('jasenrekisteri', 'Sähköposti jäsenille', 'Sähköposti', 'manage_options', 'jr-sahkoposti', 'jr_page_mail');
     add_submenu_page('jasenrekisteri', 'Jäsenrekisterin asetukset', 'Asetukset', 'manage_options', 'jr-asetukset', 'jr_page_settings');
+    add_submenu_page('jasenrekisteri', 'Tietoja ja palaute', 'Tietoja ja palaute', 'manage_options', 'jr-tietoja', 'jr_page_about');
 }
 
 // Tyylit ja skriptit vain pluginin omille sivuille

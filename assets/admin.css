@@ -171,3 +171,17 @@
 .jr-row-ok td { background: #f3faf5 !important; }
 .jr-upload { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .jr-radio.jr-indent { margin-left: 24px; }
+
+/* 4.3 */
+.jr-laskulle-rivi { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding: 6px 0; border-bottom: 1px solid #f0f0f1; }
+.jr-laskulle-rivi .jr-radio { margin: 0; }
+.jr-laskulle-kentat { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.jr-form .jr-laskulle-kentat label { display: inline; font-weight: normal; margin: 0 0 0 6px; }
+.jr-form .jr-laskulle-kentat input[type=text] { width: 90px; }
+.jr-form .jr-laskulle-kentat input[type=date] { width: auto; }
+.jr-about { max-width: 820px; }
+.jr-about dl { display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; margin: 0; }
+.jr-about dt { font-weight: 600; color: var(--jr-muted); }
+.jr-about dd { margin: 0; }
+.jr-kofi { display: inline-flex; align-items: center; gap: 8px; background: #72a4f2; color: #fff !important; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; }
+.jr-kofi:hover { background: #5b8fe0; }

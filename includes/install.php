@@ -50,6 +50,7 @@ function jr_install() {
         email varchar(100) NOT NULL DEFAULT '',
         viite varchar(25) NOT NULL,
         summa decimal(10,2) NOT NULL DEFAULT '0.00',
+        erapaiva date DEFAULT NULL,
         lahetetty datetime DEFAULT NULL,
         muistutettu datetime DEFAULT NULL,
         muistutuksia smallint(5) unsigned NOT NULL DEFAULT 0,

@@ -39,7 +39,7 @@ function jr_invoice_vars($lasku, $r) {
         'laskun_nimi' => $lasku->nimi,
         'summa'       => jr_money($r->summa),
         'viite'       => jr_viite_format($r->viite),
-        'erapaiva'    => jr_date($lasku->erapaiva),
+        'erapaiva'    => jr_date(jr_rivi_era($lasku, $r)),
         'laskupvm'    => jr_date($lasku->laskupvm),
         'iban'        => jr_iban_format($s['iban']),
         'saaja'       => $s['yhdistys'],
@@ -99,7 +99,7 @@ function jr_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
         $html .= '<div style="margin:18px 0 0;"><img src="' . esc_attr($src('jrbar')) . '" width="' . $bw . '" height="50" alt="Pankkiviivakoodi" style="display:block;width:' . $bw . 'px;height:50px;"></div>';
     }
 
-    $vvk = jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, $lasku->erapaiva);
+    $vvk = jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jr_rivi_era($lasku, $r));
     if ($vvk !== '') {
         $html .= '<div style="margin:22px 0 0;padding:14px 16px;border:1px dashed #b8c2cc;border-radius:6px;">'
                . '<div style="font-size:13px;color:#6b7785;margin:0 0 6px;">Virtuaaliviivakoodi – kopioi pankkisovellukseen, niin maksun tiedot täyttyvät valmiiksi:</div>'

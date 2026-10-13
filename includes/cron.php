@@ -39,7 +39,7 @@ function jr_auto_candidates($limit = 50) {
     $today = current_time('Y-m-d');
     $cut   = date('Y-m-d', strtotime($today . " -$days days")); // eräpäivä/edellinen muistutus viimeistään tänä päivänä
     $sql = jr_rivi_select_sql() . 'JOIN ' . jr_t('laskut') . ' l ON l.id = r.lasku_id '
-        . "WHERE l.auto_muistutus = 1 AND l.erapaiva <= %s AND r.maksettu IS NULL AND r.lahetetty IS NOT NULL "
+        . "WHERE l.auto_muistutus = 1 AND COALESCE(r.erapaiva, l.erapaiva) <= %s AND r.maksettu IS NULL AND r.lahetetty IS NOT NULL "
         . "AND COALESCE(NULLIF(m.email, ''), r.email) <> '' "
         . "AND (m.tila IS NULL OR m.tila = 'aktiivinen') "
         . 'AND r.muistutuksia < %d '

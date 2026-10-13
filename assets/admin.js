@@ -67,6 +67,19 @@
         if (!nimi || window.confirm('Poistetaanko jäsenluokka "' + nimi + '"? Muutos tallentuu, kun tallennat asetukset.')) $tr.remove();
     });
 
+    // Jäsenlomake: laskulle lisättävän summan päivitys jäsenluokan mukaan (ellei summaa ole muutettu käsin)
+    $(document).on('input', '.jr-laskulle-rivi input[type=text]', function () { $(this).data('touched', true); });
+    $(document).on('change', '#jr-laji', function () {
+        var laji = $(this).val();
+        $('.jr-laskulle-rivi').each(function () {
+            var map = $(this).data('hinnat') || {};
+            var $in = $(this).find('input[type=text]');
+            if ($in.data('touched')) return;
+            var v = Object.prototype.hasOwnProperty.call(map, laji) ? map[laji] : map[''];
+            $in.val(Number(v || 0).toFixed(2).replace('.', ','));
+        });
+    });
+
     // Tunnukset isoilla kirjaimilla
     $(document).on('input', '.jr-upper', function () {
         var p = this.selectionStart;

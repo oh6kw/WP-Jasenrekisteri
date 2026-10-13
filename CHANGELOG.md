@@ -1,7 +1,32 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.3.0 (2026-10-13)
+
+### Uutta: kesken kauden liittyvä jäsen
+- Jäsenlomakkeessa on uusi kohta **”Jäsenmaksu jo tehdyltä laskulta”**. Uuden tai olemassa olevan jäsenen voi lisätä jo lähetetylle laskulle, esim. ”Jäsenmaksu 2027”. Summa tulee jäsenluokasta ja päivittyy, kun luokka vaihdetaan. Summaa voi muuttaa, esim. osakauden jäsenmaksuksi.
+- **Jäsenkohtainen eräpäivä:** laskulle myöhemmin lisätty jäsen saa eräpäivän vähintään kolmen viikon päähän, jottei lasku ole erääntynyt jo lähtiessään. Eräpäivä näkyy laskussa, QR- ja viivakoodeissa, laskun rivillä (”eräp. …”), erääntymisissä ja automaattisissa muistutuksissa.
+- Valinta **”Lähetä lasku heti sähköpostilla”**: lasku lähtee tallennettaessa.
+- Laskun sivun painike *Lisää laskulle uudet jäsenet* antaa myöhemmin lisätyille jäsenille saman jäsenkohtaisen eräpäivän, jos laskun eräpäivä on jo lähellä tai mennyt.
+- Laskun kortissa näkyy ”Avoinna, josta erääntynyt …”, ja laskulistassa erääntyneiden määrä jäsenkohtaisten eräpäivien mukaan.
+
+### Uutta: Tietoja ja palaute
+- Uusi sivu **Jäsenrekisteri → Tietoja ja palaute**: tekijät, yhteystieto (jarno.jaskari@gmail.com), linkit GitHubiin, muutoslokiin ja vikailmoituksiin.
+- **Palautelomake:** kehitysehdotus, virheilmoitus tai kysymys lähtee kehittäjälle sähköpostilla. Vastausosoitteena on lähettäjän oma osoite, ja versiotiedot liitetään mukaan halutessa. Jäsenrekisterin tietoja ei lähetetä.
+- **Ko-fi:** ”Tarjoa kahvit” -linkki Tietoja-sivulla, Lisäosat-listassa ja GitHubissa (Sponsor-painike).
+- Lisäosat-listaan linkit: GitHub, Palaute ja kehitysehdotukset, Tarjoa kahvit.
+
+### Lisenssi ja tekijät
+- Lisenssiksi vaihdettu **GNU Affero General Public License v3.0** (AGPL-3.0-or-later).
+- Tekijätiedot: Jarno Jaskari OH6KW (alkuperäinen lisäosa ja ylläpito) ja Claude (Anthropic) jatkokehityksessä.
+
+### Muuta
+- Laskun CSV-vientiin lisätty Eräpäivä-sarake.
+- README: 0 €:n jäsenluokkia ei yleistetä kunniajäseniin.
+- Tietokantaversio 7: laskuriveille sarake `erapaiva`.
+
+
 ## 4.2.0 – ensimmäinen julkinen versio GitHubissa (2026-10-13)
-- Julkaistu GitHubissa: README, kuvakaappaukset, GPL-2.0-or-later-lisenssi.
+- Julkaistu GitHubissa: README ja kuvakaappaukset.
 - Lisäosan otsakkeeseen lisätty Plugin URI, lisenssitiedot ja `Update URI`, jottei WordPress.orgin samanniminen lisäosa voi koskaan korvata tätä päivityksenä.
 - Julkaisun zip rakennetaan automaattisesti (GitHub Actions), ja kansion nimi on aina `jasenrekisteri`.
 

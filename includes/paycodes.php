@@ -152,7 +152,7 @@ function jr_invoice_images($lasku, $r) {
         if ($png !== '') $out['jrqr'] = $png;
     }
     if ($mode === 'viivakoodi' || $mode === 'molemmat') {
-        $png = jr_barcode_png(jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, $lasku->erapaiva));
+        $png = jr_barcode_png(jr_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jr_rivi_era($lasku, $r)));
         if ($png !== '') $out['jrbar'] = $png;
     }
     return $out;
