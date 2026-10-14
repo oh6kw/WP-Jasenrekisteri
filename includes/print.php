@@ -110,8 +110,9 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
 .jasrek-tools form { display: inline; margin: 0; }
 .jasrek-tools .jasrek-warn { background: #fff4d6; color: #6b4b00; padding: 4px 10px; border-radius: 4px; flex-basis: 100%; }
 .jasrek-tools .jasrek-info { opacity: .85; font-size: 13px; flex-basis: 100%; }
-.sivu { width: 210mm; height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 0 15mm 12mm 20mm; page-break-after: always; break-after: page; }
-.sivu:last-child { page-break-after: auto; break-after: auto; }
+.sivu { width: 210mm; height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 0 15mm 12mm 20mm; }
+/* Sivunvaihto vain laskujen väliin – ei koskaan viimeisen perään */
+.sivu + .sivu { page-break-before: always; break-before: page; }
 .taitto { position: absolute; left: 4mm; width: 4mm; border-top: 0.3pt solid #999; }
 .ylaosa { position: relative; height: 62mm; flex: none; }
 /* Ikkunakuoren ikkuna: vasemmalla 20 mm, ylhäältä 15 mm, koko 90 × 45 mm (C5 ja DL). Osoite sijoitetaan ikkunan keskelle. */
@@ -156,10 +157,27 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
     html, body { height: auto; }
     /* 270 mm: mahtuu yhdelle A4-arkille myös, jos selain käyttää omia tulostusreunuksiaan (n. 10 mm).
        Täysi 297 mm työnsi silloin tyhjän toisen sivun perään. */
-    .sivu { margin: 0; box-shadow: none; height: auto; min-height: 270mm; padding-bottom: 0; overflow: visible; }
-    body { font-size: 10pt; line-height: 1.38; }
+    html, body { margin: 0 !important; padding: 0 !important; background: #fff; }
+    /* Tulosteessa sivu on niin korkea kuin sisältö: maksuosaa ei työnnetä alalaitaan, joten lasku mahtuu
+       yhdelle arkille paperikoosta (A4/Letter) ja selaimen reunuksista riippumatta. */
+    .sivu { margin: 0; box-shadow: none; height: auto; min-height: 0; padding-bottom: 0; overflow: visible; }
+    .alaosa { margin-top: 5mm; padding-top: 3mm; }
+    body { font-size: 9.5pt; line-height: 1.32; }
+    .ylaosa { height: 56mm; }
+    .huom, .vvk { font-size: 8pt; }
+    .alatunniste { font-size: 7.5pt; }
+    .erittely td { padding: 1mm 0; }
+    .yhteensa { padding: 1.6mm 5mm; }
+    .saate { margin-bottom: 2.5mm; }
+    .postihuom { margin: 0 0 3mm; }
+    .maksurivi img.qr { width: 25mm; height: 25mm; }
+    .maksutiedot td { padding: .3mm 4mm .3mm 0; }
+    .viivakoodi { margin-top: 3mm; }
+    .viivakoodi img { height: 11mm; }
+    .vvk { margin-top: 1mm; }
+    .huom { margin-top: 1.5mm; }
+    .alatunniste { margin-top: 2.5mm; padding-top: 1.5mm; }
     .alaosa { break-inside: avoid; }
-    .sivu:last-of-type { page-break-after: avoid; break-after: avoid; }
 }
 </style></head>
 <body<?php echo $autoprint && $rows ? ' onload="window.print()"' : ''; ?>>

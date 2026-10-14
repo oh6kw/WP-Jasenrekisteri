@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.6.3
+Stable tag: 4.6.4
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -94,6 +94,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 8. Audit log: who changed what and when.
 
 == Changelog ==
+
+= 4.6.4 =
+* Paper invoice: no empty trailing page with Letter paper or large print margins.
 
 = 4.6.3 =
 * Paper invoice: fixed an empty second page when printing, and a more compact invoice details box.

@@ -1,5 +1,14 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.4 (2026-10-14)
+
+### Korjaus: tyhjä toinen sivu paperilaskun PDF:ssä
+- Versiossa 4.6.3 lasku mahtui jo yhdelle sivulle, mutta joillakin koneilla PDF:n perään tuli edelleen tyhjä sivu. Syy: maksuosa työnnettiin sivun alalaitaan. Kun selaimen tulostusalue oli pienempi (oletusreunukset tai Letter-paperikoko), maksuosa tai sivun tyhjä alalaita valui toiselle sivulle.
+- Tulosteessa sivu on nyt vain sisällön korkuinen, ja maksuosa tulee heti erittelyn perään. Sivunvaihto tehdään vain laskujen väliin, ei koskaan viimeisen perään.
+- Tiiviimpi maksuosa: QR-koodi 25 mm, pankkiviivakoodin korkeus 11 mm, pienemmät välit ja ohjetekstit, tulosteen fonttikoko 9,5 pt. Pitkälläkin saatetekstillä lasku on noin 250 mm korkea.
+- Testattu Chromen PDF-tulostuksella viidellä yhdistelmällä: A4 ilman reunuksia, A4 10 mm ja 15 mm reunuksilla sekä Letter 10 mm ja 15 mm reunuksilla. Jokaisessa yksi lasku vie yhden sivun, ja QR-koodi ja pankkiviivakoodi lukeutuvat tulosteesta.
+- Postimaksun selitysrivin ja saatteen väliin lisättiin pieni väli.
+
 ## 4.6.3 (2026-10-14)
 
 ### Korjaus: paperilasku tulostui kahdelle sivulle
