@@ -27,6 +27,7 @@ function jasrek_handle_save_settings() {
     $knimet = (array) jasrek_post('kentta_nimi', array());
     $ktyyp  = (array) jasrek_post('kentta_tyyppi', array());
     $klista = (array) jasrek_post('kentta_lista', array());
+    $klomake = (array) jasrek_post('kentta_lomake', array());
     foreach ($knimet as $i => $nimi) {
         $nimi = sanitize_text_field($nimi);
         if ($nimi === '') continue;
@@ -34,8 +35,9 @@ function jasrek_handle_save_settings() {
         if ($kid === '' || isset($kentat[$kid])) $kid = 'k' . strtolower(wp_generate_password(6, false));
         $kentat[$kid] = array(
             'nimi'   => $nimi,
-            'tyyppi' => (isset($ktyyp[$i]) && $ktyyp[$i] === 'valinta') ? 'valinta' : 'teksti',
+            'tyyppi' => (isset($ktyyp[$i]) && isset(jasrek_lisa_tyypit()[$ktyyp[$i]])) ? $ktyyp[$i] : 'teksti',
             'lista'  => (isset($klista[$i]) && $klista[$i] === '1') ? '1' : '0',
+            'lomake' => (isset($klomake[$i]) && $klomake[$i] === '1') ? '1' : '0',
         );
     }
 
@@ -56,6 +58,14 @@ function jasrek_handle_save_settings() {
         'jasenlajit'       => $lajit,
         'lisakentat'       => $kentat,
         'postiosoite'      => sanitize_textarea_field(jasrek_post('postiosoite')),
+        'liitto_kaytossa'  => jasrek_post('liitto_kaytossa') === '1' ? '1' : '0',
+        'liitto_lajit'     => array_values(array_filter(array_map('sanitize_key', jasrek_post_array('liitto_lajit')), function ($id) use ($lajit) { return isset($lajit[$id]); })),
+        'liitto_tietosuoja'=> esc_url_raw(trim(jasrek_post('liitto_tietosuoja'))),
+        'liitto_ilmoitus'  => sanitize_email(jasrek_post('liitto_ilmoitus')),
+        'liitto_kiitos'    => sanitize_textarea_field(jasrek_post('liitto_kiitos')),
+        'liitto_tervetuloa'=> sanitize_textarea_field(jasrek_post('liitto_tervetuloa')),
+        'merkki_ika'       => implode(', ', jasrek_vuosilista(jasrek_post('merkki_ika'))),
+        'merkki_jasen'     => implode(', ', jasrek_vuosilista(jasrek_post('merkki_jasen'))),
         'postimaksu'       => (string) min(999.99, max(0, jasrek_parse_money(jasrek_post('postimaksu')))),
         'loki_kk'          => in_array(jasrek_post('loki_kk'), array('0', '12', '24', '36', '60', '120'), true) ? jasrek_post('loki_kk') : '24',
         'auto_muistutus'   => jasrek_post('auto_muistutus') === '1' ? '1' : '0',
@@ -80,10 +90,12 @@ function jasrek_log_settings_change($a, $b) {
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
         'auto_max' => 'Muistutuksia enintään', 'auto_raportti' => 'Muistutusten yhteenveto', 'poista_tiedot' => 'Poista tiedot lisäosan poistossa',
-        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'postiosoite' => 'Yhdistyksen postiosoite', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
+        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'postiosoite' => 'Yhdistyksen postiosoite', 'merkki_ika' => 'Merkkipäivät: täytettävät vuodet', 'merkki_jasen' => 'Merkkipäivät: jäsenyysvuodet',
+        'liitto_kaytossa' => 'Liittymislomake käytössä', 'liitto_tietosuoja' => 'Tietosuojaselosteen osoite', 'liitto_ilmoitus' => 'Hakemusilmoitukset osoitteeseen',
+        'liitto_kiitos' => 'Liittymislomakkeen kiitosteksti', 'liitto_tervetuloa' => 'Tervetuloviesti', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
-        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot'), true)) return $v === '1' ? 'kyllä' : 'ei';
+        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot', 'liitto_kaytossa'), true)) return $v === '1' ? 'kyllä' : 'ei';
         return (string) $v;
     };
     $old = array(); $new = array();
@@ -94,7 +106,7 @@ function jasrek_log_settings_change($a, $b) {
     $extra = function ($src) {
         $out = array();
         foreach ((array) $src['jasenlajit'] as $l) $out['Jäsenluokka ' . $l['nimi']] = html_entity_decode(jasrek_money($l['summa']));
-        foreach ((array) $src['lisakentat'] as $k) $out['Lisäkenttä ' . $k['nimi']] = ($k['tyyppi'] === 'valinta' ? 'valintaruutu' : 'teksti') . ($k['lista'] === '1' ? ', listassa' : '');
+        foreach ((array) $src['lisakentat'] as $k) $out['Lisäkenttä ' . $k['nimi']] = (isset(jasrek_lisa_tyypit()[$k['tyyppi']]) ? jasrek_lisa_tyypit()[$k['tyyppi']] : $k['tyyppi']) . ($k['lista'] === '1' ? ', listassa' : '') . (!empty($k['lomake']) && $k['lomake'] === '1' ? ', liittymislomakkeella' : '');
         return $out;
     };
     $diff = jasrek_log_diff($old + $extra($a), $new + $extra($b));
@@ -106,7 +118,7 @@ function jasrek_page_settings() {
     $s = jasrek_settings();
     $site_host = wp_parse_url(home_url(), PHP_URL_HOST);
     $from_host = $s['lahettaja_email'] ? substr(strrchr($s['lahettaja_email'], '@'), 1) : '';
-    $laji_counts = $wpdb->get_results("SELECT jasenlaji, COUNT(*) AS n FROM {$wpdb->jasrek_jasenet} WHERE tila <> 'eronnut' GROUP BY jasenlaji", OBJECT_K);
+    $laji_counts = $wpdb->get_results("SELECT jasenlaji, COUNT(*) AS n FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen' GROUP BY jasenlaji", OBJECT_K);
     $raportti_to = $s['vastaus_email'] ? $s['vastaus_email'] : ($s['lahettaja_email'] ? $s['lahettaja_email'] : get_option('admin_email'));
     $next = wp_next_scheduled('jasrek_auto_muistutus');
     ?>
@@ -188,21 +200,52 @@ function jasrek_page_settings() {
                    <span class="description">Tulostetaan pienellä ikkunakuoren ikkunaan vastaanottajan yläpuolelle, jotta kirje palautuu, jos sitä ei voida toimittaa. Tyhjänä palautusosoitetta ei tulosteta.</span></p>
             </div>
 
+            <div class="jasrek-panel" id="jasrek-liittyminen">
+                <h2>Liittymislomake</h2>
+                <p class="description">Lomake sivustolle uusia jäseniä varten. Lisää sivulle (esim. ”Liity jäseneksi”) lyhytkoodi
+                    <code class="jasrek-liitto-shortcode">[jasenrekisteri_liittyminen]</code>. Hakemukset tulevat jäsenlistan välilehdelle <em>Liittymishakemukset</em>,
+                    jossa ne hyväksytään tai hylätään. Hakemukset eivät näy jäsenmäärissä, laskuilla eivätkä tiedotteissa ennen hyväksyntää.
+                    Lomakkeessa on roskapostisuojaus (piilokenttä, aikatarkistus ja enintään 5 hakemusta tunnissa samasta osoitteesta).</p>
+                <p><label class="jasrek-radio"><input type="checkbox" name="liitto_kaytossa" value="1" <?php checked($s['liitto_kaytossa'], '1'); ?>> Liittymislomake käytössä</label></p>
+                <?php if ($s['jasenlajit']): ?>
+                <fieldset class="jasrek-fieldset"><legend>Jäsenluokat, joihin voi hakea</legend>
+                    <?php foreach ($s['jasenlajit'] as $lid => $l): ?>
+                        <label class="jasrek-radio"><input type="checkbox" name="liitto_lajit[]" value="<?php echo esc_attr($lid); ?>" <?php checked(in_array($lid, (array) $s['liitto_lajit'], true)); ?>> <?php echo esc_html($l['nimi'] . ' (' . jasrek_money($l['summa']) . ')'); ?></label>
+                    <?php endforeach; ?>
+                    <span class="description">Jos mitään ei valita, jäsenluokkaa ei kysytä.</span>
+                </fieldset>
+                <?php endif; ?>
+                <div class="jasrek-grid">
+                    <p><label for="jasrek-liitto-ts">Tietosuojaselosteen osoite</label>
+                       <input type="url" id="jasrek-liitto-ts" name="liitto_tietosuoja" value="<?php echo esc_attr($s['liitto_tietosuoja']); ?>" placeholder="https://…/tietosuojaseloste/"></p>
+                    <p><label for="jasrek-liitto-email">Ilmoitus uusista hakemuksista osoitteeseen</label>
+                       <input type="email" id="jasrek-liitto-email" name="liitto_ilmoitus" value="<?php echo esc_attr($s['liitto_ilmoitus']); ?>" placeholder="<?php echo esc_attr($s['vastaus_email'] ? $s['vastaus_email'] : $s['lahettaja_email']); ?>"></p>
+                </div>
+                <p><label for="jasrek-liitto-kiitos">Kiitosteksti (näytetään lomakkeen lähettämisen jälkeen ja lähetetään hakijalle)</label>
+                   <textarea id="jasrek-liitto-kiitos" name="liitto_kiitos" rows="3"><?php echo esc_textarea($s['liitto_kiitos']); ?></textarea></p>
+                <p><label for="jasrek-liitto-tervetuloa">Tervetuloviesti hyväksytylle (tyhjä = ei viestiä)</label>
+                   <textarea id="jasrek-liitto-tervetuloa" name="liitto_tervetuloa" rows="5"><?php echo esc_textarea($s['liitto_tervetuloa']); ?></textarea>
+                   <?php echo wp_kses_post(jasrek_placeholders('jasrek-liitto-tervetuloa', 'tiedote')); ?></p>
+                <p class="description">Lisäkentät, joiden kohdalla on <em>Liittymislomakkeella: Kysytään</em>, näkyvät lomakkeella (esim. syntymäaika).</p>
+            </div>
+
             <div class="jasrek-panel" id="jasrek-lisakentat">
                 <h2>Omat lisäkentät</h2>
                 <p class="description">Yhdistyksen omat tiedot jäsenille, esim. <em>Avain</em> (kerhotalon avaimen numero), <em>Lehti paperilla</em> tai <em>Talkoovastaava</em>.
                     <strong>Teksti</strong>-kenttään voi kirjoittaa arvon (esim. avaimen numero 8.59 – tyhjä tarkoittaa, ettei avainta ole).
-                    <strong>Valintaruutu</strong> on pelkkä kyllä/ei-ruksi. Kentät näkyvät jäsenen lomakkeella, CSV-viennissä ja -tuonnissa, ja halutessa omana sarakkeenaan jäsenlistassa.
+                    <strong>Valintaruutu</strong> on pelkkä kyllä/ei-ruksi. <strong>Päivämäärä</strong> tallentaa päivän (esim. avaimen luovutus).
+                    <strong>Syntymäaika</strong> on päivämäärä, josta vuosiraportti ja jäsenlista kertovat merkkipäivät (ks. Merkkipäivät alla). Kentät näkyvät jäsenen lomakkeella, CSV-viennissä ja -tuonnissa, ja halutessa omana sarakkeenaan jäsenlistassa.
                     Jäsenlistan haku löytää kentän nimellä (esim. ”avain”) kaikki, joilla kenttä on täytetty.</p>
                 <table class="widefat jasrek-lajit" id="jasrek-kentat">
-                    <thead><tr><th>Kentän nimi</th><th style="width:160px">Tyyppi</th><th style="width:150px">Jäsenlistassa</th><th style="width:60px"></th></tr></thead>
+                    <thead><tr><th>Kentän nimi</th><th style="width:220px">Tyyppi</th><th style="width:140px">Jäsenlistassa</th><th style="width:150px">Liittymislomakkeella</th><th style="width:50px"></th></tr></thead>
                     <tbody>
                     <?php foreach ($s['lisakentat'] as $kid => $k): ?>
                         <tr>
                             <td><input type="hidden" name="kentta_id[]" value="<?php echo esc_attr($kid); ?>">
                                 <input type="text" name="kentta_nimi[]" value="<?php echo esc_attr($k['nimi']); ?>"></td>
-                            <td><select name="kentta_tyyppi[]"><option value="teksti" <?php selected($k['tyyppi'], 'teksti'); ?>>Teksti</option><option value="valinta" <?php selected($k['tyyppi'], 'valinta'); ?>>Valintaruutu</option></select></td>
+                            <td><select name="kentta_tyyppi[]"><?php foreach (jasrek_lisa_tyypit() as $tk => $tn): ?><option value="<?php echo esc_attr($tk); ?>" <?php selected($k['tyyppi'], $tk); ?>><?php echo esc_html($tn); ?></option><?php endforeach; ?></select></td>
                             <td><select name="kentta_lista[]"><option value="1" <?php selected($k['lista'], '1'); ?>>Näytä sarake</option><option value="0" <?php selected($k['lista'], '0'); ?>>Ei</option></select></td>
+                            <td><select name="kentta_lomake[]"><option value="0" <?php selected(isset($k['lomake']) ? $k['lomake'] : '0', '0'); ?>>Ei</option><option value="1" <?php selected(isset($k['lomake']) ? $k['lomake'] : '0', '1'); ?>>Kysytään</option></select></td>
                             <td><button type="button" class="button-link jasrek-row-del" data-confirm-del="Poistetaanko lisäkenttä? Kenttään tallennetut tiedot poistuvat jäseniltä, kun jäsenen tiedot seuraavan kerran tallennetaan.">✕</button></td>
                         </tr>
                     <?php endforeach; ?>
@@ -211,12 +254,25 @@ function jasrek_page_settings() {
                 <template id="jasrek-kentta-tpl">
                     <tr>
                         <td><input type="hidden" name="kentta_id[]" value=""><input type="text" name="kentta_nimi[]" placeholder="esim. Avain"></td>
-                        <td><select name="kentta_tyyppi[]"><option value="teksti">Teksti</option><option value="valinta">Valintaruutu</option></select></td>
+                        <td><select name="kentta_tyyppi[]"><?php foreach (jasrek_lisa_tyypit() as $tk => $tn): ?><option value="<?php echo esc_attr($tk); ?>"><?php echo esc_html($tn); ?></option><?php endforeach; ?></select></td>
                         <td><select name="kentta_lista[]"><option value="1">Näytä sarake</option><option value="0">Ei</option></select></td>
+                        <td><select name="kentta_lomake[]"><option value="0">Ei</option><option value="1">Kysytään</option></select></td>
                         <td><button type="button" class="button-link jasrek-row-del">✕</button></td>
                     </tr>
                 </template>
                 <p><button type="button" class="button jasrek-row-add" data-tpl="#jasrek-kentta-tpl" data-table="#jasrek-kentat">+ Lisää kenttä</button></p>
+            </div>
+
+            <div class="jasrek-panel" id="jasrek-merkkipaivat">
+                <h2>Merkkipäivät</h2>
+                <p class="description">Vuosiraportti ja jäsenlista kertovat, ketkä täyttävät valittuja tasavuosia tai ovat olleet jäsenenä valitut vuodet. Syntymäpäivät edellyttävät lisäkenttää, jonka tyyppi on <em>Syntymäaika</em>. Jäsenyysvuodet lasketaan liittymispäivästä. Tyhjä = ei näytetä.</p>
+                <div class="jasrek-grid">
+                    <p><label for="jasrek-merkki-ika">Täytettävät vuodet</label>
+                       <input type="text" id="jasrek-merkki-ika" name="merkki_ika" value="<?php echo esc_attr($s['merkki_ika']); ?>" placeholder="50, 60, 70, 80, 90">
+                       <span class="description"><?php echo jasrek_syntyma_kentta() !== '' ? 'Syntymäaika luetaan lisäkentästä ”' . esc_html(jasrek_lisakentat()[jasrek_syntyma_kentta()]['nimi']) . '”.' : 'Lisää ensin lisäkenttä, jonka tyyppi on Syntymäaika.'; ?></span></p>
+                    <p><label for="jasrek-merkki-jasen">Jäsenyysvuodet</label>
+                       <input type="text" id="jasrek-merkki-jasen" name="merkki_jasen" value="<?php echo esc_attr($s['merkki_jasen']); ?>" placeholder="10, 20, 25, 30, 40, 50"></p>
+                </div>
             </div>
 
             <div class="jasrek-panel">

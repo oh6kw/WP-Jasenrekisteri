@@ -224,3 +224,8 @@
     .jasrek-panel, .jasrek-card { border-color: #999; break-inside: avoid; }
     .jasrek-report .jasrek-panel { page-break-inside: avoid; }
 }
+
+/* 4.7 */
+a.jasrek-card-link { text-decoration: none; color: inherit; }
+a.jasrek-card-link:hover { border-color: #2271b1; }
+.jasrek-liitto-shortcode { font-family: Consolas, Menlo, monospace; background: #f0f6fc; padding: 4px 8px; border-radius: 4px; user-select: all; }

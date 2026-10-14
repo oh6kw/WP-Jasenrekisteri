@@ -53,6 +53,14 @@ function jasrek_settings() {
         'loki_kk'         => '24',
         'postimaksu'      => '0',
         'postiosoite'     => '',
+        'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
+        'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',
+        'liitto_kaytossa' => '0',
+        'liitto_lajit'    => array(),
+        'liitto_tietosuoja' => '',
+        'liitto_ilmoitus' => '',
+        'liitto_kiitos'   => "Kiitos liittymishakemuksestasi! Käsittelemme hakemuksen mahdollisimman pian ja olemme sinuun yhteydessä sähköpostitse.",
+        'liitto_tervetuloa' => "Hei {etunimi},\n\nliittymishakemuksesi on hyväksytty – tervetuloa {yhdistys}:n jäseneksi!\n\nYstävällisin terveisin\n{yhdistys}",
         'auto_muistutus'  => '0',
         'auto_paivia'     => '14',
         'auto_max'        => '1',
@@ -64,7 +72,7 @@ function jasrek_settings() {
     $saved = get_option('jasrek_settings', array());
     $s = wp_parse_args(is_array($saved) ? $saved : array(), $defaults);
     // Tyhjäksi jätetyn tekstin tilalla käytetään oletusta, jottei lasku lähde ilman saatetta.
-    foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi') as $k) {
+    foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi', 'liitto_kiitos') as $k) {
         if (trim((string) $s[$k]) === '') $s[$k] = $defaults[$k];
     }
     return $s;
@@ -120,8 +128,68 @@ function jasrek_laji_badge($laji_id) {
         . esc_html($lajit[$laji_id]['nimi']) . '</span>';
 }
 
+/** Lisäkenttien tyypit. Syntymäaika-kentästä lasketaan merkkipäivät. */
+function jasrek_lisa_tyypit() {
+    return array('teksti' => 'Teksti', 'valinta' => 'Valintaruutu', 'pvm' => 'Päivämäärä', 'syntyma' => 'Syntymäaika (merkkipäivät)');
+}
+function jasrek_lisa_is_date($kentta) {
+    return in_array($kentta['tyyppi'], array('pvm', 'syntyma'), true);
+}
+/** Ensimmäinen Syntymäaika-tyyppinen lisäkenttä (id) tai ''. */
+function jasrek_syntyma_kentta() {
+    foreach (jasrek_lisakentat() as $kid => $k) if ($k['tyyppi'] === 'syntyma') return $kid;
+    return '';
+}
+/** Asetuksen vuosilista (esim. "50, 60, 70") kokonaislukuina. */
+function jasrek_vuosilista($s) {
+    $out = array();
+    foreach (preg_split('/[^\d]+/', (string) $s) as $v) if ($v !== '' && (int) $v > 0 && (int) $v < 200) $out[] = (int) $v;
+    $out = array_values(array_unique($out));
+    sort($out);
+    return $out;
+}
+
 /**
- * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta', 'lista' => '1'|'0')).
+ * Merkkipäivät annettuna vuonna: täytettävät vuodet (syntymäaika) ja jäsenyysvuodet (liittymispäivä)
+ * asetuksissa valituilla tasavuosilla. Palauttaa listan array(pvm, tyyppi 'ika'|'jasenyys', vuodet, jäsen), päivän mukaan.
+ */
+function jasrek_merkkipaivat($year) {
+    global $wpdb;
+    $year = (int) $year;
+    $s = jasrek_settings();
+    $iat = jasrek_vuosilista($s['merkki_ika']);
+    $jat = jasrek_vuosilista($s['merkki_jasen']);
+    $sk = jasrek_syntyma_kentta();
+    $out = array();
+    $paiva = function ($ymd) use ($year) {
+        $md = substr($ymd, 5, 5);
+        if ($md === '02-29' && !checkdate(2, 29, $year)) $md = '02-28';
+        return $year . '-' . $md;
+    };
+    foreach ($wpdb->get_results("SELECT * FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen'") as $m) {
+        if ($sk !== '' && $iat) {
+            $lisa = jasrek_member_lisa($m);
+            $syn = isset($lisa[$sk]) ? (string) $lisa[$sk] : '';
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $syn)) {
+                $ika = $year - (int) substr($syn, 0, 4);
+                if (in_array($ika, $iat, true)) $out[] = array('pvm' => $paiva($syn), 'tyyppi' => 'ika', 'vuodet' => $ika, 'm' => $m);
+            }
+        }
+        if ($jat && $m->liittynyt && $m->liittynyt !== '0000-00-00') {
+            $v = $year - (int) substr($m->liittynyt, 0, 4);
+            if (in_array($v, $jat, true)) $out[] = array('pvm' => $paiva($m->liittynyt), 'tyyppi' => 'jasenyys', 'vuodet' => $v, 'm' => $m);
+        }
+    }
+    usort($out, function ($a, $b) { return strcmp($a['pvm'] . $a['m']->sukunimi, $b['pvm'] . $b['m']->sukunimi); });
+    return $out;
+}
+function jasrek_merkkipaiva_teksti($mp) {
+    return $mp['tyyppi'] === 'ika' ? $mp['vuodet'] . ' vuotta' : $mp['vuodet'] . ' vuotta jäsenenä';
+}
+
+/**
+ * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta'|'pvm'|'syntyma', 'lista' => '1'|'0', 'lomake' => '1'|'0')).
+ * Päivämäärät tallennetaan muodossa VVVV-KK-PP.
  * Arvot tallennetaan jäsenelle JSON-muodossa (jasenet.lisakentat).
  */
 function jasrek_lisakentat() {
@@ -137,6 +205,7 @@ function jasrek_member_lisa($m) {
 function jasrek_lisa_value($kentta, $v, $check = '✓') {
     $v = (string) $v;
     if ($kentta['tyyppi'] === 'valinta') return $v !== '' ? $check : '';
+    if (jasrek_lisa_is_date($kentta)) return jasrek_date($v);
     return $v;
 }
 /** Tulkitsee tuodun tai lomakkeen arvon lisäkentälle. */
@@ -145,6 +214,10 @@ function jasrek_lisa_parse($kentta, $v) {
     if ($kentta['tyyppi'] === 'valinta') {
         $l = strtolower(remove_accents($v));
         return in_array($l, array('1', 'x', 'k', 'kylla', 'on', 'yes', 'true', 'y', '✓'), true) ? '1' : '';
+    }
+    if (jasrek_lisa_is_date($kentta)) {
+        $d = function_exists('jasrek_parse_date_any') ? jasrek_parse_date_any(sanitize_text_field($v)) : jasrek_date_or_null($v);
+        return $d ? $d : '';
     }
     $v = sanitize_text_field($v);
     return function_exists('mb_substr') ? mb_substr($v, 0, 200) : substr($v, 0, 200);
@@ -186,13 +259,21 @@ function jasrek_tilat() {
         'eronnut'    => 'Eronnut',
     );
 }
+/** Tilan nimi näytettäväksi (myös liittymishakemus, jota ei voi valita jäsenen lomakkeella). */
+function jasrek_tila_nimi($tila) {
+    $t = jasrek_tilat();
+    if (isset($t[$tila])) return $t[$tila];
+    return $tila === 'hakemus' ? 'Liittymishakemus' : (string) $tila;
+}
+
 function jasrek_tila_badge($tila) {
     if ($tila === 'eronnut') return '<span class="jasrek-badge jasrek-badge-muted">eronnut</span>';
+    if ($tila === 'hakemus') return '<span class="jasrek-badge jasrek-badge-orange">liittymishakemus</span>';
     return '';
 }
 /** SQL-ehto: kaikki voimassa olevat jäsenet. */
 function jasrek_sql_jasenet() {
-    return "tila <> 'eronnut'";
+    return "tila = 'aktiivinen'";
 }
 
 /** Tarkistaa oikeudet ja nonce-tunnisteen (CSRF-suojaus). */
@@ -313,6 +394,8 @@ function jasrek_notice() {
         'no_mail_recipients' => array('warning', 'Valitulla vastaanottajajoukolla ei ole yhtään sähköpostiosoitetta.'),
         'due_before_date' => array('error',   'Eräpäivä ei voi olla ennen laskun päiväystä.'),
         'member_duplicate'=> array('warning', 'Jäsen tallennettiin, mutta rekisterissä on jo toinen jäsen samalla nimellä tai sähköpostiosoitteella. Tarkista, ettei kyseessä ole tuplakirjaus.'),
+        'hakemus_ok'      => array('success', 'Hakemus hyväksytty – jäsen on nyt rekisterissä. Voit lisätä hänet jo tehdylle jäsenmaksulaskulle alta.'),
+        'hakemus_pois'    => array('success', 'Hakemus hylätty ja hakijan tiedot poistettu.'),
         'postage_updated' => array('success', sprintf('Postimaksu päivitetty %d laskuun.', $n)),
         'paper_marked'    => array('success', sprintf('%d paperilaskua merkitty postitetuksi.', $n)),
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),

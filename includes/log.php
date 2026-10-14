@@ -56,7 +56,6 @@ function jasrek_log_diff($old, $new) {
 function jasrek_member_snapshot($m) {
     if (!$m) return array();
     $m = (object) $m;
-    $tilat = jasrek_tilat();
     $s = array(
         'Etunimi'     => (string) $m->etunimi,
         'Sukunimi'    => (string) $m->sukunimi,
@@ -68,7 +67,7 @@ function jasrek_member_snapshot($m) {
         'Osoite'      => (string) $m->osoite,
         'Liittynyt'   => jasrek_date($m->liittynyt),
         'Jäsenluokka' => jasrek_laji_nimi((string) $m->jasenlaji) !== '' ? jasrek_laji_nimi((string) $m->jasenlaji) : (string) $m->jasenlaji,
-        'Jäsenyys'    => isset($tilat[$m->tila]) ? $tilat[$m->tila] : (string) $m->tila,
+        'Jäsenyys'    => jasrek_tila_nimi($m->tila),
         'Eronnut'     => isset($m->eronnut_pvm) ? jasrek_date($m->eronnut_pvm) : '',
         'Paperilasku' => !empty($m->paperilasku) ? 'kyllä' : '',
         'Lisätiedot'  => (string) $m->lisatiedot,
@@ -76,7 +75,7 @@ function jasrek_member_snapshot($m) {
     $lisa = jasrek_member_lisa($m);
     foreach (jasrek_lisakentat() as $id => $k) {
         $v = isset($lisa[$id]) ? (string) $lisa[$id] : '';
-        $s[$k['nimi']] = $k['tyyppi'] === 'valinta' ? ($v !== '' ? 'kyllä' : '') : $v;
+        $s[$k['nimi']] = jasrek_lisa_value($k, $v, 'kyllä');
     }
     return $s;
 }
@@ -89,6 +88,9 @@ function jasrek_log_member_name($m) {
 function jasrek_log_toiminnot() {
     return array(
         'lisatty'          => 'Jäsen lisätty',
+        'hakemus'          => 'Liittymishakemus',
+        'hyvaksytty'       => 'Hakemus hyväksytty',
+        'hylatty'          => 'Hakemus hylätty',
         'muokattu'         => 'Tietoja muutettu',
         'poistettu'        => 'Jäsen poistettu',
         'tuotu'            => 'Lisätty CSV-tuonnilla',
