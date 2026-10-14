@@ -129,8 +129,6 @@ Jäsenrekisteri sisältää henkilötietoja. Rekisterinpitäjä on yhdistys, ja 
 
 Lisäosa on valmisteltu WordPressin viralliseen lisäosahakemistoon: englanninkielinen `readme.txt`, yksilöllinen etuliite `jasrek_`, ja [Plugin Check](https://wordpress.org/plugins/plugin-check/) -tarkastus menee läpi ilman virheitä ja varoituksia. Hakemiston kuvat (ikoni, banneri ja kuvakaappaukset) ovat kansiossa `.wordpress-org`.
 
-Kun lisäosa on hyväksytty hakemistoon, GitHubin julkaisu vie version automaattisesti WordPress.orgiin, kunhan repositorion asetuksiin (*Settings → Secrets and variables → Actions*) on lisätty WordPress.orgin `SVN_USERNAME` ja `SVN_PASSWORD`.
-
 ## Vaatimukset
 
 - WordPress 6.2 tai uudempi

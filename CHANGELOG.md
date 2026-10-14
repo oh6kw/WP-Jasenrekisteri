@@ -22,7 +22,6 @@
   - `date()` → `gmdate()`. `utf8_encode()` (vanhentunut PHP 8.2:ssa) korvattu `mb_convert_encoding`/`iconv`-muunnoksella.
   - QR-koodikirjastosta poistettu käyttämättömät kuva-, HTML- ja SVG-tulostusfunktiot. Virheet nostetaan poikkeuksina, ja laskussa on aina vähintään virtuaaliviivakoodi.
 - **Hakemiston kuvat** kansiossa `.wordpress-org`: ikoni, banneri ja 8 kuvakaappausta.
-- **Automaattinen vienti WordPress.orgiin:** GitHubin julkaisu vie version hakemistoon, kun repositorion salaisuuksiin on lisätty `SVN_USERNAME` ja `SVN_PASSWORD`. Jo viety versio ohitetaan.
 
 ## 4.6.1 (2026-10-13)
 
