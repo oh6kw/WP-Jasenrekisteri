@@ -1,5 +1,15 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.3 (2026-10-14)
+
+### Korjaus: paperilasku tulostui kahdelle sivulle
+- Tulostettaessa laskun perään tuli tyhjä toinen sivu. Syy: sivun korkeus oli tasan A4 (297 mm), ja kun selain käyttää omia tulostusreunuksiaan (Chromessa ”Reunukset: Oletus”), sivu ei mahtunut arkille. Nyt tulostettava sivu on enintään 270 mm korkea, joten se mahtuu yhdelle arkille reunusasetuksesta riippumatta. Jos saateteksti on poikkeuksellisen pitkä, maksuosa siirtyy kokonaisena seuraavalle sivulle eikä leikkaudu pois.
+- Testattu Chromen PDF-tulostuksella sekä ilman reunuksia että 10 mm reunuksilla: yksi lasku = yksi sivu, ja QR-koodi ja pankkiviivakoodi lukeutuvat tulosteesta.
+
+### Tiiviimpi lasku
+- Oikean yläkulman tietolaatikko (päiväys, tunnus, viite, eräpäivä, jäsenmaksu, postimaksu, maksettava) on tiiviimpi: rivivälit ovat pienemmät, summat on tasattu oikealle ja *Maksettava*-rivin yläpuolella on viiva.
+- Yläosan, saatteen, erittelyn ja maksettava-laatikon välit ovat pienemmät, ja tulosteen fonttikoko on 10 pt. Osoite osuu edelleen ikkunakuoren ikkunaan.
+
 ## 4.6.2 (2026-10-13)
 
 ### Korjaus: postimaksun erittely paperilaskussa

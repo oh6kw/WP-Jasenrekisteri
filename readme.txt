@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.6.2
+Stable tag: 4.6.3
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -94,6 +94,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 8. Audit log: who changed what and when.
 
 == Changelog ==
+
+= 4.6.3 =
+* Paper invoice: fixed an empty second page when printing, and a more compact invoice details box.
 
 = 4.6.2 =
 * Paper invoices: the membership fee and the postage fee are itemised in the invoice header and after the cover text. {summa} is now the membership fee without postage, and the new {maksettava} placeholder is the total amount payable.
