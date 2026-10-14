@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.7.0
+Stable tag: 4.6.4
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -22,8 +22,6 @@ Jäsenrekisteri ("membership register") is a complete membership register and me
 * Custom fields defined in the settings, such as a clubhouse key number (text) or a yes/no checkbox, optionally shown as a column in the member list.
 * CSV import and export (Excel compatible). Columns are recognised from the headers.
 * The resignation date is recorded, for accurate yearly member counts.
-* Membership application form for your website (shortcode `[jasenrekisteri_liittyminen]`) with spam protection. Applications wait for approval and are not counted as members until approved.
-* Milestones: members reaching round birthdays (from a birth date field) or membership anniversaries; the years are configurable.
 
 **Invoicing**
 
@@ -42,7 +40,6 @@ Jäsenrekisteri ("membership register") is a complete membership register and me
 
 **Reports and audit log**
 
-* Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
 * Annual report for the general meeting: member counts per class at the start and end of the year, joined and resigned members, invoiced, paid and open fees, and fees received during the year. Printable and exportable to Excel.
 * Audit log: who changed what and when, including old and new values of member data, payments, sending, settings and exports. The retention period is configurable.
 
@@ -95,15 +92,8 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 6. Importing payments from a bank file, with a preview before saving.
 7. Annual report for the general meeting.
 8. Audit log: who changed what and when.
-9. Membership application form on the website.
-10. Voting register for the general meeting.
 
 == Changelog ==
-
-= 4.7.0 =
-* New: membership application form (shortcode), application approval and rejection, welcome email.
-* New: voting register for the general meeting.
-* New: milestones (round birthdays and membership anniversaries) with configurable years; new custom field types Date and Birth date.
 
 = 4.6.4 =
 * Paper invoice: no empty trailing page with Letter paper or large print margins.
@@ -125,9 +115,6 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 The full Finnish changelog is in CHANGELOG.md.
 
 == Upgrade Notice ==
-
-= 4.7.0 =
-Adds a membership application form, a voting register and milestones. No action needed when updating.
 
 = 4.6.2 =
 Settings move to new option names automatically. In cover texts, {summa} is now the membership fee without postage; use {maksettava} for the total amount payable.

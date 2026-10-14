@@ -26,7 +26,7 @@ function jasrek_handle_save_member() {
         'puhelin'    => sanitize_text_field(jasrek_post('puhelin')),
         'email'      => $email,
         'liittynyt'  => jasrek_date_or_null(jasrek_post('liittynyt')),
-        'tila'       => array_key_exists($tila, jasrek_tilat()) || $tila === 'hakemus' ? $tila : 'aktiivinen',
+        'tila'       => array_key_exists($tila, jasrek_tilat()) ? $tila : 'aktiivinen',
         'lisatiedot' => sanitize_textarea_field(jasrek_post('lisatiedot')),
         'jasenlaji'  => array_key_exists(jasrek_post('jasenlaji'), jasrek_jasenlajit()) ? jasrek_post('jasenlaji') : '',
         'paperilasku'=> jasrek_post('paperilasku') === '1' ? 1 : 0,
@@ -43,9 +43,6 @@ function jasrek_handle_save_member() {
 
     $old = $id ? $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->jasrek_jasenet} WHERE id = %d", $id)) : null;
     if ($id && !$old) jasrek_redirect('jasenrekisteri');
-    // Liittymishakemus-tila vain hakemukselle; kun hakemus muutetaan voimassa olevaksi, liittymispäivä on tämä päivä
-    if ($data['tila'] === 'hakemus' && (!$old || $old->tila !== 'hakemus')) $data['tila'] = 'aktiivinen';
-    if ($old && $old->tila === 'hakemus' && $data['tila'] === 'aktiivinen' && !$data['liittynyt']) $data['liittynyt'] = current_time('Y-m-d');
 
     // Eroamispäivä: annettu päivä, aiempi päivä tai tämä päivä, kun jäsen merkitään eronneeksi
     if ($data['tila'] === 'eronnut') {
@@ -138,16 +135,9 @@ function jasrek_handle_bulk_members() {
             $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$wpdb->jasrek_jasenet} SET jasenlaji = %s WHERE id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ")", array_merge(array($laji), $ids)));
         }
     } elseif ($op === 'eronnut') {
-        $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$wpdb->jasrek_jasenet} SET tila = 'eronnut', eronnut_pvm = %s WHERE tila = 'aktiivinen' AND id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ")", array_merge(array(current_time('Y-m-d')), $ids)));
+        $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$wpdb->jasrek_jasenet} SET tila = 'eronnut', eronnut_pvm = %s WHERE tila <> 'eronnut' AND id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ")", array_merge(array(current_time('Y-m-d')), $ids)));
     } elseif ($op === 'aktiivinen') {
         $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$wpdb->jasrek_jasenet} SET tila = 'aktiivinen', eronnut_pvm = NULL WHERE tila = 'eronnut' AND id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ")", $ids));
-    } elseif ($op === 'hyvaksy') {
-        foreach ($before as $hm) {
-            if ($hm->tila !== 'hakemus') continue;
-            jasrek_approve_application($hm);
-            $n++;
-        }
-        jasrek_redirect('jasenrekisteri', array('nayta' => jasrek_hakemuksia() ? 'hakemus' : 'jasenet', 'jasrek_msg' => 'members_bulk', 'jasrek_n' => $n));
     } elseif ($op === 'paperi_on' || $op === 'paperi_off') {
         $n = (int) $wpdb->query($wpdb->prepare("UPDATE {$wpdb->jasrek_jasenet} SET paperilasku = %d WHERE id IN (" . implode(',', array_fill(0, count($ids), '%d')) . ")", array_merge(array($op === 'paperi_on' ? 1 : 0), $ids)));
     }
@@ -168,10 +158,11 @@ function jasrek_handle_export_members() {
     global $wpdb;
     $rows = $wpdb->get_results("SELECT * FROM {$wpdb->jasrek_jasenet} ORDER BY sukunimi, etunimi");
     $kentat = jasrek_lisakentat();
+    $tilat = jasrek_tilat();
     $out = array();
     foreach ($rows as $m) {
         $row = array($m->id, $m->etunimi, $m->sukunimi, $m->tunnus, $m->osoite, $m->puhelin, $m->email, jasrek_date($m->liittynyt),
-            jasrek_laji_nimi($m->jasenlaji), jasrek_tila_nimi($m->tila), jasrek_date($m->eronnut_pvm),
+            jasrek_laji_nimi($m->jasenlaji), isset($tilat[$m->tila]) ? $tilat[$m->tila] : $m->tila, jasrek_date($m->eronnut_pvm),
             $m->paperilasku ? 'Kyllä' : '', $m->lisatiedot);
         $lisa = jasrek_member_lisa($m);
         foreach ($kentat as $kid => $k) $row[] = jasrek_lisa_value($k, isset($lisa[$kid]) ? $lisa[$kid] : '', 'Kyllä');
@@ -210,11 +201,6 @@ function jasrek_member_form($id) {
     <h1><?php echo $m ? 'Muokkaa jäsentä' : 'Lisää uusi jäsen'; ?></h1>
     <p><a href="<?php echo esc_url(admin_url('admin.php?page=jasenrekisteri')); ?>">&larr; Takaisin jäsenlistaan</a></p>
     <?php jasrek_notice(); ?>
-    <?php if ($m && $m->tila === 'hakemus'): ?>
-        <div class="notice notice-warning jasrek-keep"><p><strong>Liittymishakemus.</strong> Tarkista tiedot ja hyväksy tai hylkää hakemus.
-            <a class="button button-primary" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_hakemus_hyvaksy&id=' . (int) $m->id), 'jasrek_hakemus_' . (int) $m->id)); ?>">Hyväksy jäseneksi</a>
-            <a class="button jasrek-btn-danger" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_hakemus_hylkaa&id=' . (int) $m->id), 'jasrek_hakemus_' . (int) $m->id)); ?>" data-confirm="Hylätäänkö hakemus? Hakijan tiedot poistetaan rekisteristä.">Hylkää</a></p></div>
-    <?php endif; ?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="jasrek-panel jasrek-form">
         <input type="hidden" name="action" value="jasrek_save_member">
         <?php wp_nonce_field('jasrek_save_member'); ?>
@@ -262,7 +248,6 @@ function jasrek_member_form($id) {
             <?php endif; ?>
             <p><label for="jasrek-tila">Jäsenyys</label>
                <select id="jasrek-tila" name="tila">
-                   <?php if ($v('tila') === 'hakemus'): ?><option value="hakemus" selected>Liittymishakemus (odottaa)</option><?php endif; ?>
                    <?php foreach (jasrek_tilat() as $k => $label): ?>
                        <option value="<?php echo esc_attr($k); ?>" <?php selected($v('tila', 'aktiivinen'), $k); ?>><?php echo esc_html($label); ?></option>
                    <?php endforeach; ?>
@@ -280,10 +265,7 @@ function jasrek_member_form($id) {
             <legend>Lisäkentät</legend>
             <div class="jasrek-grid">
             <?php foreach ($kentat as $kid => $k): $val = isset($lisa[$kid]) ? (string) $lisa[$kid] : ''; ?>
-                <?php if (jasrek_lisa_is_date($k)): ?>
-                    <p><label for="jasrek-lisa-<?php echo esc_attr($kid); ?>"><?php echo esc_html($k['nimi']); ?></label>
-                       <input type="date" id="jasrek-lisa-<?php echo esc_attr($kid); ?>" name="lisa[<?php echo esc_attr($kid); ?>]" value="<?php echo esc_attr($val); ?>"></p>
-                <?php elseif ($k['tyyppi'] === 'valinta'): ?>
+                <?php if ($k['tyyppi'] === 'valinta'): ?>
                     <p><label class="jasrek-radio" style="margin-top:26px"><input type="checkbox" name="lisa[<?php echo esc_attr($kid); ?>]" value="1" <?php checked($val !== ''); ?>> <strong><?php echo esc_html($k['nimi']); ?></strong></label></p>
                 <?php else: ?>
                     <p><label for="jasrek-lisa-<?php echo esc_attr($kid); ?>"><?php echo esc_html($k['nimi']); ?></label>
@@ -386,7 +368,7 @@ function jasrek_member_list() {
     $order    = jasrek_get('order') === 'desc' ? 'DESC' : 'ASC';
 
     // Lukumäärät jäsenluokittain (vain voimassa olevat) ja eronneet
-    $by_laji = $wpdb->get_results("SELECT jasenlaji, COUNT(*) AS n FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen' GROUP BY jasenlaji", OBJECT_K);
+    $by_laji = $wpdb->get_results("SELECT jasenlaji, COUNT(*) AS n FROM {$wpdb->jasrek_jasenet} WHERE tila <> 'eronnut' GROUP BY jasenlaji", OBJECT_K);
     $n_jas = 0; $n_ei = 0;
     foreach ($by_laji as $k => $row) {
         $n_jas += (int) $row->n;
@@ -403,18 +385,14 @@ function jasrek_member_list() {
     }
     if ($lajit && $n_ei > 0) $tabs['ei'] = array('Ilman jäsenluokkaa', $n_ei);
     $tabs['eronnut'] = array('Eronneet', $n_ero);
-    $n_hak = jasrek_hakemuksia();
-    if ($n_hak) $tabs = array_slice($tabs, 0, 1, true) + array('hakemus' => array('Liittymishakemukset', $n_hak)) + array_slice($tabs, 1, null, true);
 
     $nayta = sanitize_key(jasrek_get('nayta', 'jasenet'));
     if (!isset($tabs[$nayta])) $nayta = 'jasenet';
     // WHERE kootaan SQL-literaaleista; kaikki arvot sidotaan prepare()-kutsulla.
-    $where = "tila = 'aktiivinen'";
+    $where = "tila <> 'eronnut'";
     $args  = array();
     if ($nayta === 'eronnut') {
         $where = "tila = 'eronnut'";
-    } elseif ($nayta === 'hakemus') {
-        $where = "tila = 'hakemus'";
     } elseif ($nayta === 'ei') {
         $known = array_keys($lajit);
         if ($known) {
@@ -428,8 +406,8 @@ function jasrek_member_list() {
     $args[] = $order_by; // sarake sallittujen listalta, sidotaan tunnisteena (%i)
     $sql = "SELECT * FROM {$wpdb->jasrek_jasenet} WHERE $where ORDER BY %i " . ($order === 'DESC' ? 'DESC' : 'ASC') . ', sukunimi ASC, etunimi ASC';
     $members = $wpdb->get_results($wpdb->prepare($sql, $args)); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- $sql is built from literal fragments above; all values are bound here.
-    $n_noemail = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen' AND (email IS NULL OR email = '')");
-    $n_paperi  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen' AND (paperilasku = 1 OR email IS NULL OR email = '')");
+    $n_noemail = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->jasrek_jasenet} WHERE tila <> 'eronnut' AND (email IS NULL OR email = '')");
+    $n_paperi  = (int) $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->jasrek_jasenet} WHERE tila <> 'eronnut' AND (paperilasku = 1 OR email IS NULL OR email = '')");
     $kentat = jasrek_lisakentat();
     $sarakkeet = array_filter($kentat, function ($k) { return !empty($k['lista']) && $k['lista'] === '1'; });
 
@@ -450,22 +428,10 @@ function jasrek_member_list() {
     <a href="<?php echo esc_url(add_query_arg(array('view' => 'new', 'laji' => strpos($nayta, 'l_') === 0 ? substr($nayta, 2) : null), $base)); ?>" class="page-title-action">Lisää uusi jäsen</a>
     <hr class="wp-header-end">
     <?php jasrek_notice(); ?>
-    <?php if ($n_hak && $nayta !== 'hakemus'): ?>
-        <div class="notice notice-info jasrek-keep"><p>📝 <strong><?php echo (int) $n_hak; ?> liittymishakemus<?php echo $n_hak > 1 ? 'ta' : ''; ?></strong> odottaa käsittelyä. <a href="<?php echo esc_url(add_query_arg('nayta', 'hakemus', $base)); ?>">Näytä hakemukset</a></p></div>
-    <?php endif; ?>
 
     <div class="jasrek-cards">
         <div class="jasrek-card"><span class="jasrek-card-num"><?php echo esc_html($n_jas); ?></span><span class="jasrek-card-label">Jäsentä<?php echo esc_html($n_free ? ', joista ' . $n_free . ' ilman jäsenmaksua' : ''); ?></span></div>
         <div class="jasrek-card"><span class="jasrek-card-num"><?php echo esc_html($n_ero); ?></span><span class="jasrek-card-label">Eronnutta</span></div>
-        <?php
-        // Merkkipäivät seuraavan 60 päivän aikana (myös vuodenvaihteen yli)
-        $tanaan = current_time('Y-m-d'); $raja = gmdate('Y-m-d', strtotime($tanaan . ' +60 days'));
-        $tulossa = array_values(array_filter(array_merge(jasrek_merkkipaivat((int) substr($tanaan, 0, 4)), jasrek_merkkipaivat((int) substr($tanaan, 0, 4) + 1)),
-            function ($mp) use ($tanaan, $raja) { return $mp['pvm'] >= $tanaan && $mp['pvm'] <= $raja; }));
-        if ($tulossa): $eka = $tulossa[0]; ?>
-        <a class="jasrek-card jasrek-card-link" href="<?php echo esc_url(admin_url('admin.php?page=jasrek-raportti&vuosi=' . substr($eka['pvm'], 0, 4) . '#merkkipaivat')); ?>"><span class="jasrek-card-num">🎉 <?php echo (int) count($tulossa); ?></span>
-            <span class="jasrek-card-label">Merkkipäivää 60 päivän sisällä, ensimmäinen <?php echo esc_html(jasrek_date($eka['pvm']) . ': ' . $eka['m']->etunimi . ' ' . $eka['m']->sukunimi . ' ' . jasrek_merkkipaiva_teksti($eka)); ?></span></a>
-        <?php endif; ?>
         <div class="jasrek-card <?php echo esc_html($n_noemail ? 'jasrek-card-warn' : ''); ?>"><span class="jasrek-card-num"><?php echo esc_html($n_noemail); ?></span><span class="jasrek-card-label">Jäsentä ilman sähköpostia</span></div>
         <?php if ($n_paperi): ?>
         <div class="jasrek-card"><span class="jasrek-card-num"><?php echo esc_html($n_paperi); ?></span><span class="jasrek-card-label">Saa laskun paperilla</span></div>
@@ -522,7 +488,7 @@ function jasrek_member_list() {
             $lisa = jasrek_member_lisa($m);
             // Hakuun myös lisäkentät: kentän nimi (esim. "avain") löytää kaikki, joilla kenttä on täytetty
             $lisa_haku = '';
-            foreach ($kentat as $kid => $k) if (isset($lisa[$kid]) && $lisa[$kid] !== '') $lisa_haku .= $k['nimi'] . ($k['tyyppi'] === 'valinta' ? '' : jasrek_lisa_value($k, $lisa[$kid]));
+            foreach ($kentat as $kid => $k) if (isset($lisa[$kid]) && $lisa[$kid] !== '') $lisa_haku .= $k['nimi'] . ($k['tyyppi'] === 'valinta' ? '' : $lisa[$kid]);
             $search = preg_replace('/\s+/', '', strtolower(remove_accents($m->etunimi . $m->sukunimi . $m->etunimi . $m->tunnus . $m->email . $m->puhelin . jasrek_laji_nimi($m->jasenlaji) . $lisa_haku . ($m->paperilasku ? 'paperilasku' : ''))));
             $edit_url = add_query_arg(array('view' => 'edit', 'id' => $m->id), $base);
             $del_url  = wp_nonce_url(admin_url('admin-post.php?action=jasrek_delete_member&id=' . $m->id), 'jasrek_delete_member_' . $m->id);
@@ -553,22 +519,16 @@ function jasrek_member_list() {
                         } else {
                             echo '<span class="jasrek-badge jasrek-badge-info">Avoin</span>';
                         }
-                    } elseif ($m->tila === 'aktiivinen' && jasrek_is_maksuvapaa($m)) {
+                    } elseif ($m->tila !== 'eronnut' && jasrek_is_maksuvapaa($m)) {
                         echo '<span class="jasrek-muted">ei jäsenmaksua</span>';
                     } else {
                         echo '<span class="jasrek-muted">–</span>';
                     }
                 ?></td>
                 <td class="jasrek-col-actions">
-                    <?php if ($m->tila === 'hakemus'): ?>
-                    <a class="button button-small button-primary" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_hakemus_hyvaksy&id=' . (int) $m->id), 'jasrek_hakemus_' . (int) $m->id)); ?>">Hyväksy</a>
-                    <a class="button button-small" href="<?php echo esc_url($edit_url); ?>">Avaa</a>
-                    <a class="button button-small jasrek-btn-danger" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_hakemus_hylkaa&id=' . (int) $m->id), 'jasrek_hakemus_' . (int) $m->id)); ?>" data-confirm="<?php echo esc_attr('Hylätäänkö ' . $m->etunimi . ' ' . $m->sukunimi . ' hakemus? Hakijan tiedot poistetaan rekisteristä.'); ?>">Hylkää</a>
-                    <?php else: ?>
                     <a class="button button-small" href="<?php echo esc_url($edit_url); ?>">Muokkaa</a>
                     <a class="button button-small jasrek-btn-danger" href="<?php echo esc_url($del_url); ?>"
                        data-confirm="<?php echo esc_attr('Poistetaanko ' . $m->etunimi . ' ' . $m->sukunimi . ' pysyvästi? Jos jäsen eroaa, kannattaa mieluummin merkitä hänet eronneeksi, jolloin tiedot ja maksuhistoria säilyvät.'); ?>">Poista</a>
-                    <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>
@@ -583,11 +543,6 @@ function jasrek_member_list() {
                 <?php foreach ($lajit as $lid => $l): ?>
                     <option value="laji:<?php echo esc_attr($lid); ?>"><?php echo esc_html($l['nimi'] . ' (' . jasrek_money($l['summa']) . ')'); ?></option>
                 <?php endforeach; ?>
-            </optgroup>
-            <?php endif; ?>
-            <?php if ($nayta === 'hakemus'): ?>
-            <optgroup label="Liittymishakemukset">
-                <option value="hyvaksy">Hyväksy jäseniksi</option>
             </optgroup>
             <?php endif; ?>
             <optgroup label="Jäsenyys">

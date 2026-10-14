@@ -3,7 +3,7 @@
 Plugin Name: Jäsenrekisteri
 Plugin URI: https://github.com/oh6kw/WP-Jasenrekisteri
 Description: Yhdistyksen jäsenrekisteri: jäsenet, jäsenluokat ja omat lisäkentät, jäsenmaksulaskut omilla viitenumeroilla sähköpostilla tai paperilla, QR-koodi ja pankkiviivakoodi, maksujen tuonti pankista, muistutukset, tiedotteet, vuosiraportti ja muutosloki.
-Version: 4.7.0
+Version: 4.6.4
 Author: Jarno Jaskari OH6KW, Claude (Anthropic)
 Author URI: https://github.com/oh6kw
 License: AGPL-3.0-or-later
@@ -18,7 +18,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 
 if (!defined('ABSPATH')) exit; // Estetään suora pääsy tiedostoon
 
-define('JASREK_VERSION', '4.7.0');
+define('JASREK_VERSION', '4.6.4');
 define('JASREK_DB_VERSION', '9');
 define('JASREK_FILE', __FILE__);
 define('JASREK_DIR', plugin_dir_path(__FILE__));
@@ -36,8 +36,6 @@ require_once JASREK_DIR . 'includes/import-payments.php';
 require_once JASREK_DIR . 'includes/export-xlsx.php';
 require_once JASREK_DIR . 'includes/print.php';
 require_once JASREK_DIR . 'includes/report.php';
-require_once JASREK_DIR . 'includes/voters.php';
-require_once JASREK_DIR . 'includes/join.php';
 require_once JASREK_DIR . 'includes/mailer.php';
 require_once JASREK_DIR . 'includes/settings.php';
 require_once JASREK_DIR . 'includes/cron.php';
@@ -50,9 +48,8 @@ add_action('plugins_loaded', 'jasrek_maybe_upgrade');
 // Hallintavalikko
 add_action('admin_menu', 'jasrek_admin_menu');
 function jasrek_admin_menu() {
-    $bubble = current_user_can('manage_options') ? jasrek_menu_bubble() : ''; // odottavat liittymishakemukset
-    add_menu_page('Jäsenrekisteri', 'Jäsenrekisteri' . $bubble, 'manage_options', 'jasenrekisteri', 'jasrek_page_members', 'dashicons-groups', 26);
-    add_submenu_page('jasenrekisteri', 'Jäsenet', 'Jäsenet' . $bubble, 'manage_options', 'jasenrekisteri', 'jasrek_page_members');
+    add_menu_page('Jäsenrekisteri', 'Jäsenrekisteri', 'manage_options', 'jasenrekisteri', 'jasrek_page_members', 'dashicons-groups', 26);
+    add_submenu_page('jasenrekisteri', 'Jäsenet', 'Jäsenet', 'manage_options', 'jasenrekisteri', 'jasrek_page_members');
     add_submenu_page('jasenrekisteri', 'Jäsenmaksulaskutus', 'Laskutus', 'manage_options', 'jasrek-laskutus', 'jasrek_page_invoices');
     add_submenu_page('jasenrekisteri', 'Sähköposti jäsenille', 'Sähköposti', 'manage_options', 'jasrek-sahkoposti', 'jasrek_page_mail');
     add_submenu_page('jasenrekisteri', 'Vuosiraportti', 'Vuosiraportti', 'manage_options', 'jasrek-raportti', 'jasrek_page_report');
