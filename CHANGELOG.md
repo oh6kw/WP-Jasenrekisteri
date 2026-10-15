@@ -2,6 +2,13 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.7.1 (2026-10-15)
+
+### Sähköpostilasku tilisiirtolomakkeella
+- **Pankkiviivakoodi mukaan:** tilisiirtomallin sähköpostilasku noudattaa nyt samaa asetusta *Maksukoodi laskussa* kuin paperilasku ja perusmalli. Oletuksella (vain pankkiviivakoodi) viivakoodi on lomakkeen alla, ja QR-koodi tulee lomakkeen yläpuolelle, jos se on valittu. Kuvat upotetaan viestiin samalla tavalla kuin perusmallissa. Virtuaaliviivakoodi on edelleen myös tekstinä.
+- Erillinen ruksi *QR-koodi sähköpostilaskussa* poistettiin, koska maksukoodiasetus hoitaa sen.
+- **Leveämpi:** tilisiirtomallin sähköpostilasku on 720 px leveä (aiemmin 600 px), joten lomake mahtuu väljemmin. Puhelimessa lomake asettuu edelleen kahteen osaan allekkain.
+
 ## 4.7.0 (2026-10-15)
 
 ### Uutta: varmuuskopio ja siirto

@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.7.0
+Stable tag: 4.7.1
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -106,6 +106,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 11. Paper invoice with the Finnish bank transfer form.
 
 == Changelog ==
+
+= 4.7.1 =
+* Email invoice with the bank transfer form now includes the bank barcode (and QR code) according to the payment code setting, and is wider.
 
 = 4.7.0 =
 * New: full backup and restore (Settings → Backup and moving), for example for moving the register to another site. The previous state is kept so a restore can be undone.

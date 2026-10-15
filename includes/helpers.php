@@ -55,7 +55,6 @@ function jasrek_settings() {
         'postiosoite'     => '',
         'paperi_malli'    => 'tilisiirto',
         'sposti_malli'    => 'tilisiirto',
-        'sposti_qr'       => '0',
         'merkki_kaytossa' => '1',
         'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
         'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',

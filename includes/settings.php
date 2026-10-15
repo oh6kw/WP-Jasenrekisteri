@@ -47,7 +47,6 @@ function jasrek_handle_save_settings() {
         'ytunnus'          => sanitize_text_field(jasrek_post('ytunnus')),
         'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'viivakoodi',
         'sposti_malli'     => jasrek_post('sposti_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
-        'sposti_qr'        => jasrek_post('sposti_qr') === '1' ? '1' : '0',
         'lahettaja_nimi'   => sanitize_text_field(jasrek_post('lahettaja_nimi')),
         'lahettaja_email'  => sanitize_email(jasrek_post('lahettaja_email')),
         'vastaus_email'    => sanitize_email(jasrek_post('vastaus_email')),
@@ -81,7 +80,7 @@ function jasrek_handle_save_settings() {
 /** Kirjaa muuttuneet asetukset muutoslokiin. */
 function jasrek_log_settings_change($a, $b) {
     $labels = array(
-        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli', 'sposti_qr' => 'QR-koodi sähköpostilaskussa',
+        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli',
         'yhteystiedot' => 'Yhteystiedot', 'lahettaja_nimi' => 'Lähettäjän nimi', 'lahettaja_email' => 'Lähettäjän osoite',
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
@@ -90,7 +89,7 @@ function jasrek_log_settings_change($a, $b) {
         'merkki_kaytossa' => 'Merkkipäivät käytössä', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
-        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot', 'merkki_kaytossa', 'sposti_qr'), true)) return $v === '1' ? 'kyllä' : 'ei';
+        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot', 'merkki_kaytossa'), true)) return $v === '1' ? 'kyllä' : 'ei';
         return (string) $v;
     };
     $old = array(); $new = array();
@@ -155,8 +154,7 @@ function jasrek_page_settings() {
                    <span class="description">QR-koodi on EPC-standardin mukainen (viite RF-muodossa, jonka pankit kohdistavat samaan viitteeseen). Pankkiviivakoodi on perinteinen suomalainen laskun viivakoodi. Virtuaaliviivakoodi tekstinä on laskussa aina.</span></p>
                 <fieldset class="jasrek-fieldset"><legend>Sähköpostilaskun malli</legend>
                     <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="perus" <?php checked($s['sposti_malli'], 'perus'); ?>> <strong>Perusmalli</strong> – maksutiedot taulukkona sekä QR-koodi ja pankkiviivakoodi kuvina (kohdan <em>Maksukoodi laskussa</em> mukaan).</label>
-                    <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="tilisiirto" <?php checked($s['sposti_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – sama ulkoasu kuin paperilaskun tilisiirtolomakkeessa. Lomake on tekstiä, joten tilinumeron, viitteen ja virtuaaliviivakoodin voi kopioida verkkopankkiin. Viestissä ei ole liitteitä eikä kuvia.</label>
-                    <label class="jasrek-radio jasrek-indent"><input type="checkbox" name="sposti_qr" value="1" <?php checked($s['sposti_qr'], '1'); ?>> Lisää tilisiirtolomakkeen yläpuolelle myös QR-koodi (upotettu kuva – osa sähköpostiohjelmista näyttää sen myös liitteenä)</label>
+                    <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="tilisiirto" <?php checked($s['sposti_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – sama ulkoasu kuin paperilaskun tilisiirtolomakkeessa. Lomake on tekstiä, joten tilinumeron, viitteen ja virtuaaliviivakoodin voi kopioida verkkopankkiin. QR-koodi ja pankkiviivakoodi tulevat kohdan <em>Maksukoodi laskussa</em> mukaan (upotettuina kuvina).</label>
                 </fieldset>
                 <p><label for="jasrek-yhteystiedot">Yhteystiedot viestien alalaitaan</label>
                    <textarea id="jasrek-yhteystiedot" name="yhteystiedot" rows="3" placeholder="Esim. Yhdistys ry · rahastonhoitaja@example.fi · www.example.fi"><?php echo esc_textarea($s['yhteystiedot']); ?></textarea></p>

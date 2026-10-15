@@ -2,7 +2,7 @@
 if (!defined('ABSPATH')) exit;
 
 /** Yhteinen sähköpostipohja (inline-tyylit, toimii myös Outlookissa ja puhelimella). */
-function jasrek_email_layout($title, $inner) {
+function jasrek_email_layout($title, $inner, $width = 600) {
     $s = jasrek_settings();
     $footer = $s['yhteystiedot'] !== '' ? nl2br(esc_html($s['yhteystiedot'])) : esc_html($s['yhdistys']);
     if ($s['ytunnus'] !== '') $footer .= '<br>Y-tunnus ' . esc_html($s['ytunnus']);
@@ -11,7 +11,7 @@ function jasrek_email_layout($title, $inner) {
         . '<meta name="viewport" content="width=device-width,initial-scale=1"><title>' . esc_html($title) . '</title></head>'
         . '<body style="margin:0;padding:0;background:#eef1f5;">'
         . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f5;padding:24px 12px;"><tr><td align="center">'
-        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#1f2933;font-size:15px;line-height:1.55;">'
+        . '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:' . (int) $width . 'px;background:#ffffff;border-radius:8px;overflow:hidden;font-family:Arial,Helvetica,sans-serif;color:#1f2933;font-size:15px;line-height:1.55;">'
         . '<tr><td style="background:#1d3557;color:#ffffff;padding:20px 28px;font-size:18px;font-weight:bold;">' . esc_html($s['yhdistys']) . '</td></tr>'
         . '<tr><td style="padding:28px;">' . $inner . '</td></tr>'
         . '<tr><td style="background:#f6f8fa;color:#6b7785;padding:16px 28px;font-size:12px;line-height:1.5;">' . $footer . '</td></tr>'
@@ -135,10 +135,8 @@ function jasrek_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
 /** Sähköpostilaskun kuvat valitun mallin mukaan (upotetaan viestiin cid-kuvina). */
 function jasrek_invoice_email_images($lasku, $r) {
     $s = jasrek_settings();
-    if ($s['sposti_malli'] !== 'tilisiirto') return jasrek_invoice_images($lasku, $r);
-    if ($s['sposti_qr'] !== '1') return array(); // tilisiirtomalli: ei kuvia eikä liitteitä
-    $png = jasrek_qr_png(jasrek_epc_payload($lasku, $r));
-    return $png !== '' ? array('jrqr' => $png) : array();
+    // Kummassakin mallissa QR-koodi ja pankkiviivakoodi kohdan "Maksukoodi laskussa" mukaan
+    return jasrek_invoice_images($lasku, $r);
 }
 
 /**
@@ -197,7 +195,7 @@ function jasrek_invoice_html_tilisiirto($lasku, $r, $reminder = false, $img = 'c
         return '<tr><th style="' . $th . 'width:30%;height:' . $h . 'px;border-bottom:' . $B . ';">' . $label . '</th>'
              . '<td style="' . $td . 'border-left:' . $B . ';border-bottom:' . $B . ';' . $extra . '">' . $value . '</td></tr>';
     };
-    $half = 'display:inline-block;width:100%;max-width:272px;vertical-align:top;font-size:14px;';
+    $half = 'display:inline-block;width:100%;max-width:332px;vertical-align:top;font-size:14px;';
     $tbl  = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:' . $B . ';">';
     $html .= '<div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;letter-spacing:.06em;color:#000;margin:0 0 3px;">TILISIIRTO · GIRERING</div>';
     $html .= '<div style="font-size:0;line-height:0;">';
@@ -221,11 +219,17 @@ function jasrek_invoice_html_tilisiirto($lasku, $r, $reminder = false, $img = 'c
            . '</table></div>';
     $html .= '</div>';
 
+    if (isset($images['jrbar'])) {
+        // Pankkiviivakoodi lomakkeen alla kuten paperilaskussa (kuva 2× tarkkuudella, näytetään puolikkaana)
+        $bw = (int) (unpack('N', substr($images['jrbar'], 16, 4))[1] / 2);
+        $bsrc = $img === 'data' ? 'data:image/png;base64,' . base64_encode($images['jrbar']) : 'cid:jrbar';
+        $html .= '<div style="margin:12px 0 0;"><img src="' . esc_attr($bsrc) . '" width="' . $bw . '" height="50" alt="Pankkiviivakoodi" style="display:block;width:' . $bw . 'px;max-width:100%;height:50px;"></div>';
+    }
     if ($vvk !== '') {
         $html .= '<div style="margin:16px 0 0;padding:12px 14px;border:1px dashed #b8c2cc;border-radius:6px;">'
                . '<div style="font-size:13px;color:#6b7785;margin:0 0 6px;">Virtuaaliviivakoodi – kopioi verkkopankkiin, niin maksun tiedot täyttyvät valmiiksi:</div>'
                . '<div style="font-family:Consolas,Menlo,monospace;font-size:14px;word-break:break-all;">' . esc_html($vvk) . '</div></div>';
     }
     $html .= '<p style="margin:16px 0 0;font-size:13px;color:#6b7785;">Käytäthän maksaessasi viitenumeroa (ei viestiä), jotta maksu kohdistuu sinulle.</p>';
-    return jasrek_email_layout($lasku->nimi, $html);
+    return jasrek_email_layout($lasku->nimi, $html, 720);
 }
