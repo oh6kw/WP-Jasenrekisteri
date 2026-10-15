@@ -40,6 +40,11 @@ function jasrek_handle_save_member() {
         if ($val !== '') $lisa[$kid] = $val;
     }
     $data['lisakentat'] = $lisa ? wp_json_encode($lisa) : null;
+    // Syntymävuosi tai -päivä kysytään vain, kun merkkipäivät ovat käytössä; muuten tallennettu arvo säilyy.
+    if (jasrek_merkki_on()) {
+        $syn = jasrek_syntynyt_parse(jasrek_post('syntynyt'));
+        $data['syntynyt'] = $syn !== '' ? $syn : null;
+    }
 
     $old = $id ? $wpdb->get_row($wpdb->prepare("SELECT * FROM {$wpdb->jasrek_jasenet} WHERE id = %d", $id)) : null;
     if ($id && !$old) jasrek_redirect('jasenrekisteri');
@@ -160,7 +165,7 @@ function jasrek_handle_export_members() {
     $kentat = jasrek_lisakentat();
     $out = array();
     foreach ($rows as $m) {
-        $row = array($m->id, $m->etunimi, $m->sukunimi, $m->tunnus, $m->osoite, $m->puhelin, $m->email, jasrek_date($m->liittynyt),
+        $row = array($m->id, $m->etunimi, $m->sukunimi, $m->tunnus, $m->osoite, $m->puhelin, $m->email, jasrek_date($m->liittynyt), jasrek_syntynyt_teksti($m->syntynyt),
             jasrek_laji_nimi($m->jasenlaji), jasrek_tila_nimi($m->tila), jasrek_date($m->eronnut_pvm),
             $m->paperilasku ? 'Kyllä' : '', $m->lisatiedot);
         $lisa = jasrek_member_lisa($m);
@@ -169,7 +174,7 @@ function jasrek_handle_export_members() {
     }
     jasrek_log('vienti', 0, 'vienti', 'Jäsenrekisteri CSV-tiedostoon (' . count($rows) . ' jäsentä)');
     jasrek_csv_output('jasenrekisteri-' . current_time('Y-m-d') . '.csv',
-        array_merge(array('ID', 'Etunimi', 'Sukunimi', jasrek_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'),
+        array_merge(array('ID', 'Etunimi', 'Sukunimi', jasrek_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Syntynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'),
             array_values(array_map(function ($k) { return $k['nimi']; }, $kentat))), $out);
 }
 
@@ -224,6 +229,12 @@ function jasrek_member_form($id) {
                <input type="text" id="jasrek-osoite" name="osoite" value="<?php echo esc_attr($v('osoite')); ?>"></p>
             <p><label for="jasrek-liittynyt">Liittynyt</label>
                <input type="date" id="jasrek-liittynyt" name="liittynyt" value="<?php echo esc_attr($v('liittynyt')); ?>"></p>
+            <?php if (jasrek_merkki_on()): ?>
+            <p><label for="jasrek-syntynyt">Syntymävuosi tai -päivä <span class="jasrek-muted">(vapaaehtoinen)</span></label>
+               <input type="text" id="jasrek-syntynyt" name="syntynyt" value="<?php echo esc_attr(jasrek_syntynyt_teksti($v('syntynyt'))); ?>" placeholder="esim. 1976 tai 12.3.1976" inputmode="numeric"
+                      pattern="\s*(\d{4}|\d{1,2}\.\d{1,2}\.\d{4}|\d{4}-\d{2}-\d{2})\s*" title="Vuosi (esim. 1976) tai päivämäärä (esim. 12.3.1976)">
+               <span class="description">Merkkipäiviä varten. Pelkkä vuosi riittää, jos jäsen ei halua kertoa tarkkaa päivää – merkkipäivä näkyy silloin ilman päivää.</span></p>
+            <?php endif; ?>
             <?php if (jasrek_jasenlajit()):
                 $cur_laji = $v('jasenlaji');
                 // Uudelle jäsenelle esivalitaan välilehdellä valittu luokka tai ensimmäinen maksullinen luokka

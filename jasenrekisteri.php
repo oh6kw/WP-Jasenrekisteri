@@ -19,7 +19,7 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 if (!defined('ABSPATH')) exit; // Estetään suora pääsy tiedostoon
 
 define('JASREK_VERSION', '4.6.5');
-define('JASREK_DB_VERSION', '9');
+define('JASREK_DB_VERSION', '10');
 define('JASREK_FILE', __FILE__);
 define('JASREK_DIR', plugin_dir_path(__FILE__));
 define('JASREK_URL', plugin_dir_url(__FILE__));

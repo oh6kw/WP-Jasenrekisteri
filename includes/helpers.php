@@ -123,17 +123,31 @@ function jasrek_laji_badge($laji_id) {
         . esc_html($lajit[$laji_id]['nimi']) . '</span>';
 }
 
-/** Lisäkenttien tyypit. Syntymäaika-kentästä lasketaan merkkipäivät. */
+/** Lisäkenttien tyypit. */
 function jasrek_lisa_tyypit() {
-    return array('teksti' => 'Teksti', 'valinta' => 'Valintaruutu', 'pvm' => 'Päivämäärä', 'syntyma' => 'Syntymäaika (merkkipäivät)');
+    return array('teksti' => 'Teksti', 'valinta' => 'Valintaruutu', 'pvm' => 'Päivämäärä');
 }
 function jasrek_lisa_is_date($kentta) {
-    return in_array($kentta['tyyppi'], array('pvm', 'syntyma'), true);
+    return $kentta['tyyppi'] === 'pvm';
 }
-/** Ensimmäinen Syntymäaika-tyyppinen lisäkenttä (id) tai ''. */
-function jasrek_syntyma_kentta() {
-    foreach (jasrek_lisakentat() as $kid => $k) if ($k['tyyppi'] === 'syntyma') return $kid;
-    return '';
+
+/**
+ * Jäsenen syntymävuosi tai -päivä (vapaaehtoinen). Tallennetaan muodossa VVVV tai VVVV-KK-PP.
+ * Hyväksyy esim. 1976, 12.3.1976 ja 1976-03-12. Virheellinen tai tuleva arvo palauttaa ''.
+ */
+function jasrek_syntynyt_parse($s) {
+    $s = trim(sanitize_text_field((string) $s));
+    if ($s === '') return '';
+    if (preg_match('/^\d{4}$/', $s)) {
+        return ((int) $s >= 1900 && (int) $s <= (int) current_time('Y')) ? $s : '';
+    }
+    $d = jasrek_parse_date_any($s);
+    return ($d && (int) substr($d, 0, 4) >= 1900 && $d <= current_time('Y-m-d')) ? $d : '';
+}
+/** Syntymävuosi sellaisenaan tai syntymäpäivä muodossa p.k.vvvv. */
+function jasrek_syntynyt_teksti($v) {
+    $v = (string) $v;
+    return preg_match('/^\d{4}$/', $v) ? $v : jasrek_date($v);
 }
 /** Asetuksen vuosilista (esim. "50, 60, 70") kokonaislukuina. */
 function jasrek_vuosilista($s) {
@@ -145,8 +159,9 @@ function jasrek_vuosilista($s) {
 }
 
 /**
- * Merkkipäivät annettuna vuonna: täytettävät vuodet (syntymäaika) ja jäsenyysvuodet (liittymispäivä)
+ * Merkkipäivät annettuna vuonna: täytettävät vuodet (syntymävuosi tai -päivä) ja jäsenyysvuodet (liittymispäivä)
  * asetuksissa valituilla tasavuosilla. Palauttaa listan array(pvm, tyyppi 'ika'|'jasenyys', vuodet, jäsen), päivän mukaan.
+ * Jos jäsenestä tiedetään vain syntymävuosi, pvm on '' ja merkkipäivä on listan lopussa.
  */
 function jasrek_merkki_on() {
     return jasrek_settings()['merkki_kaytossa'] === '1';
@@ -158,7 +173,6 @@ function jasrek_merkkipaivat($year) {
     $s = jasrek_settings();
     $iat = jasrek_vuosilista($s['merkki_ika']);
     $jat = jasrek_vuosilista($s['merkki_jasen']);
-    $sk = jasrek_syntyma_kentta();
     $out = array();
     $paiva = function ($ymd) use ($year) {
         $md = substr($ymd, 5, 5);
@@ -166,28 +180,30 @@ function jasrek_merkkipaivat($year) {
         return $year . '-' . $md;
     };
     foreach ($wpdb->get_results("SELECT * FROM {$wpdb->jasrek_jasenet} WHERE tila = 'aktiivinen'") as $m) {
-        if ($sk !== '' && $iat) {
-            $lisa = jasrek_member_lisa($m);
-            $syn = isset($lisa[$sk]) ? (string) $lisa[$sk] : '';
-            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $syn)) {
-                $ika = $year - (int) substr($syn, 0, 4);
-                if (in_array($ika, $iat, true)) $out[] = array('pvm' => $paiva($syn), 'tyyppi' => 'ika', 'vuodet' => $ika, 'm' => $m);
-            }
+        $syn = isset($m->syntynyt) ? (string) $m->syntynyt : '';
+        if ($iat && preg_match('/^\d{4}(-\d{2}-\d{2})?$/', $syn)) {
+            $ika = $year - (int) substr($syn, 0, 4);
+            if (in_array($ika, $iat, true)) $out[] = array('pvm' => strlen($syn) === 10 ? $paiva($syn) : '', 'tyyppi' => 'ika', 'vuodet' => $ika, 'm' => $m);
         }
         if ($jat && $m->liittynyt && $m->liittynyt !== '0000-00-00') {
             $v = $year - (int) substr($m->liittynyt, 0, 4);
             if (in_array($v, $jat, true)) $out[] = array('pvm' => $paiva($m->liittynyt), 'tyyppi' => 'jasenyys', 'vuodet' => $v, 'm' => $m);
         }
     }
-    usort($out, function ($a, $b) { return strcmp($a['pvm'] . $a['m']->sukunimi, $b['pvm'] . $b['m']->sukunimi); });
+    $avain = function ($mp) use ($year) { return ($mp['pvm'] !== '' ? $mp['pvm'] : $year . '-99') . $mp['m']->sukunimi . ' ' . $mp['m']->etunimi; };
+    usort($out, function ($a, $b) use ($avain) { return strcmp($avain($a), $avain($b)); });
     return $out;
+}
+/** Merkkipäivän päivä näytettäväksi; pelkästä syntymävuodesta "vuoden aikana". */
+function jasrek_merkkipaiva_pvm($mp) {
+    return $mp['pvm'] !== '' ? jasrek_date($mp['pvm']) : 'vuoden aikana';
 }
 function jasrek_merkkipaiva_teksti($mp) {
     return $mp['tyyppi'] === 'ika' ? $mp['vuodet'] . ' vuotta' : $mp['vuodet'] . ' vuotta jäsenenä';
 }
 
 /**
- * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta'|'pvm'|'syntyma', 'lista' => '1'|'0')).
+ * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta'|'pvm', 'lista' => '1'|'0')).
  * Päivämäärät tallennetaan muodossa VVVV-KK-PP.
  * Arvot tallennetaan jäsenelle JSON-muodossa (jasenet.lisakentat).
  */

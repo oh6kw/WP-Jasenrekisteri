@@ -22,7 +22,7 @@ Jäsenrekisteri ("membership register") is a complete membership register and me
 * Custom fields defined in the settings, such as a clubhouse key number (text) or a yes/no checkbox, optionally shown as a column in the member list.
 * CSV import and export (Excel compatible). Columns are recognised from the headers.
 * The resignation date is recorded, for accurate yearly member counts.
-* Optional milestones: members reaching round birthdays (from a birth date field) or membership anniversaries; the years are configurable and the feature can be switched off.
+* Optional milestones: members reaching round birthdays (from an optional birth year or birth date) or membership anniversaries; the years are configurable and the feature can be switched off.
 
 **Invoicing**
 
@@ -100,7 +100,7 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 
 = 4.6.5 =
 * New: voting register for the general meeting.
-* New: optional milestones (round birthdays and membership anniversaries) with configurable years; new custom field types Date and Birth date.
+* New: optional milestones (round birthdays and membership anniversaries) with configurable years; optional birth year or date for members; new custom field type Date.
 
 = 4.6.4 =
 * Paper invoice: no empty trailing page with Letter paper or large print margins.

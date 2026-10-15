@@ -197,7 +197,7 @@ function jasrek_page_settings() {
                 <p class="description">Yhdistyksen omat tiedot jäsenille, esim. <em>Avain</em> (kerhotalon avaimen numero), <em>Lehti paperilla</em> tai <em>Talkoovastaava</em>.
                     <strong>Teksti</strong>-kenttään voi kirjoittaa arvon (esim. avaimen numero 8.59 – tyhjä tarkoittaa, ettei avainta ole).
                     <strong>Valintaruutu</strong> on pelkkä kyllä/ei-ruksi. <strong>Päivämäärä</strong> tallentaa päivän (esim. avaimen luovutus).
-                    <strong>Syntymäaika</strong> on päivämäärä, josta vuosiraportti ja jäsenlista kertovat merkkipäivät (ks. Merkkipäivät alla). Kentät näkyvät jäsenen lomakkeella, CSV-viennissä ja -tuonnissa, ja halutessa omana sarakkeenaan jäsenlistassa.
+                    Kentät näkyvät jäsenen lomakkeella, CSV-viennissä ja -tuonnissa, ja halutessa omana sarakkeenaan jäsenlistassa.
                     Jäsenlistan haku löytää kentän nimellä (esim. ”avain”) kaikki, joilla kenttä on täytetty.</p>
                 <table class="widefat jasrek-lajit" id="jasrek-kentat">
                     <thead><tr><th>Kentän nimi</th><th style="width:220px">Tyyppi</th><th style="width:140px">Jäsenlistassa</th><th style="width:50px"></th></tr></thead>
@@ -226,13 +226,12 @@ function jasrek_page_settings() {
 
             <div class="jasrek-panel" id="jasrek-merkkipaivat">
                 <h2>Merkkipäivät</h2>
-                <p class="description">Vuosiraportti ja jäsenlista kertovat, ketkä täyttävät valittuja tasavuosia tai ovat olleet jäsenenä valitut vuodet. Syntymäpäivät edellyttävät lisäkenttää, jonka tyyppi on <em>Syntymäaika</em>. Jäsenyysvuodet lasketaan liittymispäivästä. Tyhjä kenttä = sitä merkkipäivää ei näytetä.</p>
+                <p class="description">Vuosiraportti ja jäsenlista kertovat, ketkä täyttävät valittuja tasavuosia tai ovat olleet jäsenenä valitut vuodet. Täytettävät vuodet lasketaan jäsenen tiedoissa olevasta <em>syntymävuodesta tai -päivästä</em>. Kenttä on vapaaehtoinen, ja se näkyy jäsenen lomakkeella vain, kun merkkipäivät ovat käytössä. Jos jäsenestä on merkitty vain syntymävuosi, merkkipäivä näkyy vuosiraportissa ilman päivää. Jäsenyysvuodet lasketaan liittymispäivästä. Tyhjä kenttä = sitä merkkipäivää ei näytetä.</p>
                 <p><label class="jasrek-radio"><input type="checkbox" name="merkki_kaytossa" value="1" <?php checked($s['merkki_kaytossa'], '1'); ?>> Merkkipäivät käytössä</label>
-                   <span class="description">Pois päältä merkkipäiviä ei näytetä jäsenlistassa, vuosiraportissa eikä Excel-viennissä. Asetetut vuodet säilyvät.</span></p>
+                   <span class="description">Pois päältä merkkipäiviä ei näytetä jäsenlistassa, vuosiraportissa eikä Excel-viennissä, eikä jäsenen lomakkeella kysytä syntymävuotta. Asetetut vuodet ja tallennetut syntymävuodet säilyvät.</span></p>
                 <div class="jasrek-grid">
                     <p><label for="jasrek-merkki-ika">Täytettävät vuodet</label>
-                       <input type="text" id="jasrek-merkki-ika" name="merkki_ika" value="<?php echo esc_attr($s['merkki_ika']); ?>" placeholder="50, 60, 70, 80, 90">
-                       <span class="description"><?php echo jasrek_syntyma_kentta() !== '' ? 'Syntymäaika luetaan lisäkentästä ”' . esc_html(jasrek_lisakentat()[jasrek_syntyma_kentta()]['nimi']) . '”.' : 'Lisää ensin lisäkenttä, jonka tyyppi on Syntymäaika.'; ?></span></p>
+                       <input type="text" id="jasrek-merkki-ika" name="merkki_ika" value="<?php echo esc_attr($s['merkki_ika']); ?>" placeholder="50, 60, 70, 80, 90"></p>
                     <p><label for="jasrek-merkki-jasen">Jäsenyysvuodet</label>
                        <input type="text" id="jasrek-merkki-jasen" name="merkki_jasen" value="<?php echo esc_attr($s['merkki_jasen']); ?>" placeholder="10, 20, 25, 30, 40, 50"></p>
                 </div>

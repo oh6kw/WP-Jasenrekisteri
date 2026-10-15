@@ -25,6 +25,7 @@ function jasrek_install() {
         puhelin varchar(20),
         email varchar(100),
         liittynyt date DEFAULT NULL,
+        syntynyt varchar(10) DEFAULT NULL,
         tila varchar(20) NOT NULL DEFAULT 'aktiivinen',
         jasenlaji varchar(30) NOT NULL DEFAULT '',
         lisatiedot text,
@@ -168,5 +169,27 @@ function jasrek_migrate($old) {
         // Laskuriveille talteen jäsenluokka laskutushetkellä (vuosiraporttia varten); vanhoille riveille nykyinen luokka.
         $rt = jasrek_t('rivit'); $jt = jasrek_t('jasenet');
         $wpdb->query("UPDATE {$wpdb->jasrek_rivit} SET jasenlaji = COALESCE((SELECT m.jasenlaji FROM {$wpdb->jasrek_jasenet} m WHERE m.id = {$wpdb->jasrek_rivit}.jasen_id), '') WHERE jasenlaji = ''");
+    }
+    if ($old < 10) {
+        // Kokeiluversion "Syntymäaika"-lisäkenttä siirtyy jäsenen omaan Syntynyt-kenttään.
+        $s = get_option('jasrek_settings', array());
+        $kentat = is_array($s) && isset($s['lisakentat']) && is_array($s['lisakentat']) ? $s['lisakentat'] : array();
+        $siirretyt = array();
+        foreach ($kentat as $kid => $k) {
+            if (!isset($k['tyyppi']) || $k['tyyppi'] !== 'syntyma') continue;
+            foreach ($wpdb->get_results("SELECT id, lisakentat FROM {$wpdb->jasrek_jasenet} WHERE syntynyt IS NULL AND lisakentat IS NOT NULL") as $m) {
+                $lisa = json_decode((string) $m->lisakentat, true);
+                if (is_array($lisa) && isset($lisa[$kid]) && preg_match('/^\d{4}-\d{2}-\d{2}$/', (string) $lisa[$kid])) {
+                    $wpdb->update($wpdb->jasrek_jasenet, array('syntynyt' => $lisa[$kid]), array('id' => (int) $m->id));
+                }
+            }
+            $siirretyt[] = $k['nimi'];
+            unset($kentat[$kid]);
+        }
+        if ($siirretyt) {
+            $s['lisakentat'] = $kentat;
+            update_option('jasrek_settings', $s);
+            jasrek_log('asetukset', 0, 'asetukset', 'Lisäkenttä ' . implode(', ', $siirretyt) . ' siirretty jäsenen Syntynyt-kenttään');
+        }
     }
 }

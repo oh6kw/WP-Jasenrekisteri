@@ -9,7 +9,13 @@
 - Monisivuinen luettelo toistaa otsikkorivin joka sivulla. Luettelon avaaminen kirjataan muutoslokiin, koska se sisältää henkilötietoja.
 
 ### Uutta: merkkipäivät
-- Lisäkenttiin tuli kaksi uutta tyyppiä: **Päivämäärä** ja **Syntymäaika (merkkipäivät)**. Jäsenen lomakkeella ne ovat päivämääräkenttiä. CSV-viennissä ne ovat muodossa p.k.vvvv, ja tuonnissa kelpaavat sekä p.k.vvvv että vvvv-kk-pp.
+- Jäsenen tietoihin tuli vapaaehtoinen kenttä **Syntymävuosi tai -päivä** (liittymispäivän viereen). Se näkyy jäsenen lomakkeella vain, kun merkkipäivät ovat käytössä.
+  - Kelpaa pelkkä vuosi (esim. 1976) tai päivämäärä (12.3.1976 tai 1976-03-12). Kaikki eivät halua ikäänsä julki, joten vuosi riittää: merkkipäivä näkyy silloin vuosiraportissa ja Excelissä muodossa *vuoden aikana* ja listan lopussa, mutta ei jäsenlistan 60 päivän kortissa.
+  - Tyhjä kenttä tarkoittaa, ettei syntymävuotta tiedetä. Virheellinen tai tuleva vuosi/päivä ei tallennu, ja selain huomauttaa väärästä muodosta.
+  - Kun merkkipäivät kytketään pois, kenttä piilotetaan, mutta jo tallennetut syntymävuodet säilyvät.
+  - Kenttä on mukana CSV-viennissä (sarake *Syntynyt*), CSV-tuonnissa (tunnistaa otsikot *Syntynyt*, *Syntymävuosi*, *Syntymäaika*, *Syntymäpäivä*), CSV-mallissa ja muutoslokissa.
+  - Tietokanta päivittyy automaattisesti (versio 10: jäsentauluun sarake *syntynyt*).
+- Lisäkenttiin tuli uusi tyyppi **Päivämäärä**. Jäsenen lomakkeella se on päivämääräkenttä. CSV-viennissä se on muodossa p.k.vvvv, ja tuonnissa kelpaavat sekä p.k.vvvv että vvvv-kk-pp.
 - Asetuksissa on uusi kohta **Merkkipäivät**: *Täytettävät vuodet* (oletuksena 50, 60, 70, 75, 80, 85, 90, 95 ja 100) ja *Jäsenyysvuodet* (oletuksena 10, 20, 25, 30, 40, 50 ja 60). Vuodet voi muuttaa vapaasti, ja tyhjä kenttä poistaa ne käytöstä.
 - **Vuosiraportissa** on osio *Merkkipäivät* (päivä, jäsen, merkkipäivä, jäsenluokka), ja se on myös Excel-raportissa omana välilehtenään.
 - **Jäsenlistassa** on kortti, joka näyttää seuraavan 60 päivän merkkipäivät ja ensimmäisen niistä, myös vuodenvaihteen yli. Kortista pääsee vuosiraportin merkkipäiviin.
@@ -19,6 +25,7 @@
 ### Muut muutokset
 - Jäsenyyden ehdot yhtenäistetty: jäseniksi lasketaan kaikkialla vain voimassa olevat jäsenet (aiemmin ”ei eronnut”). Tämä vaikuttaa jäsenmäärien, tiedotteiden, asetusten ja joukkotoimintojen ehtoihin.
 - Lisäosa toimii edelleen vain WordPressin hallintapaneelissa: sivustolle ei tule lomakkeita eikä lyhytkoodeja. Kokeiluversion 4.7.0 liittymislomake jätettiin pois (liittymiseen kannattaa käyttää esim. Contact Form 7:ää).
+- Kokeiluversion 4.7.0 lisäkenttätyyppi *Syntymäaika* poistui. Jos sellainen kenttä oli käytössä, sen arvot siirtyvät päivityksessä automaattisesti jäsenen Syntymävuosi tai -päivä -kenttään ja lisäkenttä poistetaan asetuksista. Siirto kirjataan muutoslokiin.
 - Jos 4.7.0-kokeiluversiolla ehti tulla liittymishakemuksia, ne näkyvät jäsenlistan välilehdellä *Eronneet* merkinnällä *liittymishakemus*. Niitä ei laskuteta eikä lasketa jäseniksi. Hakemuksen voi palauttaa jäseneksi (joukkotoiminto *Palauta jäseneksi* tai jäsenen lomakkeella) tai poistaa.
 
 ## 4.6.4 (2026-10-14)

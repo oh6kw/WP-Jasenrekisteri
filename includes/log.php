@@ -66,6 +66,7 @@ function jasrek_member_snapshot($m) {
         'Puhelin'     => (string) $m->puhelin,
         'Osoite'      => (string) $m->osoite,
         'Liittynyt'   => jasrek_date($m->liittynyt),
+        'Syntynyt'    => isset($m->syntynyt) ? jasrek_syntynyt_teksti($m->syntynyt) : '',
         'Jäsenluokka' => jasrek_laji_nimi((string) $m->jasenlaji) !== '' ? jasrek_laji_nimi((string) $m->jasenlaji) : (string) $m->jasenlaji,
         'Jäsenyys'    => jasrek_tila_nimi($m->tila),
         'Eronnut'     => isset($m->eronnut_pvm) ? jasrek_date($m->eronnut_pvm) : '',

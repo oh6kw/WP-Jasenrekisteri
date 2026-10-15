@@ -139,7 +139,7 @@ function jasrek_handle_report_xlsx() {
         array(JASREK_Xlsx::text('Yhteensä', JASREK_Xlsx::S_BOLD), $sumf('B'), $sumf('C', true), $sumf('D', true), $sumf('E', true)));
 
     $rows = array();
-    foreach (jasrek_merkkipaivat($year) as $mp) $rows[] = array(JASREK_Xlsx::date($mp['pvm']), $T($mp['m']->etunimi . ' ' . $mp['m']->sukunimi), $T(jasrek_merkkipaiva_teksti($mp)), $T(jasrek_laji_nimi((string) $mp['m']->jasenlaji)));
+    foreach (jasrek_merkkipaivat($year) as $mp) $rows[] = array($mp['pvm'] !== '' ? JASREK_Xlsx::date($mp['pvm']) : $T('vuoden aikana'), $T($mp['m']->etunimi . ' ' . $mp['m']->sukunimi), $T(jasrek_merkkipaiva_teksti($mp)), $T(jasrek_laji_nimi((string) $mp['m']->jasenlaji)));
     if ($rows) $x->add_sheet('Merkkipäivät ' . $year, array('Päivä', 'Jäsen', 'Merkkipäivä', 'Jäsenluokka'), $rows, array(12, 28, 22, 18));
 
     $bin = $x->build();
@@ -269,13 +269,13 @@ function jasrek_page_report() {
         <div class="jasrek-panel" id="merkkipaivat">
             <h2>Merkkipäivät <?php echo (int) $year; ?></h2>
             <?php if (!$mps): ?>
-                <p class="jasrek-muted">Ei merkkipäiviä vuonna <?php echo (int) $year; ?>.<?php echo jasrek_syntyma_kentta() === '' ? ' Syntymäpäivät näkyvät, kun asetuksiin lisätään lisäkenttä, jonka tyyppi on Syntymäaika.' : ''; ?></p>
+                <p class="jasrek-muted">Ei merkkipäiviä vuonna <?php echo (int) $year; ?>.</p>
             <?php else: ?>
             <table class="widefat striped jasrek-table">
                 <thead><tr><th>Päivä</th><th>Jäsen</th><th>Merkkipäivä</th><th>Jäsenluokka</th></tr></thead>
                 <tbody>
                 <?php foreach ($mps as $mp): ?>
-                    <tr><td><?php echo esc_html(jasrek_date($mp['pvm'])); ?></td>
+                    <tr><td><?php echo esc_html(jasrek_merkkipaiva_pvm($mp)); ?></td>
                         <td><?php echo esc_html($mp['m']->etunimi . ' ' . $mp['m']->sukunimi); ?><?php if (jasrek_tunnus_on() && $mp['m']->tunnus): ?> <span class="jasrek-call"><?php echo esc_html($mp['m']->tunnus); ?></span><?php endif; ?></td>
                         <td><strong><?php echo esc_html(jasrek_merkkipaiva_teksti($mp)); ?></strong></td>
                         <td><?php echo esc_html(jasrek_laji_nimi((string) $mp['m']->jasenlaji)); ?></td></tr>
@@ -283,7 +283,7 @@ function jasrek_page_report() {
                 </tbody>
             </table>
             <?php endif; ?>
-            <p class="description">Voimassa olevat jäsenet. Vuodet valitaan <a href="<?php echo esc_url(admin_url('admin.php?page=jasrek-asetukset#jasrek-merkkipaivat')); ?>">asetuksissa</a>.</p>
+            <p class="description">Voimassa olevat jäsenet. Syntymävuosi tai -päivä merkitään jäsenen tietoihin (vapaaehtoinen). Vuodet valitaan <a href="<?php echo esc_url(admin_url('admin.php?page=jasrek-asetukset#jasrek-merkkipaivat')); ?>">asetuksissa</a>.</p>
         </div>
         <?php endif; ?>
     </div>
