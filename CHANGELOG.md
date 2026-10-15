@@ -1,6 +1,6 @@
 # Muutosloki – Jäsenrekisteri
 
-## 4.7.0 (2026-10-14)
+## 4.6.5 (2026-10-15)
 
 ### Uutta: äänioikeusluettelo vuosikokoukseen
 - Vuosiraportin painikkeiden (*Tulosta*, *Vie Exceliin*) jatkona on painike **🗳 Äänioikeusluettelo**. Se avaa tulostettavan A4-luettelon voimassa olevista jäsenistä aakkosjärjestyksessä. Sarakkeet: numero, nimi, lisätunniste (esim. jäsennumero), jäsenluokka, jäsenmaksun tila, äänioikeus (✓) ja allekirjoitus.
@@ -14,32 +14,12 @@
 - **Vuosiraportissa** on osio *Merkkipäivät* (päivä, jäsen, merkkipäivä, jäsenluokka), ja se on myös Excel-raportissa omana välilehtenään.
 - **Jäsenlistassa** on kortti, joka näyttää seuraavan 60 päivän merkkipäivät ja ensimmäisen niistä, myös vuodenvaihteen yli. Kortista pääsee vuosiraportin merkkipäiviin.
 - Karkauspäivänä syntyneen merkkipäivä on muina vuosina 28.2. Mukana ovat vain voimassa olevat jäsenet.
-
-### Uutta: liittymislomake
-- Lyhytkoodi **`[jasenrekisteri_liittyminen]`** lisää sivustolle lomakkeen jäseneksi hakemista varten. Lomakkeen kentät:
-  - etunimi, sukunimi ja sähköposti (pakolliset)
-  - puhelin, katuosoite, postinumero ja postitoimipaikka
-  - lisätunniste (esim. jäsennumero), jos se on käytössä
-  - jäsenluokka asetuksissa valituista luokista hintoineen
-  - lisäkentät, joille on valittu *Liittymislomakkeella: Kysytään* (esim. syntymäaika)
-  - paperilaskun valinta ja vapaa viesti
-  - pakollinen suostumus tietojen tallentamiseen ja linkki tietosuojaselosteeseen
-- **Roskapostisuojaus:**
-  - Palvelimen allekirjoittama aikaleima: lomake hylätään, jos se lähetetään alle 3 sekunnissa tai yli 3 vuorokautta sivun latauksesta.
-  - Botteja varten piilokenttä.
-  - Samasta osoitteesta enintään 5 hakemusta tunnissa.
-  - Tavallista WordPress-noncea ei käytetä, koska se vanhenisi välimuistissa olevalla sivulla ja estäisi aidot hakemukset.
-- Hakemus tallentuu rekisteriin tilalla **Liittymishakemus**. Yhdistys saa sähköposti-ilmoituksen (osoitteen voi asettaa), ja hakija saa vahvistuksen. Jos rekisterissä on jo sama nimi tai sähköposti, siitä huomautetaan hakemuksen lisätiedoissa.
-- **Hakemusten käsittely:**
-  - Jäsenlistassa on välilehti *Liittymishakemukset* ja ilmoitus odottavista hakemuksista. WordPressin valikossa näkyy odottavien hakemusten määrä.
-  - **Hyväksy** tekee hakijasta jäsenen tästä päivästä alkaen ja lähettää tervetuloviestin. Viestin voi muokata asetuksissa, ja tyhjänä viestiä ei lähetetä. Hyväksynnän jälkeen avautuu jäsenen sivu, jolla hänet voi lisätä jo tehdylle jäsenmaksulaskulle.
-  - **Hylkää** poistaa hakijan tiedot.
-  - Hakemuksia voi hyväksyä myös joukkona.
-- Hakemukset eivät näy jäsenmäärissä, laskuilla, tiedotteissa, äänioikeusluettelossa, merkkipäivissä eivätkä vuosiraportissa ennen hyväksyntää. Kaikki vaiheet kirjataan muutoslokiin: hakemus, hyväksyntä ja hylkäys.
-- Asetuksiin tuli uusi kohta **Liittymislomake**: käyttöönotto, jäsenluokat, tietosuojaselosteen osoite, ilmoitusosoite, kiitosteksti ja tervetuloviesti paikkamerkkeineen.
+- **Merkkipäivät voi kytkeä päälle ja pois** asetuksista (*Asetukset → Merkkipäivät → Merkkipäivät käytössä*, oletuksena päällä). Pois päältä merkkipäiviä ei näytetä jäsenlistan kortissa, vuosiraportissa eikä Excel-raportissa, ja asetetut vuodet säilyvät.
 
 ### Muut muutokset
 - Jäsenyyden ehdot yhtenäistetty: jäseniksi lasketaan kaikkialla vain voimassa olevat jäsenet (aiemmin ”ei eronnut”). Tämä vaikuttaa jäsenmäärien, tiedotteiden, asetusten ja joukkotoimintojen ehtoihin.
+- Lisäosa toimii edelleen vain WordPressin hallintapaneelissa: sivustolle ei tule lomakkeita eikä lyhytkoodeja. Kokeiluversion 4.7.0 liittymislomake jätettiin pois (liittymiseen kannattaa käyttää esim. Contact Form 7:ää).
+- Jos 4.7.0-kokeiluversiolla ehti tulla liittymishakemuksia, ne näkyvät jäsenlistan välilehdellä *Eronneet* merkinnällä *liittymishakemus*. Niitä ei laskuteta eikä lasketa jäseniksi. Hakemuksen voi palauttaa jäseneksi (joukkotoiminto *Palauta jäseneksi* tai jäsenen lomakkeella) tai poistaa.
 
 ## 4.6.4 (2026-10-14)
 

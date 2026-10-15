@@ -28,8 +28,8 @@ function jasrek_report_data($year) {
 
     $active = function ($m, $d) {
         if ($m->liittynyt && $m->liittynyt !== '0000-00-00' && $m->liittynyt > $d) return false;
-        if ($m->tila === 'hakemus') return false;
-        if ($m->tila !== 'eronnut') return true;
+        if ($m->tila === 'aktiivinen') return true;
+        if ($m->tila !== 'eronnut') return false;
         return $m->eronnut_pvm && $m->eronnut_pvm > $d;
     };
 
@@ -44,7 +44,7 @@ function jasrek_report_data($year) {
             $j[$k]['loppu']++;
             if (!$m->liittynyt || $m->liittynyt === '0000-00-00') $ei_liitt++;
         }
-        if ($m->tila !== 'hakemus' && $m->liittynyt && $m->liittynyt >= $alku && $m->liittynyt <= $raja) $j[$k]['liittyi']++;
+        if (in_array($m->tila, array('aktiivinen', 'eronnut'), true) && $m->liittynyt && $m->liittynyt >= $alku && $m->liittynyt <= $raja) $j[$k]['liittyi']++;
         if ($m->tila === 'eronnut') {
             if (!$m->eronnut_pvm) $ero_ei_pvm++;
             elseif ($m->eronnut_pvm >= $alku && $m->eronnut_pvm <= $raja) $j[$k]['erosi']++;
@@ -265,7 +265,7 @@ function jasrek_page_report() {
             <?php endif; ?>
         </div>
 
-        <?php $mps = jasrek_merkkipaivat($year); ?>
+        <?php if (jasrek_merkki_on()): $mps = jasrek_merkkipaivat($year); ?>
         <div class="jasrek-panel" id="merkkipaivat">
             <h2>Merkkipäivät <?php echo (int) $year; ?></h2>
             <?php if (!$mps): ?>
@@ -285,6 +285,7 @@ function jasrek_page_report() {
             <?php endif; ?>
             <p class="description">Voimassa olevat jäsenet. Vuodet valitaan <a href="<?php echo esc_url(admin_url('admin.php?page=jasrek-asetukset#jasrek-merkkipaivat')); ?>">asetuksissa</a>.</p>
         </div>
+        <?php endif; ?>
     </div>
     <?php
 }

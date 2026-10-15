@@ -23,8 +23,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Vapaasti nimettävä lisätunniste, esim. *Jäsennumero*.
 - **Omat lisäkentät**, esim. *Avain* (kerhotalon avaimen numero) tai *Talkoolistalla*. Kenttä voi olla teksti tai valintaruutu, ja sen voi näyttää jäsenlistassa omana sarakkeenaan. Haku kentän nimellä (esim. ”avain”) löytää kaikki, joilla kenttä on täytetty.
 - Eroamispäivä tallentuu, kun jäsen merkitään eronneeksi.
-- **Liittymislomake sivustolle:** lisää sivulle lyhytkoodi `[jasenrekisteri_liittyminen]`. Hakemukset tulevat jäsenlistan välilehdelle *Liittymishakemukset*, jossa ne hyväksytään tai hylätään. Hakija saa vahvistuksen ja hyväksytty tervetuloviestin. Lomakkeessa on roskapostisuojaus, eivätkä hakemukset näy jäseninä ennen hyväksyntää.
-- **Merkkipäivät:** tasavuosia täyttävät (lisäkenttä *Syntymäaika*) ja jäsenyysvuodet (liittymispäivästä) asetuksissa valituilla vuosilla, esim. 50, 60, 70, 80 ja 90 vuotta tai 10, 25 ja 50 vuotta jäsenenä. Lähestyvät merkkipäivät näkyvät jäsenlistassa.
+- **Merkkipäivät:** tasavuosia täyttävät (lisäkenttä *Syntymäaika*) ja jäsenyysvuodet (liittymispäivästä) asetuksissa valituilla vuosilla, esim. 50, 60, 70, 80 ja 90 vuotta tai 10, 25 ja 50 vuotta jäsenenä. Lähestyvät merkkipäivät näkyvät jäsenlistassa. Ominaisuuden voi kytkeä pois asetuksista.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
 - Varoitus mahdollisesta tuplakirjauksesta.
 - **Kesken kauden liittyvä jäsen** lisätään jäsenlomakkeesta suoraan jo lähetetylle laskulle. Hän saa oman viitteen ja eräpäivän, ja laskun voi lähettää heti.
@@ -65,10 +64,9 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Tiedote](docs/kuvat/09-tiedote.png) **Tiedote** koko jäsenistölle tai yhdelle luokalle. | ![Laskut](docs/kuvat/03-laskut.png) **Laskut:** maksukertymä ja maksujen tuonti. |
 | ![Paperilaskut](docs/kuvat/13-paperilaskut.png) **Paperilaskut** laskun sivulla: tulosta, laita kuoreen ja merkitse postitetuksi. | ![Tulostettava paperilasku](docs/kuvat/14-paperilasku.png) **Tulostettava lasku** ikkunakuoreen (C5 tai DL). |
 | ![Vuosiraportti](docs/kuvat/15-vuosiraportti.png) **Vuosiraportti:** jäsenmäärät luokittain ja jäsenmaksut. | ![Muutosloki](docs/kuvat/16-muutosloki.png) **Muutosloki:** kuka muutti mitä ja milloin. |
-| ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** asetuksissa, esim. avaimen numero tai syntymäaika. | ![Merkkipäivät](docs/kuvat/21-merkkipaivat.png) **Merkkipäivät** vuosiraportissa. |
-| ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. | ![Liittymislomake](docs/kuvat/19-liittymislomake.png) **Liittymislomake** sivustolla. |
-| ![Liittymishakemukset](docs/kuvat/20-hakemukset.png) **Liittymishakemukset** hyväksytään tai hylätään yhdellä painalluksella. | |
-| ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. |
+| ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** ja **merkkipäivien** valinnat asetuksissa. | ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. |
+| ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
+| ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
 
 ## Asennus
 
@@ -87,7 +85,6 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 3. **Jäsenet:** tuo CSV-tiedostosta (Jäsenet → Tuo CSV, malli ladattavissa) tai lisää käsin. Jos jäseniä jää ilman luokkaa, aseta luokka joukkona välilehdellä *Ilman jäsenluokkaa*.
 4. **SMTP:** asenna esim. [WP Mail SMTP](https://wordpress.org/plugins/wp-mail-smtp/) tai [FluentSMTP](https://wordpress.org/plugins/fluent-smtp/), jotta viestit lähtevät yhdistyksen oikean sähköpostitilin kautta eivätkä päädy roskapostiin.
 5. **Kokeile:** tee lasku ja lähetä testilasku itsellesi. Skannaa QR-koodi pankkisovelluksella, mutta älä hyväksy maksua.
-6. **Liittymislomake (valinnainen):** ota käyttöön kohdassa *Asetukset → Liittymislomake*, valitse jäsenluokat, joihin voi hakea, ja anna tietosuojaselosteen osoite. Lisää sitten sivustolle sivu, jolla on lyhytkoodi `[jasenrekisteri_liittyminen]`.
 
 ## Jäsenmaksukierros käytännössä
 
@@ -164,7 +161,6 @@ includes/
   print.php                 Tulostettavat paperilaskut ja postitusmerkinnät
   report.php                Vuosiraportti (näyttö ja Excel)
   voters.php                Äänioikeusluettelo
-  join.php                  Liittymislomake ja hakemusten käsittely
   log.php                   Muutosloki
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)

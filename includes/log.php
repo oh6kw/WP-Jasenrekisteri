@@ -88,9 +88,6 @@ function jasrek_log_member_name($m) {
 function jasrek_log_toiminnot() {
     return array(
         'lisatty'          => 'Jäsen lisätty',
-        'hakemus'          => 'Liittymishakemus',
-        'hyvaksytty'       => 'Hakemus hyväksytty',
-        'hylatty'          => 'Hakemus hylätty',
         'muokattu'         => 'Tietoja muutettu',
         'poistettu'        => 'Jäsen poistettu',
         'tuotu'            => 'Lisätty CSV-tuonnilla',

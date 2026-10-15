@@ -53,14 +53,9 @@ function jasrek_settings() {
         'loki_kk'         => '24',
         'postimaksu'      => '0',
         'postiosoite'     => '',
+        'merkki_kaytossa' => '1',
         'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
         'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',
-        'liitto_kaytossa' => '0',
-        'liitto_lajit'    => array(),
-        'liitto_tietosuoja' => '',
-        'liitto_ilmoitus' => '',
-        'liitto_kiitos'   => "Kiitos liittymishakemuksestasi! Käsittelemme hakemuksen mahdollisimman pian ja olemme sinuun yhteydessä sähköpostitse.",
-        'liitto_tervetuloa' => "Hei {etunimi},\n\nliittymishakemuksesi on hyväksytty – tervetuloa {yhdistys}:n jäseneksi!\n\nYstävällisin terveisin\n{yhdistys}",
         'auto_muistutus'  => '0',
         'auto_paivia'     => '14',
         'auto_max'        => '1',
@@ -72,7 +67,7 @@ function jasrek_settings() {
     $saved = get_option('jasrek_settings', array());
     $s = wp_parse_args(is_array($saved) ? $saved : array(), $defaults);
     // Tyhjäksi jätetyn tekstin tilalla käytetään oletusta, jottei lasku lähde ilman saatetta.
-    foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi', 'liitto_kiitos') as $k) {
+    foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi') as $k) {
         if (trim((string) $s[$k]) === '') $s[$k] = $defaults[$k];
     }
     return $s;
@@ -153,8 +148,12 @@ function jasrek_vuosilista($s) {
  * Merkkipäivät annettuna vuonna: täytettävät vuodet (syntymäaika) ja jäsenyysvuodet (liittymispäivä)
  * asetuksissa valituilla tasavuosilla. Palauttaa listan array(pvm, tyyppi 'ika'|'jasenyys', vuodet, jäsen), päivän mukaan.
  */
+function jasrek_merkki_on() {
+    return jasrek_settings()['merkki_kaytossa'] === '1';
+}
 function jasrek_merkkipaivat($year) {
     global $wpdb;
+    if (!jasrek_merkki_on()) return array();
     $year = (int) $year;
     $s = jasrek_settings();
     $iat = jasrek_vuosilista($s['merkki_ika']);
@@ -188,7 +187,7 @@ function jasrek_merkkipaiva_teksti($mp) {
 }
 
 /**
- * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta'|'pvm'|'syntyma', 'lista' => '1'|'0', 'lomake' => '1'|'0')).
+ * Omat lisäkentät: array(id => array('nimi' => ..., 'tyyppi' => 'teksti'|'valinta'|'pvm'|'syntyma', 'lista' => '1'|'0')).
  * Päivämäärät tallennetaan muodossa VVVV-KK-PP.
  * Arvot tallennetaan jäsenelle JSON-muodossa (jasenet.lisakentat).
  */
@@ -259,7 +258,7 @@ function jasrek_tilat() {
         'eronnut'    => 'Eronnut',
     );
 }
-/** Tilan nimi näytettäväksi (myös liittymishakemus, jota ei voi valita jäsenen lomakkeella). */
+/** Tilan nimi näytettäväksi. 'hakemus' voi olla jäänyt 4.7.0-testiversiosta; se näkyy Eronneet-välilehdellä. */
 function jasrek_tila_nimi($tila) {
     $t = jasrek_tilat();
     if (isset($t[$tila])) return $t[$tila];
@@ -394,8 +393,6 @@ function jasrek_notice() {
         'no_mail_recipients' => array('warning', 'Valitulla vastaanottajajoukolla ei ole yhtään sähköpostiosoitetta.'),
         'due_before_date' => array('error',   'Eräpäivä ei voi olla ennen laskun päiväystä.'),
         'member_duplicate'=> array('warning', 'Jäsen tallennettiin, mutta rekisterissä on jo toinen jäsen samalla nimellä tai sähköpostiosoitteella. Tarkista, ettei kyseessä ole tuplakirjaus.'),
-        'hakemus_ok'      => array('success', 'Hakemus hyväksytty – jäsen on nyt rekisterissä. Voit lisätä hänet jo tehdylle jäsenmaksulaskulle alta.'),
-        'hakemus_pois'    => array('success', 'Hakemus hylätty ja hakijan tiedot poistettu.'),
         'postage_updated' => array('success', sprintf('Postimaksu päivitetty %d laskuun.', $n)),
         'paper_marked'    => array('success', sprintf('%d paperilaskua merkitty postitetuksi.', $n)),
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),

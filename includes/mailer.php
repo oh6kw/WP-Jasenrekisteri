@@ -19,7 +19,7 @@ function jasrek_mail_recipients($kohde) {
         if (!$latest) return array();
         $ids = $wpdb->get_col($wpdb->prepare("$base AND id IN (SELECT jasen_id FROM {$wpdb->jasrek_rivit} WHERE lasku_id = %d AND maksettu IS NULL) ORDER BY id", $latest)); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
     } else {
-        $ids = $wpdb->get_col("$base AND tila <> 'hakemus' ORDER BY id"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
+        $ids = $wpdb->get_col("$base ORDER BY id"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
     }
     return array_map('intval', $ids);
 }
