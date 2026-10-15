@@ -22,6 +22,27 @@
 - Karkauspäivänä syntyneen merkkipäivä on muina vuosina 28.2. Mukana ovat vain voimassa olevat jäsenet.
 - **Merkkipäivät voi kytkeä päälle ja pois** asetuksista (*Asetukset → Merkkipäivät → Merkkipäivät käytössä*, oletuksena päällä). Pois päältä merkkipäiviä ei näytetä jäsenlistan kortissa, vuosiraportissa eikä Excel-raportissa, ja asetetut vuodet säilyvät.
 
+### Nimi muuttui: OH6KW Jäsenrekisteri (WordPress.orgin tarkastus)
+- WordPress.orgin tarkastus piti nimeä *Jäsenrekisteri* liian yleisenä. Lisäosan nimi on nyt **OH6KW Jäsenrekisteri** ja tunniste (slug, kansio ja Text Domain) **`oh6kw-jasenrekisteri`**. Pääsivun tiedosto on `oh6kw-jasenrekisteri.php`. Hallinnan valikossa nimi on edelleen *Jäsenrekisteri*.
+- Uudet bannerit, joissa on uusi nimi. GitHubin julkaisu tekee nyt tiedoston `oh6kw-jasenrekisteri.zip`, ja WordPress.org-vienti käyttää uutta slugia.
+- **Päivitys vanhasta versiosta:** kansio vaihtui, joten WordPress asentaa 4.6.5:n uutena lisäosana. Tiedot (jäsenet, laskut, asetukset) säilyvät, koska ne ovat samoissa tauluissa ja asetuksissa. Ohje on README:ssä: poista vanha käytöstä (*Säilytä tiedot*), asenna ja ota käyttöön uusi, ja poista vanha vasta sitten.
+- Jos vanha ja uusi ovat yhtä aikaa käytössä, uusi ei lataudu toista kertaa (ei virhettä), vaan näyttää ilmoituksen vanhan poistamisesta käytöstä. Siksi pääsivun koodi siirtyi tiedostoon `includes/main.php`.
+
+### Korjaukset WordPress.orgin tarkastuksesta
+- **Tyylit ja skriptit WordPressin omilla funktioilla:**
+  - Tulostettavien sivujen (paperilaskut ja äänioikeusluettelo) `<style>`-lohkot siirtyivät tiedostoihin `assets/print.css` ja `assets/voters.css`. Ne rekisteröidään `wp_register_style`-funktiolla ja tulostetaan `wp_print_styles`-funktiolla.
+  - Sivujen `onclick`-, `onload`- ja `onchange`-käsittelijät siirtyivät skripteihin: tulostettavilla sivuilla `assets/print-page.js`, hallinnassa `admin.js`. Niitä käyttävät *Tulosta*-painikkeet, postitusmerkinnän vahvistus, automaattinen tulostus ja vuosiraportin vuoden valinta.
+  - Käytöstä poiston kyselyn tyylit siirtyivät WordPressin `common`-tyylistä omaan tiedostoonsa `assets/deactivate.css`.
+- **Toimii ilman PHP:n mbstring-laajennusta:**
+  - Jäsenlista kutsui `mb_strtolower`-funktiota ehdoitta, ja se olisi kaatanut sivun palvelimella, jossa mbstringiä ei ole.
+  - Nyt kirjainkoon muunnokset kulkevat apufunktioiden `jasrek_lower` ja `jasrek_upper` kautta. Ne toimivat myös ilman mbstringiä, myös å-, ä- ja ö-kirjaimilla.
+  - Pankki- ja CSV-tiedostojen merkistömuunnos (Windows-1252 → UTF-8) toimii myös ilman mbstringiä ja iconvia.
+- **Tyylit vain omilla sivuilla:**
+  - Hallinnan CSS ja JS ladataan vain lisäosan omille sivuille, ja sivut tunnistetaan niiden rekisteröinnissä saaduista tunnisteista.
+  - Vuosiraportin tulostustyylit (WordPressin valikon piilotus) on rajattu luokkaan `body.jasrek-screen`, joten ne eivät vaikuta WordPressin muihin sivuihin.
+- Kaikkien lomakkeiden ja AJAX-kutsujen käsittelijät tarkistettiin: jokainen tarkistaa noncen ja käyttöoikeuden (`manage_options`).
+- Testattu puhtaassa WordPressissä (WP_DEBUG päällä): aktivointi ilman virheitä ja tulosteita, kaikki sivut ilman varoituksia, myös PHP:llä ilman mbstringiä. Plugin Check: 0 virhettä, 0 varoitusta.
+
 ### Muut muutokset
 - Jäsenyyden ehdot yhtenäistetty: jäseniksi lasketaan kaikkialla vain voimassa olevat jäsenet (aiemmin ”ei eronnut”). Tämä vaikuttaa jäsenmäärien, tiedotteiden, asetusten ja joukkotoimintojen ehtoihin.
 - Lisäosa toimii edelleen vain WordPressin hallintapaneelissa: sivustolle ei tule lomakkeita eikä lyhytkoodeja. Kokeiluversion 4.7.0 liittymislomake jätettiin pois (liittymiseen kannattaa käyttää esim. Contact Form 7:ää).

@@ -1,4 +1,4 @@
-/* Jäsenrekisteri – hallinnan skriptit */
+/* OH6KW Jäsenrekisteri – hallinnan skriptit */
 (function ($) {
     'use strict';
 
@@ -10,6 +10,10 @@
             e.stopImmediatePropagation();
         }
     });
+
+    // Tulosta-painike ja automaattisesti lähetettävä valinta (esim. vuosiraportin vuosi)
+    $(document).on('click', '[data-jasrek-print]', function () { window.print(); });
+    $(document).on('change', 'select[data-jasrek-autosubmit]', function () { this.form.submit(); });
 
     // Haku + tilasuodatin taulukoille ja listoille
     var norm = function (s) { return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\s+/g, ''); };

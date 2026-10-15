@@ -180,7 +180,7 @@ function jasrek_handle_members_import() {
             if ($byname) $laji = $byname;
         }
         $tunnus = sanitize_text_field($g('tunnus'));
-        if ($isot) $tunnus = function_exists('mb_strtoupper') ? mb_strtoupper($tunnus) : strtoupper($tunnus);
+        if ($isot) $tunnus = jasrek_upper($tunnus);
         $tila = jasrek_import_tila(isset($v['tila']) ? $v['tila'] : '', $oletus);
         $ero  = $tila === 'eronnut' ? jasrek_parse_date_any($g('eronnut_pvm')) : null;
         $lisa = array();

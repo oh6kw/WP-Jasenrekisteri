@@ -16,7 +16,7 @@ function jasrek_handle_save_member() {
     $email     = sanitize_email($raw_email);
     $tila      = jasrek_post('tila', 'aktiivinen');
     $tunnus    = sanitize_text_field(jasrek_post('tunnus'));
-    if (jasrek_settings()['tunnus_isot'] === '1') $tunnus = function_exists('mb_strtoupper') ? mb_strtoupper($tunnus) : strtoupper($tunnus);
+    if (jasrek_settings()['tunnus_isot'] === '1') $tunnus = jasrek_upper($tunnus);
 
     $data = array(
         'etunimi'    => sanitize_text_field(jasrek_post('etunimi')),
@@ -478,7 +478,7 @@ function jasrek_member_list() {
             <?php endforeach; ?>
         </ul>
         <div class="jasrek-toolbar-right">
-            <input type="search" class="jasrek-search" data-jasrek-filter="#jasrek-members" placeholder="<?php echo esc_attr('Hae: nimi, sähköposti, puhelin' . ($tunnus_on ? ', ' . mb_strtolower(jasrek_tunnus_nimi()) : '') . ($kentat ? ', lisäkenttä' : '') . '…'); ?>">
+            <input type="search" class="jasrek-search" data-jasrek-filter="#jasrek-members" placeholder="<?php echo esc_attr('Hae: nimi, sähköposti, puhelin' . ($tunnus_on ? ', ' . jasrek_lower(jasrek_tunnus_nimi()) : '') . ($kentat ? ', lisäkenttä' : '') . '…'); ?>">
             <a class="button" href="<?php echo esc_url(add_query_arg('view', 'tuonti', $base)); ?>">Tuo CSV</a>
             <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_export_members'), 'jasrek_export_members')); ?>">Vie CSV</a>
         </div>

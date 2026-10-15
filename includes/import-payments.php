@@ -16,12 +16,23 @@ if (!defined('ABSPATH')) exit;
 
 function jasrek_to_utf8($s) {
     $s = preg_replace('/^\xEF\xBB\xBF/', '', $s);
-    if (function_exists('mb_check_encoding') && !mb_check_encoding($s, 'UTF-8')) {
+    $utf8 = function_exists('mb_check_encoding') ? mb_check_encoding($s, 'UTF-8') : (preg_match('//u', $s) === 1);
+    if (!$utf8) {
         if (function_exists('mb_convert_encoding')) {
             $s = mb_convert_encoding($s, 'UTF-8', 'Windows-1252');
-        } elseif (function_exists('iconv')) {
-            $conv = iconv('Windows-1252', 'UTF-8//IGNORE', $s);
-            if ($conv !== false) $s = $conv;
+        } elseif (function_exists('iconv') && ($conv = iconv('Windows-1252', 'UTF-8//IGNORE', $s)) !== false) {
+            $s = $conv;
+        } else {
+            // Ilman mbstringiä ja iconvia: Latin-1 / Windows-1252 tavu kerrallaan (ä, ö, å ja €).
+            $out = '';
+            for ($i = 0, $n = strlen($s); $i < $n; $i++) {
+                $c = ord($s[$i]);
+                if ($c < 0x80) $out .= $s[$i];
+                elseif ($c === 0x80) $out .= "\xE2\x82\xAC";
+                elseif ($c >= 0xA0) $out .= chr(0xC0 | ($c >> 6)) . chr(0x80 | ($c & 0x3F));
+                else $out .= '?';
+            }
+            $s = $out;
         }
     }
     return $s;

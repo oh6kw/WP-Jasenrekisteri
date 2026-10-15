@@ -91,12 +91,26 @@ function jasrek_laji_nimi($id) {
     $l = jasrek_jasenlajit();
     return ($id !== '' && isset($l[$id])) ? $l[$id]['nimi'] : '';
 }
+/**
+ * Pienet ja isot kirjaimet myös ilman PHP:n mbstring-laajennusta (å, ä, ö muunnetaan silloin taulukolla).
+ */
+function jasrek_lower($s) {
+    $s = (string) $s;
+    if (function_exists('mb_strtolower')) return mb_strtolower($s, 'UTF-8');
+    return strtr(strtolower($s), array('Å' => 'å', 'Ä' => 'ä', 'Ö' => 'ö', 'Ü' => 'ü', 'É' => 'é', 'Š' => 'š', 'Ž' => 'ž'));
+}
+function jasrek_upper($s) {
+    $s = (string) $s;
+    if (function_exists('mb_strtoupper')) return mb_strtoupper($s, 'UTF-8');
+    return strtr(strtoupper($s), array('å' => 'Å', 'ä' => 'Ä', 'ö' => 'Ö', 'ü' => 'Ü', 'é' => 'É', 'š' => 'Š', 'ž' => 'Ž'));
+}
+
 /** Etsii jäsenluokan nimellä (kirjainkoolla ei väliä). */
 function jasrek_laji_by_name($nimi) {
-    $nimi = function_exists('mb_strtolower') ? mb_strtolower(trim($nimi)) : strtolower(trim($nimi));
+    $nimi = jasrek_lower(trim($nimi));
     if ($nimi === '') return '';
     foreach (jasrek_jasenlajit() as $id => $l) {
-        $n = function_exists('mb_strtolower') ? mb_strtolower($l['nimi']) : strtolower($l['nimi']);
+        $n = jasrek_lower($l['nimi']);
         if ($n === $nimi) return $id;
     }
     return null;

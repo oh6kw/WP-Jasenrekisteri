@@ -1,4 +1,4 @@
-# Jäsenrekisteri – WordPress-lisäosa yhdistyksille
+# OH6KW Jäsenrekisteri – WordPress-lisäosa yhdistyksille
 
 Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisille yhdistyksille.
 
@@ -70,13 +70,19 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 
 ## Asennus
 
-1. Lataa uusin `jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest).
+1. Lataa uusin `oh6kw-jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest).
 2. Valitse WordPressissä **Lisäosat → Lisää uusi → Lataa lisäosa** ja anna zip-tiedosto.
 3. Ota lisäosa käyttöön. Valikkoon ilmestyy **Jäsenrekisteri**.
 
-> Käytä julkaisun `jasenrekisteri.zip`-tiedostoa, älä GitHubin vihreän *Code*-painikkeen zip-latausta. Julkaisun zipissä lisäosan kansion nimi on `jasenrekisteri`, jolloin myöhemmät päivitykset korvaavat vanhan version oikein.
+> Käytä julkaisun `oh6kw-jasenrekisteri.zip`-tiedostoa, älä GitHubin vihreän *Code*-painikkeen zip-latausta. Julkaisun zipissä lisäosan kansion nimi on `oh6kw-jasenrekisteri`, jolloin myöhemmät päivitykset korvaavat vanhan version oikein.
 
 **Päivitys:** lataa uusi zip samalla tavalla. WordPress tarjoaa nykyisen version korvaamista, ja tietokanta päivittyy automaattisesti. Ota varmuuskopio ennen päivitystä.
+
+**Päivitys versiosta 4.6.4 tai vanhemmasta (kansio `jasenrekisteri`):** lisäosan nimi ja kansio muuttuivat versiossa 4.6.5, joten WordPress asentaa sen uutena lisäosana. Tiedot säilyvät, kun teet näin:
+1. Ota varmuuskopio.
+2. Poista vanha *Jäsenrekisteri* käytöstä ja valitse kyselyssä **Säilytä tiedot**.
+3. Asenna ja ota käyttöön `oh6kw-jasenrekisteri.zip`. Jäsenet, laskut ja asetukset ovat heti käytössä.
+4. Poista vanha lisäosa vasta tämän jälkeen. Varmista ensin, että *Asetukset → Lisäosan poistaminen* -kohdassa tietoja **ei** ole valittu poistettavaksi.
 
 ## Käyttöönotto
 
@@ -143,10 +149,11 @@ Lisäosa on valmisteltu WordPressin viralliseen lisäosahakemistoon: englanninki
 ## Rakenne
 
 ```
-jasenrekisteri.php          Lisäosan pääsivu, valikot ja kytkennät
+oh6kw-jasenrekisteri.php    Lisäosan pääsivu (otsaketiedot ja käynnistys)
 uninstall.php               Tietojen poisto lisäosan poiston yhteydessä (jos valittu)
 readme.txt                  WordPress.orgin lisäosahakemiston kuvaus (englanniksi)
 includes/
+  main.php                  Osien lataus, valikot, tyylit ja skriptit
   install.php               Tietokantataulut ja versiopäivitykset
   helpers.php               Asetukset, viitenumero, IBAN, virtuaaliviivakoodi, CSV, sähköposti
   members.php               Jäsenlista, jäsenlomake, joukkotoiminnot
@@ -166,7 +173,7 @@ includes/
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
   lib/jasrek-qrcode.php     QR-koodikirjasto (MIT)
-assets/                     Hallinnan CSS ja JavaScript
+assets/                     Hallinnan CSS ja JavaScript sekä tulostettavien sivujen tyylit (print.css, voters.css, print-page.js)
 ```
 
 ## Palaute ja kehitysehdotukset

@@ -173,11 +173,11 @@ function jasrek_page_report() {
         <h1 class="wp-heading-inline">Vuosiraportti <?php echo (int) $year; ?></h1>
         <form method="get" class="jasrek-noprint jasrek-inline">
             <input type="hidden" name="page" value="jasrek-raportti">
-            <select name="vuosi" onchange="this.form.submit()">
+            <select name="vuosi" data-jasrek-autosubmit>
                 <?php foreach ($years as $y): ?><option value="<?php echo (int) $y; ?>" <?php selected($year, $y); ?>><?php echo (int) $y; ?></option><?php endforeach; ?>
             </select>
             <noscript><button class="button">Näytä</button></noscript>
-            <button type="button" class="button" onclick="window.print()">🖨 Tulosta</button>
+            <button type="button" class="button" data-jasrek-print>🖨 Tulosta</button>
             <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_report_xlsx&vuosi=' . $year), 'jasrek_report_xlsx')); ?>">Vie Exceliin</a>
             <a class="button" target="_blank" href="<?php echo esc_url(jasrek_voters_url(array('otsikko' => 'Vuosikokous ' . ((int) $year + 1)))); ?>" title="Tulostettava luettelo äänioikeutetuista allekirjoitussarakkeineen">🗳 Äänioikeusluettelo</a>
         </form>

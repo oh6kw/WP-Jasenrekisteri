@@ -36,12 +36,12 @@ function jasrek_handle_feedback() {
           . 'Lähettäjä: ' . ($nimi !== '' ? $nimi : '(ei nimeä)') . ($email ? ' <' . $email . '>' : '') . "\n";
     if (jasrek_post('tekniset') === '1') {
         global $wp_version;
-        $body .= 'Jäsenrekisteri ' . JASREK_VERSION . ' · WordPress ' . $wp_version . ' · PHP ' . PHP_VERSION . ' · ' . home_url() . "\n";
+        $body .= 'OH6KW Jäsenrekisteri ' . JASREK_VERSION . ' · WordPress ' . $wp_version . ' · PHP ' . PHP_VERSION . ' · ' . home_url() . "\n";
     }
     $headers = array('Content-Type: text/plain; charset=UTF-8');
     if ($email) $headers[] = 'Reply-To: ' . ($nimi !== '' ? $nimi . ' ' : '') . '<' . $email . '>';
 
-    $ok = wp_mail(JASREK_DEV_EMAIL, '[Jäsenrekisteri] ' . $tyyppi . ': ' . wp_trim_words($viesti, 8, '…'), $body, $headers);
+    $ok = wp_mail(JASREK_DEV_EMAIL, '[OH6KW Jäsenrekisteri] ' . $tyyppi . ': ' . wp_trim_words($viesti, 8, '…'), $body, $headers);
     if ($ok) set_transient('jasrek_feedback_sent_' . $uid, 1, MINUTE_IN_SECONDS);
     jasrek_redirect('jasrek-tietoja', array('jasrek_msg' => $ok ? 'feedback_sent' : 'send_failed'));
 }
@@ -55,7 +55,7 @@ function jasrek_page_about() {
         <?php jasrek_notice(); ?>
 
         <div class="jasrek-panel">
-            <h2>Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?></h2>
+            <h2>OH6KW Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?></h2>
             <p>Jäsenrekisteri ja jäsenmaksulaskutus yhdistyksille.</p>
             <dl>
                 <dt>Tekijä</dt>
@@ -102,7 +102,7 @@ function jasrek_page_about() {
             </div>
             <p><label for="jasrek-fb-viesti">Viesti *</label>
                <textarea id="jasrek-fb-viesti" name="viesti" rows="6" required placeholder="Mitä toivoisit lisäosaan, tai mikä ei toiminut?"></textarea></p>
-            <p><label class="jasrek-radio"><input type="checkbox" name="tekniset" value="1" checked> Liitä mukaan versiotiedot (Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?>, WordPress, PHP, sivuston osoite) – helpottaa vikojen selvittämistä</label></p>
+            <p><label class="jasrek-radio"><input type="checkbox" name="tekniset" value="1" checked> Liitä mukaan versiotiedot (OH6KW Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?>, WordPress, PHP, sivuston osoite) – helpottaa vikojen selvittämistä</label></p>
             <p class="jasrek-actions"><button type="submit" class="button button-primary">Lähetä palaute</button></p>
         </form>
     </div>

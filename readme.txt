@@ -1,4 +1,4 @@
-=== Jäsenrekisteri ===
+=== OH6KW Jäsenrekisteri ===
 Contributors: oh6kw
 Donate link: https://ko-fi.com/oh6kw
 Tags: membership, members, invoices, association, finland
@@ -13,7 +13,7 @@ Membership register and dues invoicing for Finnish associations: Finnish referen
 
 == Description ==
 
-Jäsenrekisteri ("membership register") is a complete membership register and membership-fee invoicing tool for Finnish associations (yhdistys / ry), built into the WordPress admin. The user interface is in Finnish, because the plugin implements Finnish banking standards.
+OH6KW Jäsenrekisteri ("membership register") is a complete membership register and membership-fee invoicing tool for Finnish associations (yhdistys / ry), built into the WordPress admin. The user interface is in Finnish, because the plugin implements Finnish banking standards.
 
 **Members**
 
@@ -99,6 +99,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 == Changelog ==
 
 = 4.6.5 =
+* Renamed to OH6KW Jäsenrekisteri (slug oh6kw-jasenrekisteri).
+* Print pages load their styles and scripts with wp_register_style / wp_print_styles instead of inline tags.
+* Works without the PHP mbstring extension.
 * New: voting register for the general meeting.
 * New: optional milestones (round birthdays and membership anniversaries) with configurable years; optional birth year or date for members; new custom field type Date.
 
@@ -124,7 +127,7 @@ The full Finnish changelog is in CHANGELOG.md.
 == Upgrade Notice ==
 
 = 4.6.5 =
-Adds a voting register and optional milestones. No action needed when updating.
+Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.
 
 = 4.6.2 =
 Settings move to new option names automatically. In cover texts, {summa} is now the membership fee without postage; use {maksettava} for the total amount payable.

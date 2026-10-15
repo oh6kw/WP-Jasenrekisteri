@@ -1,4 +1,4 @@
-/* Jäsenrekisteri – hallinnan tyylit */
+/* OH6KW Jäsenrekisteri – hallinnan tyylit */
 .jasrek-wrap {
     --jasrek-accent: #1d3557;
     --jasrek-ok: #1a7f37;      --jasrek-ok-bg: #e6f4ea;
@@ -217,9 +217,11 @@
 .jasrek-num tfoot th { font-weight: 600; }
 .jasrek-report h3 { margin: 20px 0 8px; font-size: 1em; }
 @media print {
-    #adminmenumain, #wpadminbar, #wpfooter, .jasrek-noprint, .notice, .update-nag, #screen-meta-links { display: none !important; }
-    #wpcontent, #wpbody-content { margin: 0 !important; padding: 0 !important; }
-    html.wp-toolbar { padding-top: 0 !important; }
+    /* Vain pluginin omilla sivuilla (body.jasrek-screen) */
+    body.jasrek-screen #adminmenumain, body.jasrek-screen #wpadminbar, body.jasrek-screen #wpfooter, body.jasrek-screen .notice,
+    body.jasrek-screen .update-nag, body.jasrek-screen #screen-meta-links, .jasrek-noprint { display: none !important; }
+    body.jasrek-screen #wpcontent, body.jasrek-screen #wpbody-content { margin: 0 !important; padding: 0 !important; }
+    html.wp-toolbar:has(body.jasrek-screen) { padding-top: 0 !important; }
     .jasrek-wrap { max-width: none; }
     .jasrek-panel, .jasrek-card { border-color: #999; break-inside: avoid; }
     .jasrek-report .jasrek-panel { page-break-inside: avoid; }

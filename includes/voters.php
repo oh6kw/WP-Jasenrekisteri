@@ -61,36 +61,8 @@ function jasrek_handle_voters() {
 <!DOCTYPE html>
 <html lang="fi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title><?php echo esc_html('Äänioikeusluettelo – ' . $otsikko); ?></title>
-<style>
-@page { size: A4; margin: 12mm 12mm 14mm; }
-* { box-sizing: border-box; }
-body { margin: 0; background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1f2933; font-size: 10pt; }
-.tools { background: #1d3557; color: #fff; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; font-size: 14px; }
-.tools form { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; margin: 0; }
-.tools label { display: inline-flex; gap: 6px; align-items: center; }
-.tools input[type=text], .tools select, .tools input[type=date] { font-size: 14px; padding: 4px 6px; }
-.tools button { font-size: 14px; padding: 6px 14px; border-radius: 4px; border: 0; cursor: pointer; background: #fff; color: #1d3557; font-weight: bold; }
-.tools a { color: #fff; }
-.paperi { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; padding: 12mm; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
-h1 { font-size: 16pt; margin: 0 0 1mm; color: #1d3557; }
-.ala { color: #555; margin: 0 0 5mm; }
-table { width: 100%; border-collapse: collapse; }
-thead { display: table-header-group; }
-th { text-align: left; font-size: 8.5pt; color: #555; border-bottom: 0.8pt solid #333; padding: 1.5mm 1.5mm; }
-td { padding: 2.2mm 1.5mm; border-bottom: 0.4pt solid #bbb; vertical-align: middle; }
-tr { break-inside: avoid; }
-.nro { width: 9mm; color: #555; text-align: right; }
-.ok { font-weight: bold; text-align: center; width: 18mm; }
-.ei { color: #b42318; text-align: center; width: 18mm; }
-.allek { width: 52mm; }
-.yht { margin-top: 5mm; color: #333; }
-.huom { margin-top: 3mm; font-size: 8.5pt; color: #555; }
-@media print {
-  body { background: #fff; }
-  .tools { display: none; }
-  .paperi { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
-}
-</style></head>
+<?php wp_print_styles('jasrek-voters'); ?>
+</head>
 <body>
 <div class="tools">
   <form method="get" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -105,7 +77,7 @@ tr { break-inside: avoid; }
     <label><input type="checkbox" name="vain" value="1" <?php checked($vain); ?>> Vain äänioikeutetut</label>
     <button type="submit">Päivitä</button>
   </form>
-  <button type="button" onclick="window.print()">🖨 Tulosta</button>
+  <button type="button" data-jasrek-print>🖨 Tulosta</button>
   <a href="<?php echo esc_url($back); ?>">← Vuosiraportti</a>
 </div>
 <div class="paperi">
@@ -131,6 +103,7 @@ tr { break-inside: avoid; }
   <p class="yht"><strong><?php echo (int) $n_oikeus; ?> äänioikeutettua</strong><?php echo $vain ? '' : esc_html(' · ' . count($data) . ' voimassa olevaa jäsentä'); ?>.</p>
   <p class="huom">Äänioikeutettu: voimassa oleva jäsen, jonka jäsenmaksu valitulta laskulta on maksettu tai jonka jäsenluokan jäsenmaksu on 0 €. Tarkista äänioikeuden ehdot yhdistyksen säännöistä.</p>
 </div>
+<?php wp_print_scripts('jasrek-print-page'); ?>
 </body></html>
     <?php
     exit;
