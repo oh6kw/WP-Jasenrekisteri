@@ -53,6 +53,7 @@ function jasrek_settings() {
         'loki_kk'         => '24',
         'postimaksu'      => '0',
         'postiosoite'     => '',
+        'paperi_malli'    => 'perus',
         'merkki_kaytossa' => '1',
         'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
         'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',

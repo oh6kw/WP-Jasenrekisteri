@@ -35,6 +35,45 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
   - **Purettu varmuuskopio saa olla enintään 50 Mt,** jottei rikkinäinen tai valtava tiedosto kaada sivua muistin loppumiseen. Rikkinäinen pakattu tiedosto ei enää kirjoita PHP-varoitusta lokiin.
   - Jos tietokantataulut ovat vanhaa MyISAM-tyyppiä, transaktio ei ole käytössä. Keskeytynyt palautus korjataan silloin perumalla.
 
+### Uutta: paperilasku tilisiirtolomakkeella
+- **Asetukset → Paperilaskut → Laskun malli:** perusmallin rinnalle tuli *Tilisiirtolomake*, perinteinen suomalainen pankkisiirtolomake (tilisiirto / girering) sivun alareunaan. Oletuksena on edelleen perusmalli.
+- **Sivun rakenne:**
+  - Ylhäällä lähettäjä, ikkunakuoren osoite ja laskun tiedot, täsmälleen samassa kohdassa kuin perusmallissa. Osoite osuu C5- ja DL-kuorten ikkunaan, ja testissä sen paikka oli molemmissa malleissa 20 mm vasemmalta ja 27,1 mm ylhäältä.
+  - Keskellä saateteksti.
+  - Lomakkeen yläpuolella *Maksaminen*-ohje viitenumeroineen, virtuaaliviivakoodi ja QR-koodi (jos valittu).
+  - **Tilisiirtolomake aina sivun alareunassa:**
+    - saajan tilinumero (IBAN) ja BIC, saaja osoitteineen ja maksaja osoitteineen
+    - allekirjoitus, tililtä nro ja viesti
+    - viitenumero, eräpäivä ja summa euroina
+    - pankkiviivakoodi ja pankin vakioteksti (suomeksi ja ruotsiksi)
+    - leikkausviiva ✂
+- Jos saate jää lyhyeksi, väliin jää tyhjää ja lomake pysyy alareunassa. Erittely ja yhteensä-laatikko jätetään tästä mallista pois, koska summat ovat jo tietolaatikossa ja lomakkeessa. Saatteelle jää noin puolet sivusta.
+- **Liian pitkä saate:** tulostussivu pienentää saatteen tekstiä vähitellen (enintään 8,5 pt:iin). Jos teksti ei vieläkään mahdu, yläpalkissa näytetään varoitus jäsenten nimillä. Mitään ei jää lomakkeen alle piiloon.
+- QR-koodi ja pankkiviivakoodi tulostuvat kohdan *Maksukoodi* mukaan (QR, viivakoodi, molemmat tai ei kumpaakaan).
+- Sivu on tulosteessa koko A4:n korkuinen ja tekstikoko sama kuin esikatselussa (10,5 pt). Aiemman 4.6.4-perusmallin pienennetyt koot eivät koske tätä mallia.
+- Tulostus: A4, reunukset *Oletus* tai *Ei mitään*, mittakaava 100 %. Testattu Chromen PDF-tulostuksella: yksi sivu laskua kohden, lomake 6 mm alareunasta.
+- Perusmalli toimii kuten ennenkin. Sen yläosa ja saate tulevat nyt samasta koodista kuin tilisiirtomallissa.
+
+### Uutta: tietosuoja (GDPR)
+- **Jäsenrekisterin tietosuojaselosteen pohja** (Tietoja-sivu → *Jäsenrekisterin tietosuojaselosteen pohja*): yhdistyksen tiedoilla esitäytetty seloste tietosuoja-asetuksen 13 ja 14 artiklan mukaan. Se sisältää:
+  - rekisterinpitäjä ja yhteyshenkilö
+  - käsittelyn tarkoitus ja oikeusperuste (yhdistyslain 11 §:n jäsenluettelo, jäsenyys, ja syntymävuodelle suostumus, jos merkkipäivät ovat käytössä)
+  - tietosisältö: käytössä olevat kentät, lisätunniste ja omat lisäkentät nimeltä
+  - tietolähteet, luovutukset ja käsittelijät, siirrot EU:n ulkopuolelle
+  - säilytysajat (kirjanpito 6 vuotta, muutosloki asetuksen mukaan), suojaus ja rekisteröidyn oikeudet
+  - Täydennettävät kohdat on merkitty keltaisella *[täydennä]*.
+  - Tekstiä voi muokata suoraan sivulla, ja sen voi tulostaa tai kopioida (*Kopioi teksti*) esimerkiksi yhdistyksen verkkosivuille.
+  - Sivulla muistutetaan, että pohja ei ole oikeudellinen neuvo.
+- **WordPressin henkilötietotyökalut** (*Työkalut → Vie henkilötiedot / Poista henkilötiedot*) tunnistavat nyt jäsenen sähköpostiosoitteella:
+  - **Vienti:** jäsentiedot (myös lisäkentät) ja kaikki jäsenmaksut (lasku, viite, summa, eräpäivä, lähetys- ja maksupäivä, maksaja).
+  - **Poisto nimettömöi jäsenen:**
+    - Nimi, osoite, puhelin, sähköposti, lisätunniste, syntymävuosi, lisätiedot ja lisäkentät poistetaan, ja jäsen merkitään eronneeksi.
+    - Laskuriveiltä poistetaan nimi, sähköposti ja maksaja.
+    - Jäsenmaksujen summat ja päivät säilyvät kirjanpitoa ja vuosiraporttia varten.
+    - Jäsenen muutoslokimerkinnät poistetaan, ja hänen nimensä korvataan muista merkinnöistä tekstillä *[poistettu]*.
+    - Poisto kirjataan lokiin.
+- **Ehdotus sivuston tietosuojaselosteeseen** (*Asetukset → Tietosuoja → Opas*): lisäosa kertoo, mitä tietoja se käsittelee. Se ei kerää tietoja sivuston kävijöistä eikä käytä evästeitä.
+
 ### Muut muutokset
 - **Käytöstä poiston kysely** suosittelee nyt koko varmuuskopiota: linkki *Lataa ensin varmuuskopio* lataa kaikki tiedot muutoslokeineen. Jäsenluettelon CSV on toissijaisena vaihtoehtona Exceliä varten.
 - *Lisäosan poistaminen* -kohta asetuksissa ohjaa ottamaan varmuuskopion.

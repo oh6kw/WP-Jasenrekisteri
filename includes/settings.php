@@ -56,6 +56,7 @@ function jasrek_handle_save_settings() {
         'jasenlajit'       => $lajit,
         'lisakentat'       => $kentat,
         'postiosoite'      => sanitize_textarea_field(jasrek_post('postiosoite')),
+        'paperi_malli'     => jasrek_post('paperi_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
         'merkki_kaytossa'  => jasrek_post('merkki_kaytossa') === '1' ? '1' : '0',
         'merkki_ika'       => implode(', ', jasrek_vuosilista(jasrek_post('merkki_ika'))),
         'merkki_jasen'     => implode(', ', jasrek_vuosilista(jasrek_post('merkki_jasen'))),
@@ -83,7 +84,7 @@ function jasrek_log_settings_change($a, $b) {
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
         'auto_max' => 'Muistutuksia enintään', 'auto_raportti' => 'Muistutusten yhteenveto', 'poista_tiedot' => 'Poista tiedot lisäosan poistossa',
-        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'postiosoite' => 'Yhdistyksen postiosoite', 'merkki_ika' => 'Merkkipäivät: täytettävät vuodet', 'merkki_jasen' => 'Merkkipäivät: jäsenyysvuodet',
+        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'postiosoite' => 'Yhdistyksen postiosoite', 'paperi_malli' => 'Paperilaskun malli', 'merkki_ika' => 'Merkkipäivät: täytettävät vuodet', 'merkki_jasen' => 'Merkkipäivät: jäsenyysvuodet',
         'merkki_kaytossa' => 'Merkkipäivät käytössä', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
@@ -191,6 +192,11 @@ function jasrek_page_settings() {
                    <span class="description">Lisätään jäsenmaksuun vain paperilaskun saajille, esim. postimerkin ja kirjekuoren hinta. 0 = ei postimaksua. Summaa voi muuttaa laskua tehdessä.
                    Postimaksu näkyy laskussa omana rivinään, ja se on mukana QR- ja viivakoodin summassa. Sähköpostilaskuihin sitä ei lisätä.
                    Saatetekstissä <code>{summa}</code> on jäsenmaksu ilman postimaksua ja <code>{maksettava}</code> maksettava yhteensä.</span></p>
+                <fieldset class="jasrek-fieldset"><legend>Laskun malli</legend>
+                    <label class="jasrek-radio"><input type="radio" name="paperi_malli" value="perus" <?php checked($s['paperi_malli'], 'perus'); ?>> <strong>Perusmalli</strong> – maksutiedot, QR-koodi ja pankkiviivakoodi saatteen alla.</label>
+                    <label class="jasrek-radio"><input type="radio" name="paperi_malli" value="tilisiirto" <?php checked($s['paperi_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – perinteinen suomalainen pankkisiirtolomake sivun alareunassa, QR-koodi sen yläpuolella. Saateteksti mahtuu noin puolelle sivulle.</label>
+                    <span class="description">Kummassakin mallissa jäsenen nimi ja osoite osuvat ikkunakuoren (C5 tai DL) ikkunaan. QR-koodi ja pankkiviivakoodi tulostuvat kohdan <em>Maksukoodi</em> mukaan.</span>
+                </fieldset>
                 <p><label for="jasrek-postiosoite">Yhdistyksen postiosoite (palautusosoite)</label>
                    <textarea id="jasrek-postiosoite" name="postiosoite" rows="2" style="max-width:420px" placeholder="esim. PL 123, 00100 Helsinki"><?php echo esc_textarea($s['postiosoite']); ?></textarea>
                    <span class="description">Tulostetaan pienellä ikkunakuoren ikkunaan vastaanottajan yläpuolelle, jotta kirje palautuu, jos sitä ei voida toimittaa. Tyhjänä palautusosoitetta ei tulosteta.</span></p>

@@ -116,7 +116,8 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     </form>
     <?php endif; ?>
     <a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a>
-    <?php if ($rows): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).</span><?php endif; ?>
+    <?php if ($rows): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).<?php echo $s['paperi_malli'] === 'tilisiirto' ? ' Tilisiirtolomake tulostuu sivun alareunaan.' : ''; ?></span><?php endif; ?>
+    <span class="jasrek-warn" id="jasrek-ylivuoto" hidden>⚠ Saateteksti ei mahdu kokonaan sivulle tilisiirtolomakkeen yläpuolelle: <span></span>. Lyhennä laskun saatetekstiä tai käytä perusmallia (Asetukset → Paperilaskut).</span>
     <?php if ($no_addr): ?><span class="jasrek-warn">⚠ Osoite puuttuu: <?php echo esc_html(implode(', ', $no_addr)); ?>. Lisää osoite jäsenen tietoihin ennen tulostusta.</span><?php endif; ?>
 </div>
 <?php if (!$rows): ?>
@@ -129,22 +130,29 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     return ob_get_clean();
 }
 
-/** Yksi A4-sivu. */
+/** Yksi A4-sivu valitulla mallilla (Asetukset → Paperilaskut → Laskun malli). */
 function jasrek_print_page($lasku, $r, $reminder, $s) {
-    $vars = jasrek_invoice_vars($lasku, $r);
+    if ($s['paperi_malli'] === 'tilisiirto') return jasrek_print_page_tilisiirto($lasku, $r, $reminder, $s);
+    return jasrek_print_page_perus($lasku, $r, $reminder, $s);
+}
+
+/** Taittomerkit: puolitaitto C5-kuoreen (148,5 mm) ja kolmitaitto DL-kuoreen (99 ja 198 mm). */
+function jasrek_print_marks() {
+    return '<span class="taitto" style="top:99mm"></span><span class="taitto" style="top:148.5mm"></span><span class="taitto" style="top:198mm"></span>';
+}
+
+/**
+ * Sivun yläosa (lähettäjä, ikkunakuoren osoite ja laskun tiedot) sekä saate, erittely ja yhteensä.
+ * Sama kummassakin mallissa, joten osoite osuu aina samaan kohtaan kuoren ikkunaa.
+ */
+function jasrek_print_head($lasku, $r, $reminder, $s, $vars, $erittely = true) {
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
-    $images = jasrek_invoice_images($lasku, $r);
-    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
     $addr = jasrek_address_lines($r);
     $luokka = isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '';
     // Palautusosoite ikkunaan vain, jos yhdistyksen postiosoite on annettu (muuten nimi toistuisi turhaan)
     $palautus = trim((string) $s['postiosoite']) !== '' ? $s['yhdistys'] . ', ' . preg_replace('/\s*\n\s*/', ', ', trim($s['postiosoite'])) : '';
-    $yt = trim(preg_replace('/\s*\n\s*/', ' · ', (string) $s['yhteystiedot']));
 
-    $h  = '<div class="sivu">';
-    // Taittomerkit: puolitaitto C5-kuoreen (148,5 mm) ja kolmitaitto DL-kuoreen (99 ja 198 mm)
-    $h .= '<span class="taitto" style="top:99mm"></span><span class="taitto" style="top:148.5mm"></span><span class="taitto" style="top:198mm"></span>';
-    $h .= '<div class="ylaosa">';
+    $h  = '<div class="ylaosa">';
     $h .= '<div class="lahettaja">' . esc_html($s['yhdistys']) . '</div>';
     $h .= '<div class="ikkuna">' . ($palautus !== '' ? '<div class="palautus">' . esc_html($palautus) . '</div>' : '') . '<div class="vastaanottaja">';
     foreach ($addr as $i => $l) $h .= ($i ? '<br>' : '') . ($i === 0 ? '<strong>' . esc_html($l) . '</strong>' : esc_html($l));
@@ -168,12 +176,23 @@ function jasrek_print_page($lasku, $r, $reminder, $s) {
     $h .= '<div class="saate">' . jasrek_fill($text, $vars) . '</div>';
     $note = jasrek_postimaksu_note($text, $r, $vars);
     if ($note !== '') $h .= '<p class="postihuom">' . esc_html($note) . '</p>';
+    if (!$erittely) return $h; // tilisiirtomalli: summat ovat tietolaatikossa ja lomakkeessa
     $h .= '<table class="erittely"><thead><tr><th>Erittely</th><th class="summa">Summa</th></tr></thead><tbody>';
     $h .= '<tr><td>' . esc_html($lasku->nimi) . ' – ' . esc_html($vars['nimi']) . ($luokka !== '' ? ' (' . esc_html($luokka) . ')' : '') . '</td><td class="summa">' . esc_html($vars['jasenmaksu']) . '</td></tr>';
     if (jasrek_rivi_postimaksu($r) > 0) $h .= '<tr><td>Postimaksu (paperilasku)</td><td class="summa">' . esc_html($vars['postimaksu']) . '</td></tr>';
     $h .= '</tbody></table>';
     $h .= '<div class="yhteensa"><span>Maksettava viimeistään ' . esc_html($vars['erapaiva']) . '</span><strong>' . esc_html($vars['maksettava']) . '</strong></div>';
+    return $h;
+}
 
+/** Perusmalli: maksutiedot, QR-koodi ja pankkiviivakoodi saatteen alla. */
+function jasrek_print_page_perus($lasku, $r, $reminder, $s) {
+    $vars = jasrek_invoice_vars($lasku, $r);
+    $images = jasrek_invoice_images($lasku, $r);
+    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
+    $yt = trim(preg_replace('/\s*\n\s*/', ' · ', (string) $s['yhteystiedot']));
+    $h  = '<div class="sivu">' . jasrek_print_marks();
+    $h .= jasrek_print_head($lasku, $r, $reminder, $s, $vars);
     $h .= '<div class="alaosa"><div class="maksurivi">';
     if (isset($images['jrqr'])) {
         $h .= '<img class="qr" alt="QR-koodi" src="data:image/png;base64,' . base64_encode($images['jrqr']) . '">';
@@ -198,6 +217,71 @@ function jasrek_print_page($lasku, $r, $reminder, $s) {
     $h .= '<div class="huom">Käytäthän maksaessasi viitenumeroa, jotta maksu kohdistuu sinulle.</div>';
     $foot = ($yt !== '' ? $yt : $s['yhdistys']) . ($s['ytunnus'] !== '' ? ' · Y-tunnus ' . $s['ytunnus'] : '');
     $h .= '<div class="alatunniste">' . esc_html($foot) . '</div>';
+    $h .= '</div></div>';
+    return $h;
+}
+
+/** Pankkiviivakoodin kuva tulostusmittoihin (piirretty 2 px/moduuli, tulosteessa 0,3 mm/moduuli). */
+function jasrek_print_barcode_img($png) {
+    $px = unpack('N', substr($png, 16, 4))[1];
+    $mm = round($px / 2 * 0.3, 1);
+    return '<img alt="Pankkiviivakoodi" style="width:' . esc_attr($mm) . 'mm" src="data:image/png;base64,' . base64_encode($png) . '">';
+}
+
+/** Summa tilisiirtolomakkeelle: 1 234,50 EUR. */
+function jasrek_print_eur($amount) {
+    return number_format((float) $amount, 2, ',', ' ') . ' EUR';
+}
+
+/**
+ * Tilisiirtolomakemalli: perinteinen suomalainen pankkisiirtolomake (tilisiirto / girering) sivun alareunassa.
+ * Yläosa ja ikkunakuoren osoite ovat samat kuin perusmallissa. QR-koodi (jos valittu) on lomakkeen yläpuolella.
+ */
+function jasrek_print_page_tilisiirto($lasku, $r, $reminder, $s) {
+    $vars = jasrek_invoice_vars($lasku, $r);
+    $images = jasrek_invoice_images($lasku, $r);
+    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
+    $yt = trim(preg_replace('/\s*\n\s*/', ' · ', (string) $s['yhteystiedot']));
+    $saaja = array_merge(array($s['yhdistys']), array_filter(array_map('trim', preg_split('/\s*[,\n]\s*/', (string) $s['postiosoite']))));
+    $maksaja = jasrek_address_lines($r);
+    $br = function ($lines) { return implode('<br>', array_map('esc_html', $lines)); };
+
+    $h  = '<div class="sivu ts-sivu">' . jasrek_print_marks();
+    $h .= '<div class="ts-keski">' . jasrek_print_head($lasku, $r, $reminder, $s, $vars, false);
+    $foot = ($yt !== '' ? $yt : $s['yhdistys']) . ($s['ytunnus'] !== '' ? ' · Y-tunnus ' . $s['ytunnus'] : '');
+    $h .= '</div>';
+
+    // Lomakkeen yläpuolella: QR-koodi ja virtuaaliviivakoodi verkkopankkia varten
+    $h .= '<div class="ts-ennen">';
+    $h .= '<div class="ts-ohje"><div class="ts-ohje-otsikko">Maksaminen</div>'
+        . 'Maksa verkkopankissa tai mobiilisovelluksessa tilisiirtolomakkeen tiedoilla. Käytä viitenumeroa <strong class="mono">' . esc_html($vars['viite']) . '</strong>, jotta maksu kohdistuu sinulle.'
+        . ($vvk !== '' ? '<div class="ts-vvk">Virtuaaliviivakoodi: <span class="mono">' . esc_html($vvk) . '</span></div>' : '')
+        . '<div class="ts-yht">' . esc_html($foot) . '</div></div>';
+    if (isset($images['jrqr'])) {
+        $h .= '<div class="ts-qr"><img class="qr" alt="QR-koodi" src="data:image/png;base64,' . base64_encode($images['jrqr']) . '"><span>Skannaa pankki&shy;sovelluksella</span></div>';
+    }
+    $h .= '</div>';
+
+    // Tilisiirtolomake
+    $h .= '<div class="ts-lomake"><div class="ts-leikkaa">✂</div><table class="ts">';
+    $h .= '<colgroup><col class="ts-c1"><col class="ts-c2"><col class="ts-c3"><col class="ts-c4"><col class="ts-c5"><col class="ts-c6"></colgroup>';
+    $h .= '<tr class="ts-r1"><th>Saajan<br>tilinumero<br><span>Mottagarens<br>kontonummer</span></th>'
+        . '<td><small>IBAN</small><div class="ts-arvo">' . esc_html($vars['iban']) . '</div></td>'
+        . '<td colspan="4" class="ts-oik"><small>BIC</small><div class="ts-arvo">' . esc_html($s['bic']) . '</div></td></tr>';
+    $h .= '<tr class="ts-r2"><th>Saaja<br><span>Mottagare</span></th><td><div class="ts-osoite">' . $br($saaja) . '</div></td>'
+        . '<td colspan="4" rowspan="2" class="ts-oik ts-viesti"><small>Viesti / Meddelande</small></td></tr>';
+    $h .= '<tr class="ts-r3"><th rowspan="2" class="ts-maksaja-th"><span class="ts-pysty">TILISIIRTO GIRERING</span>Maksaja<br><span>Betalare</span>'
+        . '<div class="ts-allek-l">Allekirjoitus<br><span>Underskrift</span></div></th>'
+        . '<td rowspan="2" class="ts-maksaja"><div class="ts-osoite">' . $br($maksaja) . '</div><div class="ts-allek"></div></td></tr>';
+    $h .= '<tr class="ts-r4"><th class="ts-oik">Viitenro<br><span>Ref.nr</span></th><td colspan="3" class="ts-arvo">' . esc_html($vars['viite']) . '</td></tr>';
+    $h .= '<tr class="ts-r5"><th>Tililtä nro<br><span>Från konto nr</span></th><td></td>'
+        . '<th class="ts-oik">Eräpäivä<br><span>Förf.dag</span></th><td class="ts-arvo">' . esc_html($vars['erapaiva']) . '</td>'
+        . '<th>Summa</th><td class="ts-arvo ts-summa">' . esc_html(jasrek_print_eur($r->summa)) . '</td></tr>';
+    $h .= '</table>';
+    $h .= '<div class="ts-ala"><div class="ts-viivakoodi">' . (isset($images['jrbar']) ? jasrek_print_barcode_img($images['jrbar']) : '') . '</div>'
+        . '<div class="ts-ehdot">Maksu välitetään saajalle maksujen välityksen ehtojen mukaisesti ja vain maksajan ilmoittaman tilinumeron perusteella.<br>'
+        . 'Betalningen förmedlas till mottagaren enligt villkoren för betalningsförmedling och endast till det kontonummer som betalaren angivit.'
+        . '<div class="ts-pankki">PANKKI BANKEN</div></div></div>';
     $h .= '</div></div>';
     return $h;
 }

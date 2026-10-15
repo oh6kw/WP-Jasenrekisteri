@@ -20,6 +20,7 @@ require_once JASREK_DIR . 'includes/print.php';
 require_once JASREK_DIR . 'includes/report.php';
 require_once JASREK_DIR . 'includes/voters.php';
 require_once JASREK_DIR . 'includes/backup.php';
+require_once JASREK_DIR . 'includes/privacy.php';
 require_once JASREK_DIR . 'includes/mailer.php';
 require_once JASREK_DIR . 'includes/settings.php';
 require_once JASREK_DIR . 'includes/cron.php';
@@ -57,6 +58,7 @@ function jasrek_is_own_screen() {
 add_action('admin_init', function () {
     wp_register_style('jasrek-print', JASREK_URL . 'assets/print.css', array(), JASREK_VERSION);
     wp_register_style('jasrek-voters', JASREK_URL . 'assets/voters.css', array(), JASREK_VERSION);
+    wp_register_style('jasrek-document', JASREK_URL . 'assets/document.css', array(), JASREK_VERSION);
     wp_register_script('jasrek-print-page', JASREK_URL . 'assets/print-page.js', array(), JASREK_VERSION, true);
 });
 

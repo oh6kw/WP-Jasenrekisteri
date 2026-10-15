@@ -76,6 +76,8 @@ function jasrek_page_about() {
             </dl>
         </div>
 
+        <?php jasrek_privacy_panel(); ?>
+
         <div class="jasrek-panel">
             <h2>Tarjoa kahvit</h2>
             <p>Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit. Kiitos!</p>

@@ -79,3 +79,64 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
     .alatunniste { margin-top: 2.5mm; padding-top: 1.5mm; }
     .alaosa { break-inside: avoid; }
 }
+
+/* ------------------------------------------------------------------
+ * Tilisiirtolomakemalli (Asetukset → Paperilaskut → Laskun malli)
+ * Sivu on aina koko A4:n korkuinen: kirje ylhäällä, tilisiirtolomake alareunassa.
+ * Ikkunakuoren osoite on samassa kohdassa kuin perusmallissa.
+ * ------------------------------------------------------------------ */
+.ts-sivu { display: block; }
+.ts-keski { position: absolute; left: 20mm; right: 15mm; top: 0; height: 169mm; overflow: hidden; }
+.ts-sivu .ylaosa { height: 58mm; }
+.ts-sivu .yhteensa { margin-bottom: 0; }
+.ts-ennen { position: absolute; left: 20mm; right: 15mm; bottom: 94mm; height: 31mm; display: flex; gap: 6mm; align-items: flex-end; }
+.ts-ohje { flex: 1; font-size: 9pt; line-height: 1.4; }
+.ts-ohje-otsikko { font-weight: bold; color: #1d3557; font-size: 10pt; margin-bottom: 1mm; }
+.ts-vvk { font-size: 7.5pt; color: #444; margin-top: 1.5mm; word-break: break-all; }
+.ts-yht { font-size: 7.5pt; color: #555; margin-top: 2mm; border-top: 0.3pt solid #ccc; padding-top: 1.5mm; }
+.ts-qr { flex: none; width: 30mm; text-align: center; font-size: 7pt; color: #555; line-height: 1.2; }
+.ts-qr img.qr { width: 28mm; height: 28mm; image-rendering: pixelated; display: block; margin: 0 auto 1mm; }
+
+.ts-lomake { position: absolute; left: 8mm; right: 8mm; bottom: 6mm; height: 88mm; color: #000; font-family: Arial, Helvetica, sans-serif; }
+.ts-leikkaa { border-top: 0.3mm dashed #000; height: 5mm; font-size: 10pt; line-height: 1; margin-top: 1mm; position: relative; }
+.ts-leikkaa { padding-left: 0; }
+.ts-leikkaa::before { content: ""; }
+table.ts { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; line-height: 1.25; }
+table.ts col.ts-c1 { width: 22mm; } table.ts col.ts-c2 { width: 82mm; } table.ts col.ts-c3 { width: 15mm; }
+table.ts col.ts-c4 { width: 38mm; } table.ts col.ts-c5 { width: 12mm; }
+table.ts th, table.ts td { padding: 1mm 1.6mm; vertical-align: top; border: 0; text-align: left; overflow: hidden; }
+table.ts th { font-weight: normal; font-size: 7pt; line-height: 1.2; text-align: right; }
+table.ts th span { font-size: 7pt; }
+table.ts small { display: block; font-size: 7pt; line-height: 1.2; }
+table.ts td:not(.ts-oik), table.ts td.ts-oik { }
+/* Pystyviivat: arvosarake ja keskiviiva */
+table.ts td:nth-child(2), table.ts tr.ts-r4 td, table.ts .ts-maksaja { border-left: 0.6mm solid #000; }
+table.ts .ts-oik { border-left: 0.6mm solid #000; }
+table.ts tr.ts-r4 td, table.ts tr.ts-r5 td.ts-arvo { border-left: 0.3mm solid #000; }
+table.ts tr.ts-r5 th:nth-of-type(3) { border-left: 0.3mm solid #000; }
+/* Vaakaviivat */
+table.ts tr.ts-r1 > *, table.ts tr.ts-r2 > *, table.ts .ts-viesti, table.ts tr.ts-r4 > *, table.ts tr.ts-r5 > *, table.ts .ts-maksaja, table.ts .ts-maksaja-th { border-bottom: 0.6mm solid #000; }
+table.ts tr.ts-r1 { height: 13mm; } table.ts tr.ts-r2 { height: 15mm; } table.ts tr.ts-r3 { height: 17mm; }
+table.ts tr.ts-r4 { height: 9mm; } table.ts tr.ts-r5 { height: 9mm; }
+table.ts .ts-arvo { font-size: 11pt; padding-top: 0.6mm; }
+table.ts td.ts-arvo { vertical-align: middle; }
+table.ts tr.ts-r5 th, table.ts tr.ts-r4 th { vertical-align: middle; }
+table.ts .ts-summa { text-align: right; white-space: nowrap; }
+table.ts .ts-osoite { font-size: 10pt; line-height: 1.3; }
+table.ts .ts-maksaja-th { position: relative; }
+table.ts .ts-pysty { position: absolute; left: 0.6mm; bottom: 1mm; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 5.8pt; font-weight: bold; letter-spacing: 0; white-space: nowrap; line-height: 1; }
+table.ts .ts-allek-l { position: absolute; right: 1.6mm; bottom: 1.5mm; }
+table.ts .ts-maksaja { position: relative; }
+table.ts .ts-allek { position: absolute; left: 4mm; right: 8mm; bottom: 4mm; border-bottom: 0.3mm solid #000; }
+.ts-ala { display: flex; gap: 6mm; margin-top: 3mm; align-items: flex-start; }
+.ts-viivakoodi { flex: 0 0 110mm; padding-left: 4mm; }
+.ts-viivakoodi img { height: 12mm; image-rendering: pixelated; display: block; max-width: 106mm; }
+.ts-ehdot { flex: 1; font-size: 6.3pt; line-height: 1.3; }
+.ts-pankki { font-weight: bold; font-size: 7pt; text-align: right; margin-top: 1.5mm; }
+.ts-ylivuoto .ts-keski { box-shadow: inset 0 -3mm 0 #f6c2c2; }
+@media print {
+    /* Tilisiirtomalli: koko arkki (296 mm, ettei pyöristys tuota tyhjää sivua) ja samat koot kuin näytöllä */
+    .sivu.ts-sivu { height: 296mm; overflow: hidden; padding: 0; font-size: 10.5pt; line-height: 1.45; }
+    .ts-sivu .ylaosa { height: 58mm; }
+    .ts-ylivuoto .ts-keski { box-shadow: none; }
+}

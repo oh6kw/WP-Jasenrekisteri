@@ -28,7 +28,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 * One click sends every member an individual invoice by email, with a unique Finnish reference number (viitenumero, 7-3-1 check digit).
 * Every invoice contains an EPC QR code, a Finnish bank barcode (version 4) and a virtual barcode, so paying in a banking app takes seconds.
-* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only.
+* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page.
 * Sending runs in small batches with a progress bar, so large member lists do not time out. Test invoices and previews before sending.
 * Manual or automatic payment reminders.
 * Members who join mid-season can be added to an invoice that has already been sent, with their own due date.
@@ -47,6 +47,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 **Backup and moving**
 
+* Privacy (GDPR): a pre-filled privacy notice template for the member register, and support for the WordPress personal data export and erase tools (members are found by email address; erasing anonymises the member and keeps the fee amounts for bookkeeping).
 * Full backup in one file (JSON, compressed): members, invoices, payments, settings and optionally the audit log. Restore it on the same or another site, for example when the register moves to a new website. A summary is shown before restoring, the file is checked before anything is changed, and the previous state is kept so a restore can be undone.
 
 **Newsletters**
@@ -102,11 +103,14 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 8. Audit log: who changed what and when.
 9. Voting register for the general meeting.
 10. Backup and restore in the settings.
+11. Paper invoice with the Finnish bank transfer form.
 
 == Changelog ==
 
 = 4.7.0 =
 * New: full backup and restore (Settings → Backup and moving), for example for moving the register to another site. The previous state is kept so a restore can be undone.
+* New: optional paper invoice layout with the traditional Finnish bank transfer form at the bottom of the page.
+* New: privacy notice template and support for the WordPress personal data export and erase tools.
 
 = 4.6.5 =
 * Renamed to OH6KW Jäsenrekisteri (slug oh6kw-jasenrekisteri).
@@ -137,7 +141,7 @@ The full Finnish changelog is in CHANGELOG.md.
 == Upgrade Notice ==
 
 = 4.7.0 =
-Adds full backup and restore in the settings. No action needed when updating.
+Adds backup and restore, a bank transfer form layout for paper invoices and privacy tools. No action needed when updating.
 
 = 4.6.5 =
 Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.
