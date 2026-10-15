@@ -102,7 +102,7 @@ function jasrek_page_about() {
             </div>
             <p><label for="jasrek-fb-viesti">Viesti *</label>
                <textarea id="jasrek-fb-viesti" name="viesti" rows="6" required placeholder="Mitä toivoisit lisäosaan, tai mikä ei toiminut?"></textarea></p>
-            <p><label class="jasrek-radio"><input type="checkbox" name="tekniset" value="1" checked> Liitä mukaan versiotiedot (OH6KW Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?>, WordPress, PHP, sivuston osoite) – helpottaa vikojen selvittämistä</label></p>
+            <p><label class="jasrek-radio"><input type="checkbox" name="tekniset" value="1"> Liitä mukaan versiotiedot (OH6KW Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?>, WordPress, PHP, sivuston osoite) – helpottaa vikojen selvittämistä</label></p>
             <p class="jasrek-actions"><button type="submit" class="button button-primary">Lähetä palaute</button></p>
         </form>
     </div>

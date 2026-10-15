@@ -193,7 +193,9 @@ Jos lisäosasta on hyötyä yhdistyksellesi, voit tarjota kehittäjälle kahvit:
 ## Tekijät
 
 - **Jarno Jaskari, OH6KW:** alkuperäinen lisäosa (versio 2.6), ideointi, vaatimukset, testaus ja ylläpito
-- **Claude (Anthropic):** jatkokehitys yhdessä Jarnon kanssa versiosta 3.0 alkaen
+- **Claude (Anthropic):** tekoälyavustaja, jonka kanssa lisäosaa on kehitetty versiosta 3.0 alkaen
+
+Lisäosan otsaketiedoissa ja WordPress.orgissa tekijänä on Jarno Jaskari (oh6kw).
 
 ## Muutokset
 

@@ -247,6 +247,7 @@ function jasrek_handle_payments_upload() {
         jasrek_redirect('jasrek-laskutus', array('jasrek_msg' => 'no_payments'));
     }
     $parsed['tiedosto'] = $f['name'];
+    $parsed['gen'] = jasrek_data_gen();
     set_transient('jasrek_payimp_' . get_current_user_id(), $parsed, HOUR_IN_SECONDS);
     jasrek_redirect('jasrek-laskutus', array('view' => 'maksutuonti'));
 }
@@ -258,6 +259,10 @@ function jasrek_handle_payments_confirm() {
     $key = 'jasrek_payimp_' . get_current_user_id();
     $parsed = get_transient($key);
     if (!$parsed) jasrek_redirect('jasrek-laskutus', array('jasrek_msg' => 'no_payments'));
+    if (!isset($parsed['gen']) || $parsed['gen'] !== jasrek_data_gen()) {
+        delete_transient($key);
+        jasrek_redirect('jasrek-laskutus', array('jasrek_msg' => 'data_restored'));
+    }
 
     $valitut = array_flip(array_map('intval', jasrek_post_array('valitut')));
     $maksut = jasrek_match_payments($parsed['maksut']); // tarkistetaan uudelleen

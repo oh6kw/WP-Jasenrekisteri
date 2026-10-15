@@ -53,6 +53,8 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 * Email to all members, one membership class, or members with unpaid invoices. Placeholders such as {etunimi} (first name) personalise every message.
 
+Developed by Jarno Jaskari (oh6kw) together with Claude, an AI assistant made by Anthropic.
+
 The plugin does not use any external services. All data stays in your own WordPress database. QR codes, barcodes and Excel files are generated locally without extra PHP extensions.
 
 Source code, issue tracker and full Finnish documentation: [github.com/oh6kw/WP-Jasenrekisteri](https://github.com/oh6kw/WP-Jasenrekisteri)

@@ -15,6 +15,8 @@ if (!defined('ABSPATH')) exit;
 
 define('JASREK_BACKUP_FORMAT', 'oh6kw-jasenrekisteri-backup');
 define('JASREK_BACKUP_VERSION', 1);
+define('JASREK_BACKUP_UNDO_DAYS', 30);        // palautusta edeltänyt tilanne poistetaan automaattisesti
+define('JASREK_BACKUP_MAX_BYTES', 50 * 1024 * 1024); // purettu varmuuskopio enintään 50 Mt
 
 /** Varmuuskopioon kuuluvat taulut (avain → taulun nimi $wpdb-oliossa). Muutosloki on valinnainen. */
 function jasrek_backup_tables() {
@@ -78,9 +80,13 @@ function jasrek_backup_read_upload($raw) {
     $raw = (string) $raw;
     if (substr($raw, 0, 2) === "\x1f\x8b") {
         if (!function_exists('gzdecode')) return null;
-        $json = gzdecode($raw, 200 * MB_IN_BYTES);
+        // Rikkinäinen tiedosto aiheuttaa PHP-varoituksen; se käsitellään virheilmoituksena, ei lokiin.
+        set_error_handler(function () { return true; }); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_set_error_handler -- only around gzdecode() of an uploaded file.
+        $json = gzdecode($raw, JASREK_BACKUP_MAX_BYTES);
+        restore_error_handler();
         return $json === false ? null : $json;
     }
+    if (strlen($raw) > JASREK_BACKUP_MAX_BYTES) return null;
     return preg_replace('/^\xEF\xBB\xBF/', '', $raw);
 }
 /** Väliaikainen säilytys tietokannassa (transient ja peruttava tilanne): pakattuna, jos mahdollista. */
@@ -190,12 +196,10 @@ function jasrek_backup_restore($data) {
         }
     }
 
-    // Asetukset: vain tunnetut avaimet. Tämän sivuston valinta "poista tiedot lisäosan poistossa" säilyy.
-    $nykyiset = jasrek_settings();
-    $uudet = array_intersect_key((array) $data['settings'], $nykyiset);
-    $uudet['poista_tiedot'] = $nykyiset['poista_tiedot'];
-    update_option('jasrek_settings', $uudet);
+    update_option('jasrek_settings', jasrek_backup_clean_settings((array) $data['settings']));
     $wpdb->query('COMMIT');
+    // Keskeneräiset tuonnit ja lähetykset viittaavat vanhoihin tunnisteisiin: ne mitätöidään.
+    update_option('jasrek_data_gen', (string) ((int) jasrek_data_gen() + 1));
 
     // Vanhemman version varmuuskopio päivitetään nykyiseen muotoon.
     $dbv = (int) $data['db_version'];
@@ -204,18 +208,102 @@ function jasrek_backup_restore($data) {
     return true;
 }
 
+/**
+ * Varmuuskopion asetukset tarkistettuina: vain tunnetut avaimet ja oikeat tyypit. Virheellinen arvo
+ * korvataan nykyisellä. Tämän sivuston valinta "poista tiedot lisäosan poistossa" säilyy aina.
+ */
+function jasrek_backup_clean_settings($in) {
+    $nyt = jasrek_settings();
+    $out = array();
+    foreach ($nyt as $k => $v) {
+        if (!array_key_exists($k, $in)) continue;
+        $u = $in[$k];
+        if (is_array($v)) {
+            $out[$k] = is_array($u) ? $u : $v;
+        } else {
+            $out[$k] = (is_scalar($u) || $u === null) ? (string) $u : $v;
+        }
+    }
+    // Jäsenluokat: array(id => array('nimi', 'summa'))
+    if (isset($out['jasenlajit'])) {
+        $l = array();
+        foreach ($out['jasenlajit'] as $id => $r) {
+            if (is_array($r) && isset($r['nimi']) && is_scalar($r['nimi']) && trim((string) $r['nimi']) !== '') {
+                $l[sanitize_key((string) $id)] = array('nimi' => sanitize_text_field((string) $r['nimi']), 'summa' => (float) (isset($r['summa']) && is_scalar($r['summa']) ? $r['summa'] : 0));
+            }
+        }
+        $out['jasenlajit'] = $l;
+    }
+    // Lisäkentät: array(id => array('nimi', 'tyyppi', 'lista'))
+    if (isset($out['lisakentat'])) {
+        $k = array();
+        foreach ($out['lisakentat'] as $id => $r) {
+            if (!is_array($r) || !isset($r['nimi']) || !is_scalar($r['nimi']) || trim((string) $r['nimi']) === '') continue;
+            $tyyppi = isset($r['tyyppi']) && is_string($r['tyyppi']) && isset(jasrek_lisa_tyypit()[$r['tyyppi']]) ? $r['tyyppi'] : 'teksti';
+            $k[sanitize_key((string) $id)] = array('nimi' => sanitize_text_field((string) $r['nimi']), 'tyyppi' => $tyyppi, 'lista' => (isset($r['lista']) && $r['lista'] === '1') ? '1' : '0');
+        }
+        $out['lisakentat'] = $k;
+    }
+    $out['poista_tiedot'] = $nyt['poista_tiedot'];
+    return $out;
+}
+
+/* Luettu, vahvistusta odottava varmuuskopio: tavallisena asetuksena (ei transientina), koska sivustoilla, joilla on
+   ulkoinen välimuisti (Redis, Memcached), transient voi kadota kokorajan takia. Vanhenee tunnissa. */
+function jasrek_backup_pending_key() {
+    return 'jasrek_backup_tulossa_' . get_current_user_id();
+}
+function jasrek_backup_pending_get() {
+    $p = get_option(jasrek_backup_pending_key(), null);
+    if (!is_array($p) || !isset($p['json'], $p['tiedosto'], $p['aika'])) return null;
+    if (time() - (int) $p['aika'] > HOUR_IN_SECONDS) {
+        delete_option(jasrek_backup_pending_key());
+        return null;
+    }
+    $p['json'] = jasrek_backup_unpack($p['json']);
+    return $p;
+}
+function jasrek_backup_pending_set($json, $tiedosto) {
+    delete_option(jasrek_backup_pending_key());
+    return add_option(jasrek_backup_pending_key(), array('json' => jasrek_backup_pack($json), 'tiedosto' => $tiedosto, 'aika' => time()), '', false);
+}
+
+/** Siivous kerran vuorokaudessa: vanhentuneet palautuksen esivaiheet ja yli 30 päivää vanha peruttava tilanne. */
+add_action('admin_init', 'jasrek_backup_cleanup');
+function jasrek_backup_cleanup() {
+    if (get_transient('jasrek_backup_cleanup')) return;
+    set_transient('jasrek_backup_cleanup', 1, DAY_IN_SECONDS);
+    global $wpdb;
+    $names = $wpdb->get_col($wpdb->prepare("SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s", $wpdb->esc_like('jasrek_backup_tulossa_') . '%'));
+    foreach ($names as $n) {
+        $p = get_option($n);
+        if (!is_array($p) || !isset($p['aika']) || time() - (int) $p['aika'] > DAY_IN_SECONDS) delete_option($n);
+    }
+    jasrek_backup_undo_get(); // poistaa vanhentuneen
+}
+
 /** Palautusta edeltänyt tilanne (perumista varten), tallennetaan erilliseen asetukseen. */
 function jasrek_backup_undo_get() {
     $u = get_option('jasrek_backup_edellinen', null);
     if (!is_array($u) || !isset($u['json'], $u['aika'])) return null;
+    if (strtotime($u['aika']) < strtotime(current_time('mysql') . ' -' . JASREK_BACKUP_UNDO_DAYS . ' days')) {
+        delete_option('jasrek_backup_edellinen'); // sisältää henkilötietoja: ei säilytetä tarpeettomasti
+        return null;
+    }
     $u['json'] = jasrek_backup_unpack($u['json']);
     return $u;
 }
+/** Päivä, jona tallessa oleva tilanne poistetaan automaattisesti. */
+function jasrek_backup_undo_expires($u) {
+    return gmdate('Y-m-d', strtotime($u['aika'] . ' +' . JASREK_BACKUP_UNDO_DAYS . ' days'));
+}
+/** Tallentaa nykyisen tilanteen. Palauttaa false, jos tallennus ei onnistunut (esim. tietokannan kokoraja). */
 function jasrek_backup_undo_save() {
-    update_option('jasrek_backup_edellinen', array(
+    delete_option('jasrek_backup_edellinen');
+    return add_option('jasrek_backup_edellinen', array(
         'aika' => current_time('mysql'),
         'json' => jasrek_backup_pack(jasrek_backup_json(jasrek_backup_build(true))),
-    ), false);
+    ), '', false);
 }
 
 function jasrek_backup_filename($prefix = 'varmuuskopio') {
@@ -246,7 +334,7 @@ function jasrek_backup_download($json, $filename) {
 add_action('admin_post_jasrek_backup_export', 'jasrek_handle_backup_export');
 function jasrek_handle_backup_export() {
     jasrek_check('jasrek_backup_export');
-    $loki = jasrek_post('loki') === '1';
+    $loki = jasrek_request_flag('loki'); // lomakkeelta (POST) tai käytöstä poiston kyselyn linkistä (GET)
     $c = jasrek_backup_current_counts();
     jasrek_log('vienti', 0, 'vienti', sprintf('Varmuuskopio ladattu (%d jäsentä, %d laskua%s)', $c['jasenet'], $c['laskut'], $loki ? ', muutosloki mukana' : ''));
     jasrek_backup_download(jasrek_backup_json(jasrek_backup_build($loki)), jasrek_backup_filename());
@@ -259,12 +347,14 @@ function jasrek_handle_backup_upload() {
     $f = jasrek_uploaded_file('tiedosto');
     if (!$f) jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_upload_failed'));
     $json = jasrek_backup_read_upload(file_get_contents($f['tmp_name']));
-    $v = $json === null ? array('ok' => false, 'virhe' => 'Pakattua tiedostoa ei voitu purkaa (tiedosto on vioittunut tai palvelimelta puuttuu zlib).') : jasrek_backup_validate($json);
+    $v = $json === null ? array('ok' => false, 'virhe' => 'Tiedostoa ei voitu lukea: se on vioittunut, purettuna yli ' . size_format(JASREK_BACKUP_MAX_BYTES) . ' tai palvelimelta puuttuu zlib.') : jasrek_backup_validate($json);
+    if ($v['ok'] && !jasrek_backup_pending_set($json, $f['name'])) {
+        $v = array('ok' => false, 'virhe' => 'Varmuuskopiota ei voitu tallentaa tietokantaan odottamaan vahvistusta (liian suuri tietokannan asetuksille). Kokeile varmuuskopiota ilman muutoslokia.');
+    }
     if (!$v['ok']) {
         set_transient('jasrek_backup_err_' . $uid, $v['virhe'], 10 * MINUTE_IN_SECONDS);
         jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
     }
-    set_transient('jasrek_backup_' . $uid, array('json' => jasrek_backup_pack($json), 'tiedosto' => $f['name']), HOUR_IN_SECONDS);
     jasrek_redirect('jasrek-asetukset', array('view' => 'palautus'));
 }
 
@@ -272,21 +362,24 @@ add_action('admin_post_jasrek_backup_restore', 'jasrek_handle_backup_restore');
 function jasrek_handle_backup_restore() {
     jasrek_check('jasrek_backup_restore');
     $uid = get_current_user_id();
-    $t = get_transient('jasrek_backup_' . $uid);
-    if (!is_array($t) || !isset($t['json'])) jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_expired'));
+    $t = jasrek_backup_pending_get();
+    if (!$t) jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_expired'));
     if (jasrek_post('vahvistus') !== '1') jasrek_redirect('jasrek-asetukset', array('view' => 'palautus', 'jasrek_msg' => 'backup_confirm'));
-    $v = jasrek_backup_validate(jasrek_backup_unpack($t['json']));
+    $v = jasrek_backup_validate($t['json']);
     if (!$v['ok']) {
         set_transient('jasrek_backup_err_' . $uid, $v['virhe'], 10 * MINUTE_IN_SECONDS);
         jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
     }
-    jasrek_backup_undo_save();
+    if (!jasrek_backup_undo_save()) {
+        set_transient('jasrek_backup_err_' . $uid, 'Nykyistä tilannetta ei voitu tallentaa perumista varten (liian suuri tietokannan asetuksille), joten palautusta ei tehty. Lataa ensin varmuuskopio nykyisistä tiedoista.', 10 * MINUTE_IN_SECONDS);
+        jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
+    }
     $r = jasrek_backup_restore($v['data']);
     if ($r !== true) {
         set_transient('jasrek_backup_err_' . $uid, $r, 10 * MINUTE_IN_SECONDS);
         jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
     }
-    delete_transient('jasrek_backup_' . $uid);
+    delete_option(jasrek_backup_pending_key());
     $sum = jasrek_backup_summary($v['data']);
     jasrek_log('vienti', 0, 'palautus', sprintf('Varmuuskopio palautettu: %s (tehty %s%s), %d jäsentä, %d laskua',
         $t['tiedosto'], $sum['created'] ? jasrek_date(substr($sum['created'], 0, 10)) : '?', $sum['site'] ? ', ' . $sum['site'] : '', $sum['jasenet'], $sum['laskut']));
@@ -313,7 +406,10 @@ function jasrek_handle_backup_undo() {
             set_transient('jasrek_backup_err_' . get_current_user_id(), $v['virhe'], 10 * MINUTE_IN_SECONDS);
             jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
         }
-        jasrek_backup_undo_save(); // perumisen voi vielä perua
+        if (!jasrek_backup_undo_save()) { // perumisen voi vielä perua
+            set_transient('jasrek_backup_err_' . get_current_user_id(), 'Nykyistä tilannetta ei voitu tallentaa, joten perumista ei tehty. Lataa tallessa oleva tilanne tiedostona ja palauta se tavalliseen tapaan.', 10 * MINUTE_IN_SECONDS);
+            jasrek_redirect('jasrek-asetukset', array('jasrek_msg' => 'backup_invalid'));
+        }
         $r = jasrek_backup_restore($v['data']);
         if ($r !== true) {
             set_transient('jasrek_backup_err_' . get_current_user_id(), $r, 10 * MINUTE_IN_SECONDS);
@@ -375,7 +471,8 @@ function jasrek_backup_panel() {
                 <button type="submit" name="op" value="lataa" class="button">⬇ Lataa tiedostona</button>
                 <button type="submit" name="op" value="poista" class="button jasrek-btn-danger" data-confirm="Poistetaanko tallessa oleva tilanne? Sen jälkeen palautusta ei voi perua.">Poista</button>
             </p>
-            <p class="description">Tallennettu tilanne sisältää henkilötietoja. Poista se, kun palautus on todettu onnistuneeksi.</p>
+            <p class="description">Tallennettu tilanne sisältää henkilötietoja. Poista se, kun palautus on todettu onnistuneeksi.
+                Muuten se poistetaan automaattisesti <?php echo esc_html(jasrek_date(jasrek_backup_undo_expires($u))); ?>.</p>
         </form>
         <?php endif; ?>
     </div>
@@ -384,11 +481,11 @@ function jasrek_backup_panel() {
 
 /** Palautuksen vahvistussivu (Asetukset → view=palautus). */
 function jasrek_backup_confirm_page() {
-    $t = get_transient('jasrek_backup_' . get_current_user_id());
+    $t = jasrek_backup_pending_get();
     $back = admin_url('admin.php?page=jasrek-asetukset#jasrek-varmuuskopio');
     echo '<div class="wrap jasrek-wrap"><h1>Palauta varmuuskopio</h1>';
     jasrek_notice();
-    $v = is_array($t) && isset($t['json']) ? jasrek_backup_validate(jasrek_backup_unpack($t['json'])) : array('ok' => false);
+    $v = $t ? jasrek_backup_validate($t['json']) : array('ok' => false);
     if (!$v['ok']) {
         echo '<div class="notice notice-warning"><p>' . esc_html('Varmuuskopiota ei löytynyt tai se on vanhentunut. Lue tiedosto uudelleen.') . '</p></div>';
         echo '<p><a class="button" href="' . esc_url($back) . '">← Takaisin asetuksiin</a></p></div>';
@@ -413,7 +510,8 @@ function jasrek_backup_confirm_page() {
                 </tbody>
             </table>
             <div class="notice notice-warning inline jasrek-keep"><p><strong>Palautus korvaa kaikki nykyiset jäsenet, laskut, maksut ja asetukset<?php echo $s['loki'] === null ? '' : ' sekä muutoslokin'; ?>.</strong>
-                Nykyinen tilanne tallennetaan ensin, joten palautuksen voi perua asetussivulla.</p></div>
+                Nykyinen tilanne tallennetaan ensin, joten palautuksen voi perua asetussivulla.
+                <?php if (jasrek_backup_undo_get()): ?><br>Huom: tallessa on jo aiemman palautuksen edeltänyt tilanne. Se korvautuu nykyisellä tilanteella.<?php endif; ?></p></div>
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="jasrek_backup_restore">
                 <?php wp_nonce_field('jasrek_backup_restore'); ?>

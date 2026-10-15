@@ -4,7 +4,7 @@ Plugin Name: OH6KW Jäsenrekisteri
 Plugin URI: https://github.com/oh6kw/WP-Jasenrekisteri
 Description: Yhdistyksen jäsenrekisteri: jäsenet, jäsenluokat ja omat lisäkentät, jäsenmaksulaskut omilla viitenumeroilla sähköpostilla tai paperilla, QR-koodi ja pankkiviivakoodi, maksujen tuonti pankista, muistutukset, tiedotteet, vuosiraportti ja muutosloki.
 Version: 4.7.0
-Author: Jarno Jaskari OH6KW, Claude (Anthropic)
+Author: Jarno Jaskari (oh6kw)
 Author URI: https://github.com/oh6kw
 License: AGPL-3.0-or-later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html

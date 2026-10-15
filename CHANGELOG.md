@@ -1,5 +1,7 @@
 # Muutosloki – Jäsenrekisteri
 
+Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
+
 ## 4.7.0 (kehitysversio)
 
 ### Uutta: varmuuskopio ja siirto
@@ -23,10 +25,22 @@
 - **Palautuksen voi perua:** nykyinen tilanne tallennetaan automaattisesti ennen palautusta. Asetuksissa näkyy silloin laatikko, jossa on valinnat *Peru palautus*, *Lataa tiedostona* ja *Poista*. Myös perumisen voi perua. Tallennettu tilanne sisältää henkilötietoja, joten sivu kehottaa poistamaan sen, kun palautus on todettu onnistuneeksi.
 - Palautus ja perumiset kirjataan muutoslokiin (uusi toiminto *Varmuuskopio palautettu*).
 - Toimii myös ilman PHP:n mbstring-laajennusta. Ilman zlibiä tiedosto ladataan pakkaamattomana JSONina.
+- **Turvallisuus ja varmuus:**
+  - **Palautus pysäyttää keskeneräiset toiminnot:** maksujen tuonnin esikatselu, jäsenten CSV-tuonnin esikatselu sekä kesken oleva laskujen tai tiedotteen lähetys. Ne viittaavat vanhoihin rivitunnisteisiin, ja ilman tätä esimerkiksi maksu olisi voinut kirjautua väärälle laskuriville. Tiedoilla on versio, joka vaihtuu palautuksessa. Esikatselu pyytää aloittamaan tuonnin uudelleen, ja lähetys pysähtyy selkeään ilmoitukseen ("päivitä sivu ja tarkista tilanne").
+  - **Perumismahdollisuus varmistetaan ennen palautusta.** Jos nykyistä tilannetta ei voida tallentaa (esim. tietokannan kokoraja), palautusta ei tehdä, ja käyttäjää neuvotaan lataamaan ensin varmuuskopio.
+  - **Luettu varmuuskopio odottaa vahvistusta tavallisena tietokanta-asetuksena eikä transientina.** Sivustoilla, joilla on ulkoinen välimuisti (Redis, Memcached), transient olisi voinut kadota kokorajan takia. Odottava tiedosto vanhenee tunnissa, ja vanhat siivotaan vuorokauden välein.
+  - **Asetukset tarkistetaan palautuksessa:** vain tunnetut asetukset ja oikeat tyypit hyväksytään, ja virheellinen arvo korvataan nykyisellä. Jäsenluokat ja lisäkentät siistitään (tuntematon kenttätyyppi → teksti, virheelliset rivit pois).
+  - **Palautusta edeltänyt tilanne poistetaan automaattisesti 30 päivän kuluttua,** koska se sisältää henkilötietoja. Poistopäivä näkyy asetuksissa.
+  - **Vahvistussivu kertoo,** jos aiemman palautuksen peruttava tilanne korvautuu uudella (tallessa on aina vain yksi).
+  - **Purettu varmuuskopio saa olla enintään 50 Mt,** jottei rikkinäinen tai valtava tiedosto kaada sivua muistin loppumiseen. Rikkinäinen pakattu tiedosto ei enää kirjoita PHP-varoitusta lokiin.
+  - Jos tietokantataulut ovat vanhaa MyISAM-tyyppiä, transaktio ei ole käytössä. Keskeytynyt palautus korjataan silloin perumalla.
 
 ### Muut muutokset
-- *Lisäosan poistaminen* -kohta ohjaa nyt ottamaan varmuuskopion.
-- Lisäosan poisto (kun tietojen poisto on valittu) poistaa myös tallessa olevan palautusta edeltäneen tilanteen.
+- **Käytöstä poiston kysely** suosittelee nyt koko varmuuskopiota: linkki *Lataa ensin varmuuskopio* lataa kaikki tiedot muutoslokeineen. Jäsenluettelon CSV on toissijaisena vaihtoehtona Exceliä varten.
+- *Lisäosan poistaminen* -kohta asetuksissa ohjaa ottamaan varmuuskopion.
+- Lisäosan poisto (kun tietojen poisto on valittu) poistaa myös tallessa olevan palautusta edeltäneen tilanteen ja vahvistusta odottavat varmuuskopiot.
+- **Tekijä:** lisäosan otsakkeessa on nyt *Jarno Jaskari (oh6kw)*. Clauden (Anthropic) osuus kerrotaan README:ssä, readme.txt:ssä, CHANGELOGissa ja Tietoja-sivulla.
+- **Palautelomakkeen** ruksi *Liitä mukaan versiotiedot (… sivuston osoite)* on nyt oletuksena pois päältä. Tietoja lähtee vain, jos käyttäjä itse valitsee.
 
 ## 4.6.5 (2026-10-15)
 

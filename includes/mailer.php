@@ -74,7 +74,7 @@ add_action('wp_ajax_jasrek_mass_mail_chunk', 'jasrek_ajax_mass_mail_chunk');
 function jasrek_ajax_mass_mail_chunk() {
     if (!current_user_can('manage_options')) wp_send_json_error('Ei oikeuksia', 403);
     $key = sanitize_key(jasrek_post('key'));
-    check_ajax_referer('jasrek_mass_mail_' . $key, 'nonce');
+    check_ajax_referer('jasrek_mass_mail_' . $key . '_' . jasrek_data_gen(), 'nonce'); // vanhenee, jos tiedot palautetaan
 
     $run = get_transient('jasrek_mail_run_' . $key);
     if (!$run) wp_send_json_error('Lähetystä ei löytynyt tai se on vanhentunut.');
@@ -124,7 +124,7 @@ function jasrek_page_mail() {
                 <p><?php echo count($run['ids']); ?> vastaanottajaa<?php echo !empty($run['offset']) ? ', joista ' . (int) $run['offset'] . ' jo käsitelty' : ''; ?>. Pidä tämä sivu auki, kunnes lähetys on valmis.</p>
                 <button type="button" class="button button-primary jasrek-run" data-autostart="1"
                     data-action="jasrek_mass_mail_chunk"
-                    data-params="<?php echo esc_attr(wp_json_encode(array('key' => $key, 'offset' => 0, 'nonce' => wp_create_nonce('jasrek_mass_mail_' . $key)))); ?>"
+                    data-params="<?php echo esc_attr(wp_json_encode(array('key' => $key, 'offset' => 0, 'nonce' => wp_create_nonce('jasrek_mass_mail_' . $key . '_' . jasrek_data_gen())))); ?>"
                     data-done-url="<?php echo esc_url(admin_url('admin.php?page=jasrek-sahkoposti')); ?>">Jatka lähetystä</button>
                 <div class="jasrek-progress" hidden><div class="jasrek-progress-bar"><span></span></div><p class="jasrek-progress-text"></p></div>
             </div>

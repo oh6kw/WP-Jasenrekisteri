@@ -173,7 +173,9 @@
                     finish('Valmis! Lähetetty ' + tot.sent + ' viestiä' + (tot.failed ? ', epäonnistui ' + tot.failed + '.' : '.'));
                 }
             }).fail(function (xhr) {
-                finish('Yhteysvirhe (' + xhr.status + '). Voit jatkaa lähetystä päivittämällä sivun – jo lähetettyjä ei lähetetä uudelleen.', true);
+                finish(xhr.status === 403
+                    ? 'Lähetys pysäytettiin: kirjautuminen on vanhentunut tai tiedot on sillä välin palautettu varmuuskopiosta. Päivitä sivu ja tarkista tilanne ennen jatkamista – jo lähetettyjä ei lähetetä uudelleen.'
+                    : 'Yhteysvirhe (' + xhr.status + '). Voit jatkaa lähetystä päivittämällä sivun – jo lähetettyjä ei lähetetä uudelleen.', true);
             });
         }
         $txt.text('Aloitetaan…');

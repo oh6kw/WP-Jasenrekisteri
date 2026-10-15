@@ -126,6 +126,7 @@ function jasrek_handle_members_upload() {
     $t = jasrek_parse_csv_table(file_get_contents($f['tmp_name']));
     if (!$t) jasrek_redirect('jasenrekisteri', array('view' => 'tuonti', 'jasrek_msg' => 'csv_empty'));
     $t['tiedosto'] = $f['name'];
+    $t['gen'] = jasrek_data_gen();
     set_transient('jasrek_memimp_' . get_current_user_id(), $t, HOUR_IN_SECONDS);
     jasrek_redirect('jasenrekisteri', array('view' => 'tuonti', 'vaihe' => 2));
 }
@@ -137,6 +138,10 @@ function jasrek_handle_members_import() {
     $key = 'jasrek_memimp_' . get_current_user_id();
     $t = get_transient($key);
     if (!$t) jasrek_redirect('jasenrekisteri', array('view' => 'tuonti', 'jasrek_msg' => 'csv_empty'));
+    if (!isset($t['gen']) || $t['gen'] !== jasrek_data_gen()) {
+        delete_transient($key);
+        jasrek_redirect('jasenrekisteri', array('view' => 'tuonti', 'jasrek_msg' => 'data_restored'));
+    }
 
     $fields  = jasrek_import_fields();
     $map     = array();

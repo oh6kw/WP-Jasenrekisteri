@@ -81,7 +81,8 @@ add_action('admin_enqueue_scripts', function ($hook) {
         'plugin'  => plugin_basename(JASREK_FILE),
         'nonce'   => wp_create_nonce('jasrek_set_uninstall'),
         'current' => jasrek_settings()['poista_tiedot'],
-        'export'  => wp_nonce_url(admin_url('admin-post.php?action=jasrek_export_members'), 'jasrek_export_members'),
+        'backup'  => wp_nonce_url(admin_url('admin-post.php?action=jasrek_backup_export&loki=1'), 'jasrek_backup_export'),
+        'csv'     => wp_nonce_url(admin_url('admin-post.php?action=jasrek_export_members'), 'jasrek_export_members'),
     ));
     wp_enqueue_style('jasrek-deactivate', JASREK_URL . 'assets/deactivate.css', array(), JASREK_VERSION);
 });

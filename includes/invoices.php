@@ -468,7 +468,7 @@ add_action('wp_ajax_jasrek_send_chunk', 'jasrek_ajax_send_chunk');
 function jasrek_ajax_send_chunk() {
     if (!current_user_can('manage_options')) wp_send_json_error('Ei oikeuksia', 403);
     $lasku_id = jasrek_request_int('lasku_id');
-    check_ajax_referer('jasrek_send_chunk_' . $lasku_id, 'nonce');
+    check_ajax_referer('jasrek_send_chunk_' . $lasku_id . '_' . jasrek_data_gen(), 'nonce'); // vanhenee, jos tiedot palautetaan
 
     global $wpdb;
     $lasku = jasrek_get_lasku($lasku_id);
@@ -746,7 +746,7 @@ function jasrek_invoice_detail($id) {
 
     $post_url   = admin_url('admin-post.php');
     $run_start  = current_time('mysql');
-    $send_nonce = wp_create_nonce('jasrek_send_chunk_' . $id);
+    $send_nonce = wp_create_nonce('jasrek_send_chunk_' . $id . '_' . jasrek_data_gen());
     $is_overdue = $lasku->erapaiva < $today; // laskun yleinen eräpäivä
     ?>
     <h1 class="wp-heading-inline"><?php echo esc_html($lasku->nimi); ?></h1>

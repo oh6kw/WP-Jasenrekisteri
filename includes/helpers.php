@@ -313,6 +313,15 @@ function jasrek_check($nonce_action) {
     check_admin_referer($nonce_action);
 }
 
+/**
+ * Tietojen versio: vaihtuu, kun tiedot palautetaan varmuuskopiosta. Keskeneräiset toiminnot
+ * (maksujen ja jäsenten tuonnin esikatselu, laskujen ja tiedotteiden lähetys) sidotaan tähän,
+ * jotta ne eivät jatku palautuksen jälkeen vanhoilla rivitunnisteilla.
+ */
+function jasrek_data_gen() {
+    return (string) get_option('jasrek_data_gen', '0');
+}
+
 function jasrek_redirect($page, $args = array()) {
     $args = array_filter($args, function ($v) { return $v !== null && $v !== ''; });
     wp_safe_redirect(add_query_arg($args, admin_url('admin.php?page=' . $page)));
@@ -428,6 +437,7 @@ function jasrek_notice() {
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),
         'backup_invalid'  => array('error',   'Varmuuskopiota ei voitu käyttää: ' . (string) get_transient('jasrek_backup_err_' . get_current_user_id())),
         'backup_upload_failed' => array('error', 'Tiedoston lataus epäonnistui. Tarkista, että valitsit tiedoston ja että se on enintään ' . size_format(wp_max_upload_size()) . '. Suuren rekisterin varmuuskopiosta voi jättää muutoslokin pois.'),
+        'data_restored'   => array('warning', 'Tiedot on palautettu varmuuskopiosta tämän toiminnon aloittamisen jälkeen. Aloita se uudelleen.'),
         'backup_expired'  => array('warning', 'Varmuuskopio on vanhentunut tai sitä ei löytynyt. Lue tiedosto uudelleen.'),
         'backup_confirm'  => array('warning', 'Vahvista ensin, että nykyiset tiedot korvataan.'),
         'backup_restored' => array('success', sprintf('Varmuuskopio palautettu: %d jäsentä. Palautusta edeltänyt tilanne on tallessa, ja palautuksen voi perua alla.', $n)),
