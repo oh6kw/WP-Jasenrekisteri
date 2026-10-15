@@ -230,3 +230,9 @@
 /* 4.6.5 */
 a.jasrek-card-link { text-decoration: none; color: inherit; }
 a.jasrek-card-link:hover { border-color: #2271b1; }
+
+/* 4.7.0: varmuuskopio */
+.jasrek-backup-undo { margin-top: 16px; padding: 4px 16px; border-left: 4px solid var(--jasrek-warn); background: var(--jasrek-warn-bg); border-radius: 4px; }
+.jasrek-backup-compare { max-width: 760px; margin-bottom: 16px; }
+.jasrek-backup-compare tbody th { font-weight: 600; width: 160px; }
+#jasrek-varmuuskopio h3 { margin: 12px 0 4px; }

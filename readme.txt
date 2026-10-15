@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.6.5
+Stable tag: 4.7.0
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -44,6 +44,10 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 * Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
 * Annual report for the general meeting: member counts per class at the start and end of the year, joined and resigned members, invoiced, paid and open fees, and fees received during the year. Printable and exportable to Excel.
 * Audit log: who changed what and when, including old and new values of member data, payments, sending, settings and exports. The retention period is configurable.
+
+**Backup and moving**
+
+* Full backup in one file (JSON, compressed): members, invoices, payments, settings and optionally the audit log. Restore it on the same or another site, for example when the register moves to a new website. A summary is shown before restoring, the file is checked before anything is changed, and the previous state is kept so a restore can be undone.
 
 **Newsletters**
 
@@ -95,8 +99,12 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 7. Annual report for the general meeting.
 8. Audit log: who changed what and when.
 9. Voting register for the general meeting.
+10. Backup and restore in the settings.
 
 == Changelog ==
+
+= 4.7.0 =
+* New: full backup and restore (Settings → Backup and moving), for example for moving the register to another site. The previous state is kept so a restore can be undone.
 
 = 4.6.5 =
 * Renamed to OH6KW Jäsenrekisteri (slug oh6kw-jasenrekisteri).
@@ -125,6 +133,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 The full Finnish changelog is in CHANGELOG.md.
 
 == Upgrade Notice ==
+
+= 4.7.0 =
+Adds full backup and restore in the settings. No action needed when updating.
 
 = 4.6.5 =
 Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.

@@ -426,6 +426,13 @@ function jasrek_notice() {
         'postage_updated' => array('success', sprintf('Postimaksu päivitetty %d laskuun.', $n)),
         'paper_marked'    => array('success', sprintf('%d paperilaskua merkitty postitetuksi.', $n)),
         'paper_reminded'  => array('success', sprintf('%d paperimuistutusta merkitty postitetuksi.', $n)),
+        'backup_invalid'  => array('error',   'Varmuuskopiota ei voitu käyttää: ' . (string) get_transient('jasrek_backup_err_' . get_current_user_id())),
+        'backup_upload_failed' => array('error', 'Tiedoston lataus epäonnistui. Tarkista, että valitsit tiedoston ja että se on enintään ' . size_format(wp_max_upload_size()) . '. Suuren rekisterin varmuuskopiosta voi jättää muutoslokin pois.'),
+        'backup_expired'  => array('warning', 'Varmuuskopio on vanhentunut tai sitä ei löytynyt. Lue tiedosto uudelleen.'),
+        'backup_confirm'  => array('warning', 'Vahvista ensin, että nykyiset tiedot korvataan.'),
+        'backup_restored' => array('success', sprintf('Varmuuskopio palautettu: %d jäsentä. Palautusta edeltänyt tilanne on tallessa, ja palautuksen voi perua alla.', $n)),
+        'backup_undone'   => array('success', 'Palautus peruttu: palautusta edeltänyt tilanne on palautettu.'),
+        'backup_undo_deleted' => array('success', 'Tallessa ollut palautusta edeltänyt tilanne poistettu.'),
         'rows_failed'     => array('warning', sprintf('Lasku luotiin, mutta %d jäsenelle laskua ei voitu muodostaa (viitenumero oli jo käytössä). Ota yhteyttä ylläpitoon.', $n)),
     );
     $key = sanitize_key(jasrek_get('jasrek_msg'));

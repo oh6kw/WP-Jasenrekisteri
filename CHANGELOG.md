@@ -1,5 +1,33 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.7.0 (kehitysversio)
+
+### Uutta: varmuuskopio ja siirto
+- **Asetukset → Varmuuskopio ja siirto:** koko jäsenrekisteri yhteen tiedostoon ja takaisin. Käyttötarkoituksia:
+  - rekisterin siirto toiselle sivustolle (esim. kun yhdistys vaihtaa sivustoa tai rekisteri siirtyy uudelle rahastonhoitajalle)
+  - turvakopio esimerkiksi ennen laskutusta tai massamuutoksia
+  - Koko sivuston siirrossa (siirtolisäosalla tai webhotellin työkalulla) rekisteri siirtyy jo muun tietokannan mukana.
+- **Lataa varmuuskopio:**
+  - Tiedostossa ovat jäsenet (myös eronneet), laskut, laskurivit maksutietoineen ja asetukset (jäsenluokat, lisäkentät, saatetekstit ym.). Muutoslokin voi ottaa mukaan tai jättää pois.
+  - Muoto on JSON. Tiedosto ladataan pakattuna (`.json.gz`, noin kymmenesosa koosta), jotta suurikin rekisteri mahtuu sivustojen tavalliseen 2 Mt:n latausrajaan. Sen voi purkaa tavalliseksi JSONiksi esim. 7-Zipillä.
+  - Rivit tallennetaan tunnisteineen, joten laskurivit pysyvät oikeiden jäsenten kohdalla ja viitenumerot ja maksut toimivat palautuksen jälkeen.
+  - Lataus kirjataan muutoslokiin, ja sivulla muistutetaan, että tiedosto sisältää henkilötietoja.
+- **Palauta varmuuskopiosta:**
+  - Kelpaa `.json` tai `.json.gz`.
+  - Tiedosto tarkistetaan kokonaan ennen kuin mitään muutetaan: muoto, versio, pakolliset taulut, tunnisteet (ei puuttuvia eikä kahdentuneita) ja arvojen tyypit. Virheellinen tiedosto hylätään selkeällä virheilmoituksella.
+  - Uudemmalla lisäosan versiolla tehty varmuuskopio hylätään, ja ohjeeksi annetaan lisäosan päivitys ensin. Vanhemman version varmuuskopio päivitetään palautuksessa nykyiseen muotoon.
+  - Ennen palautusta näytetään yhteenveto: yhdistys, sivusto, tekoaika ja versio sekä jäsenten, laskujen, laskurivien ja lokimerkintöjen määrät rinnakkain nykyisten kanssa. Palautus pitää vahvistaa erikseen.
+  - Palautus korvaa kaikki jäsenet, laskut, laskurivit ja asetukset. Muutosloki korvataan vain, jos se on varmuuskopiossa, muuten nykyinen loki säilyy. Tämän sivuston valinta *Poista tiedot lisäosan poistossa* säilyy aina.
+  - Tunnistamattomat sarakkeet (esim. uudemmasta versiosta) ohitetaan, eikä tiedoston sisältö pääse SQL-kyselyihin sarakkeiden niminä.
+  - Palautus tehdään tietokantatransaktiona, kun tietokanta tukee sitä.
+- **Palautuksen voi perua:** nykyinen tilanne tallennetaan automaattisesti ennen palautusta. Asetuksissa näkyy silloin laatikko, jossa on valinnat *Peru palautus*, *Lataa tiedostona* ja *Poista*. Myös perumisen voi perua. Tallennettu tilanne sisältää henkilötietoja, joten sivu kehottaa poistamaan sen, kun palautus on todettu onnistuneeksi.
+- Palautus ja perumiset kirjataan muutoslokiin (uusi toiminto *Varmuuskopio palautettu*).
+- Toimii myös ilman PHP:n mbstring-laajennusta. Ilman zlibiä tiedosto ladataan pakkaamattomana JSONina.
+
+### Muut muutokset
+- *Lisäosan poistaminen* -kohta ohjaa nyt ottamaan varmuuskopion.
+- Lisäosan poisto (kun tietojen poisto on valittu) poistaa myös tallessa olevan palautusta edeltäneen tilanteen.
+
 ## 4.6.5 (2026-10-15)
 
 ### Uutta: äänioikeusluettelo vuosikokoukseen

@@ -107,6 +107,10 @@ function jasrek_log_settings_change($a, $b) {
 
 function jasrek_page_settings() {
     global $wpdb;
+    if (jasrek_get('view') === 'palautus') {
+        jasrek_backup_confirm_page();
+        return;
+    }
     $s = jasrek_settings();
     $site_host = wp_parse_url(home_url(), PHP_URL_HOST);
     $from_host = $s['lahettaja_email'] ? substr(strrchr($s['lahettaja_email'], '@'), 1) : '';
@@ -306,11 +310,12 @@ function jasrek_page_settings() {
                 <p>Kun lisäosa poistetaan WordPressistä (Lisäosat → Poista käytöstä → Poista):</p>
                 <label class="jasrek-radio"><input type="radio" name="poista_tiedot" value="0" <?php checked($s['poista_tiedot'], '0'); ?>> <strong>Säilytä tiedot</strong> – jäsenet, laskut, maksut ja asetukset jäävät tietokantaan, ja lisäosan voi asentaa myöhemmin uudelleen.</label>
                 <label class="jasrek-radio"><input type="radio" name="poista_tiedot" value="1" <?php checked($s['poista_tiedot'], '1'); ?> data-confirm="Haluatko varmasti, että kaikki jäsenrekisterin tiedot poistetaan pysyvästi, kun lisäosa poistetaan? Tätä ei voi perua."> <strong>Poista kaikki tiedot</strong> – kaikki lisäosan luomat taulut ja asetukset poistetaan pysyvästi.</label>
-                <p class="description">Ota ennen poistamista varmuuskopio: <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_export_members'), 'jasrek_export_members')); ?>">vie jäsenet CSV-tiedostoon</a> ja laskujen CSV:t laskujen sivuilta. Valinta kysytään myös, kun lisäosa poistetaan käytöstä.</p>
+                <p class="description">Ota ennen poistamista <a href="#jasrek-varmuuskopio">varmuuskopio</a> (alla), jolla kaikki tiedot voi palauttaa myöhemmin. Valinta kysytään myös, kun lisäosa poistetaan käytöstä.</p>
             </div>
 
             <p><button type="submit" class="button button-primary button-large">Tallenna asetukset</button></p>
         </form>
+        <?php jasrek_backup_panel(); ?>
     </div>
     <?php
 }

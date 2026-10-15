@@ -20,7 +20,7 @@ function jasrek_uninstall_site() {
     foreach (array('jasenrekisteri_laskurivit', 'jasenrekisteri_laskut', 'jasenrekisteri_loki', 'jasenrekisteri') as $t) {
         $wpdb->query('DROP TABLE IF EXISTS `' . esc_sql($wpdb->prefix . $t) . '`'); // phpcs:ignore WordPress.DB.DirectDatabaseQuery.SchemaChange, WordPress.DB.PreparedSQL.NotPrepared -- removing the plugin's own tables on uninstall, only when the admin has chosen to delete the data.
     }
-    foreach (array('jasrek_settings', 'jasrek_db_version', 'jr_settings', 'jr_db_version') as $o) delete_option($o);
+    foreach (array('jasrek_settings', 'jasrek_db_version', 'jasrek_backup_edellinen', 'jr_settings', 'jr_db_version') as $o) delete_option($o);
     // Väliaikaiset tiedot (keskeneräiset tuonnit ja lähetykset)
     foreach (array('jasrek_', 'jr_') as $prefix) {
         $wpdb->query($wpdb->prepare(

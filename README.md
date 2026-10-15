@@ -26,6 +26,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - **Merkkipäivät:** tasavuosia täyttävät (jäsenen vapaaehtoinen *syntymävuosi tai -päivä*; pelkkä vuosi riittää) ja jäsenyysvuodet (liittymispäivästä) asetuksissa valituilla vuosilla, esim. 50, 60, 70, 80 ja 90 vuotta tai 10, 25 ja 50 vuotta jäsenenä. Lähestyvät merkkipäivät näkyvät jäsenlistassa. Ominaisuuden voi kytkeä pois asetuksista.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
 - Varoitus mahdollisesta tuplakirjauksesta.
+- **Varmuuskopio ja siirto:** koko rekisteri (jäsenet, laskut, maksut, asetukset ja halutessa muutosloki) yhteen pakattuun tiedostoon. Palautus samalle tai toiselle sivustolle, esim. kun rekisteri siirtyy uudelle sivustolle tai rahastonhoitajalle. Ennen palautusta näytetään yhteenveto, ja palautuksen voi perua.
 - **Kesken kauden liittyvä jäsen** lisätään jäsenlomakkeesta suoraan jo lähetetylle laskulle. Hän saa oman viitteen ja eräpäivän, ja laskun voi lähettää heti.
 
 **Laskutus**
@@ -66,6 +67,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Vuosiraportti](docs/kuvat/15-vuosiraportti.png) **Vuosiraportti:** jäsenmäärät luokittain ja jäsenmaksut. | ![Muutosloki](docs/kuvat/16-muutosloki.png) **Muutosloki:** kuka muutti mitä ja milloin. |
 | ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** ja **merkkipäivien** valinnat asetuksissa. | ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. |
 | ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
+| ![Varmuuskopio](docs/kuvat/20-varmuuskopio.png) **Varmuuskopio ja siirto** asetuksissa. | ![Palautus](docs/kuvat/21-palautus.png) **Palautus:** yhteenveto ja vahvistus ennen kuin mitään muutetaan. |
 | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
 
 ## Asennus
@@ -168,6 +170,7 @@ includes/
   print.php                 Tulostettavat paperilaskut ja postitusmerkinnät
   report.php                Vuosiraportti (näyttö ja Excel)
   voters.php                Äänioikeusluettelo
+  backup.php                Varmuuskopio ja palautus (JSON)
   log.php                   Muutosloki
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)

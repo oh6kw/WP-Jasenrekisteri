@@ -112,6 +112,7 @@ function jasrek_log_toiminnot() {
         'tiedote'          => 'Tiedote lähetetty',
         'vienti'           => 'Tiedot viety',
         'tuonti'           => 'Tiedot tuotu',
+        'palautus'         => 'Varmuuskopio palautettu',
     );
 }
 
