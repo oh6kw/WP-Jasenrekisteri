@@ -588,12 +588,12 @@ function jasrek_invoice_list() {
 function jasrek_invoice_new_form() {
     global $wpdb;
     $s = jasrek_settings();
-    $members = $wpdb->get_results("SELECT * FROM {$wpdb->jasrek_jasenet} ORDER BY tila ASC, sukunimi, etunimi");
+    $members = $wpdb->get_results("SELECT * FROM {$wpdb->jasrek_jasenet} WHERE tila IN ('aktiivinen', 'eronnut') ORDER BY tila ASC, sukunimi, etunimi");
     $n_akt = 0; $n_noemail = 0; $n_mv = 0; $n_pap = 0;
     $lajit = jasrek_jasenlajit();
     $laji_n = array();
     foreach ($members as $m) {
-        if ($m->tila === 'eronnut') continue;
+        if ($m->tila !== 'aktiivinen') continue;
         $k = isset($lajit[$m->jasenlaji]) ? $m->jasenlaji : '';
         $laji_n[$k] = isset($laji_n[$k]) ? $laji_n[$k] + 1 : 1;
         if (jasrek_is_maksuvapaa($m)) { $n_mv++; continue; }

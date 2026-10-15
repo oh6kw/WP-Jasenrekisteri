@@ -44,7 +44,7 @@ class JASREK_Xlsx {
         if ($name === '') $name = 'Taulukko';
         $name = function_exists('mb_substr') ? mb_substr($name, 0, 31) : substr($name, 0, 31);
         $base = $name; $i = 2;
-        $lower = function_exists('mb_strtolower') ? 'mb_strtolower' : 'strtolower';
+        $lower = 'jasrek_lower';
         $taken = array_map(function ($s) use ($lower) { return $lower($s['name']); }, $this->sheets);
         while (in_array($lower($name), $taken, true)) {
             $suffix = ' (' . $i++ . ')';

@@ -98,101 +98,21 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
 <!DOCTYPE html>
 <html lang="fi"><head><meta charset="UTF-8"><title><?php echo esc_html($title); ?></title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-@page { size: A4; margin: 0; }
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; }
-body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1f2933; font-size: 10.5pt; line-height: 1.45; }
-.jasrek-tools { position: sticky; top: 0; z-index: 5; background: #1d3557; color: #fff; padding: 10px 20px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; font-size: 14px; }
-.jasrek-tools a { color: #fff; }
-.jasrek-tools button { font-size: 14px; padding: 6px 14px; border-radius: 4px; border: 0; cursor: pointer; background: #fff; color: #1d3557; font-weight: bold; }
-.jasrek-tools button.jasrek-sec { background: transparent; color: #fff; border: 1px solid #fff; font-weight: normal; }
-.jasrek-tools form { display: inline; margin: 0; }
-.jasrek-tools .jasrek-warn { background: #fff4d6; color: #6b4b00; padding: 4px 10px; border-radius: 4px; flex-basis: 100%; }
-.jasrek-tools .jasrek-info { opacity: .85; font-size: 13px; flex-basis: 100%; }
-.sivu { width: 210mm; height: 297mm; margin: 10mm auto; background: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.2); position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 0 15mm 12mm 20mm; }
-/* Sivunvaihto vain laskujen väliin – ei koskaan viimeisen perään */
-.sivu + .sivu { page-break-before: always; break-before: page; }
-.taitto { position: absolute; left: 4mm; width: 4mm; border-top: 0.3pt solid #999; }
-.ylaosa { position: relative; height: 62mm; flex: none; }
-/* Ikkunakuoren ikkuna: vasemmalla 20 mm, ylhäältä 15 mm, koko 90 × 45 mm (C5 ja DL). Osoite sijoitetaan ikkunan keskelle. */
-.ikkuna { position: absolute; left: 0; top: 19mm; width: 85mm; height: 37mm; }
-.palautus { font-size: 7.5pt; color: #555; border-bottom: 0.4pt solid #999; padding-bottom: 1mm; margin-bottom: 3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vastaanottaja { font-size: 11pt; line-height: 1.35; }
-.vastaanottaja .puuttuu { color: #b42318; font-size: 9pt; }
-.lahettaja { position: absolute; left: 0; top: 8mm; font-weight: bold; font-size: 12pt; color: #1d3557; }
-.tiedot { position: absolute; right: 0; top: 10mm; width: 72mm; }
-.tiedot .laji { font-size: 15pt; font-weight: bold; letter-spacing: .06em; color: #1d3557; margin-bottom: 1.5mm; line-height: 1.2; }
-.tiedot table { width: 100%; border-collapse: collapse; font-size: 9pt; line-height: 1.25; }
-.tiedot td { padding: 0.35mm 0; vertical-align: top; }
-.tiedot td:last-child { text-align: right; white-space: nowrap; }
-.tiedot tr.yht td { border-top: 0.4pt solid #999; padding-top: 0.8mm; }
-.tiedot td:first-child { color: #555; }
-.tiedot .vahva { font-weight: bold; }
-.mono { font-family: Consolas, Menlo, "Courier New", monospace; }
-.saate { margin: 0 0 4mm; }
-.postihuom { margin: -1mm 0 4mm; font-weight: bold; }
-.erittely { width: 100%; border-collapse: collapse; margin: 0 0 3mm; }
-.erittely th { text-align: left; font-size: 9pt; color: #555; border-bottom: 0.6pt solid #333; padding: 1.5mm 0; }
-.erittely td { padding: 1.2mm 0; border-bottom: 0.3pt solid #ccc; }
-.erittely .summa { text-align: right; white-space: nowrap; }
-.yhteensa { display: flex; justify-content: space-between; align-items: center; background: #eaf2fb; border-radius: 2mm; padding: 2mm 5mm; font-size: 11.5pt; }
-.yhteensa strong { font-size: 16pt; color: #1d3557; }
-.alaosa { margin-top: auto; border-top: 0.6pt dashed #999; padding-top: 4mm; }
-.maksurivi { display: flex; gap: 6mm; align-items: center; }
-.maksurivi img.qr { width: 30mm; height: 30mm; image-rendering: pixelated; flex: none; }
-.maksutiedot { flex: 1; font-size: 9.5pt; }
-.maksutiedot table { border-collapse: collapse; }
-.maksutiedot td { padding: .6mm 4mm .6mm 0; }
-.maksutiedot td:first-child { color: #555; }
-.viivakoodi { margin-top: 5mm; padding: 0 4mm; }
-.viivakoodi img { height: 13mm; image-rendering: pixelated; display: block; }
-.vvk { font-size: 8.5pt; margin-top: 2mm; word-break: break-all; }
-.huom { font-size: 8.5pt; color: #555; margin-top: 3mm; }
-.alatunniste { font-size: 8pt; color: #555; margin-top: 4mm; border-top: 0.3pt solid #ccc; padding-top: 2mm; }
-.tyhja { max-width: 600px; margin: 40px auto; background: #fff; padding: 24px; border-radius: 8px; }
-@media print {
-    body { background: #fff; }
-    .jasrek-tools { display: none; }
-    html, body { height: auto; }
-    /* 270 mm: mahtuu yhdelle A4-arkille myös, jos selain käyttää omia tulostusreunuksiaan (n. 10 mm).
-       Täysi 297 mm työnsi silloin tyhjän toisen sivun perään. */
-    html, body { margin: 0 !important; padding: 0 !important; background: #fff; }
-    /* Tulosteessa sivu on niin korkea kuin sisältö: maksuosaa ei työnnetä alalaitaan, joten lasku mahtuu
-       yhdelle arkille paperikoosta (A4/Letter) ja selaimen reunuksista riippumatta. */
-    .sivu { margin: 0; box-shadow: none; height: auto; min-height: 0; padding-bottom: 0; overflow: visible; }
-    .alaosa { margin-top: 5mm; padding-top: 3mm; }
-    body { font-size: 9.5pt; line-height: 1.32; }
-    .ylaosa { height: 56mm; }
-    .huom, .vvk { font-size: 8pt; }
-    .alatunniste { font-size: 7.5pt; }
-    .erittely td { padding: 1mm 0; }
-    .yhteensa { padding: 1.6mm 5mm; }
-    .saate { margin-bottom: 2.5mm; }
-    .postihuom { margin: 0 0 3mm; }
-    .maksurivi img.qr { width: 25mm; height: 25mm; }
-    .maksutiedot td { padding: .3mm 4mm .3mm 0; }
-    .viivakoodi { margin-top: 3mm; }
-    .viivakoodi img { height: 11mm; }
-    .vvk { margin-top: 1mm; }
-    .huom { margin-top: 1.5mm; }
-    .alatunniste { margin-top: 2.5mm; padding-top: 1.5mm; }
-    .alaosa { break-inside: avoid; }
-}
-</style></head>
-<body<?php echo $autoprint && $rows ? ' onload="window.print()"' : ''; ?>>
+<?php wp_print_styles('jasrek-print'); ?>
+</head>
+<body<?php echo $autoprint && $rows ? ' data-jasrek-autoprint="1"' : ''; ?>>
 <div class="jasrek-tools">
     <strong><?php echo esc_html($title); ?></strong>
     <span><?php echo count($rows); ?> kpl</span>
     <?php if ($rows): ?>
-    <button type="button" onclick="window.print()">🖨 Tulosta</button>
+    <button type="button" data-jasrek-print>🖨 Tulosta</button>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="action" value="jasrek_paper_mark">
         <input type="hidden" name="lasku_id" value="<?php echo (int) $lasku->id; ?>">
         <input type="hidden" name="tapa" value="<?php echo $reminder ? 'muistutus' : 'lasku'; ?>">
         <?php wp_nonce_field('jasrek_paper_mark_' . $lasku->id); ?>
         <?php foreach ($ids as $rid): ?><input type="hidden" name="rivit[]" value="<?php echo (int) $rid; ?>"><?php endforeach; ?>
-        <button type="submit" class="jasrek-sec" onclick="return confirm('Merkitäänkö <?php echo count($rows); ?> <?php echo $reminder ? 'muistutusta' : 'laskua'; ?> postitetuksi tänään?')">✓ Merkitse <?php echo count($rows) === 1 ? 'postitetuksi' : 'kaikki postitetuiksi'; ?></button>
+        <button type="submit" class="jasrek-sec" data-jasrek-confirm="Merkitäänkö <?php echo count($rows); ?> <?php echo $reminder ? 'muistutusta' : 'laskua'; ?> postitetuksi tänään?">✓ Merkitse <?php echo count($rows) === 1 ? 'postitetuksi' : 'kaikki postitetuiksi'; ?></button>
     </form>
     <?php endif; ?>
     <a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a>
@@ -203,6 +123,7 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
     <div class="tyhja"><p>Ei tulostettavia laskuja tässä joukossa.</p><p><a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a></p></div>
 <?php endif; ?>
 <?php foreach ($rows as $r) echo jasrek_print_page($lasku, $r, $reminder, $s); // phpcs:ignore ?>
+<?php wp_print_scripts('jasrek-print-page'); ?>
 </body></html>
     <?php
     return ob_get_clean();

@@ -28,7 +28,8 @@ function jasrek_report_data($year) {
 
     $active = function ($m, $d) {
         if ($m->liittynyt && $m->liittynyt !== '0000-00-00' && $m->liittynyt > $d) return false;
-        if ($m->tila !== 'eronnut') return true;
+        if ($m->tila === 'aktiivinen') return true;
+        if ($m->tila !== 'eronnut') return false;
         return $m->eronnut_pvm && $m->eronnut_pvm > $d;
     };
 
@@ -43,7 +44,7 @@ function jasrek_report_data($year) {
             $j[$k]['loppu']++;
             if (!$m->liittynyt || $m->liittynyt === '0000-00-00') $ei_liitt++;
         }
-        if ($m->liittynyt && $m->liittynyt >= $alku && $m->liittynyt <= $raja) $j[$k]['liittyi']++;
+        if (in_array($m->tila, array('aktiivinen', 'eronnut'), true) && $m->liittynyt && $m->liittynyt >= $alku && $m->liittynyt <= $raja) $j[$k]['liittyi']++;
         if ($m->tila === 'eronnut') {
             if (!$m->eronnut_pvm) $ero_ei_pvm++;
             elseif ($m->eronnut_pvm >= $alku && $m->eronnut_pvm <= $raja) $j[$k]['erosi']++;
@@ -137,6 +138,10 @@ function jasrek_handle_report_xlsx() {
     $x->add_sheet('Kertymä ' . $year, array('Lasku', 'Maksuja', 'Kertynyt € (maksupäivä ' . $year . ')', 'Josta postimaksuja €', 'Jäsenmaksuja €'), $rows, array(30, 10, 26, 20, 16),
         array(JASREK_Xlsx::text('Yhteensä', JASREK_Xlsx::S_BOLD), $sumf('B'), $sumf('C', true), $sumf('D', true), $sumf('E', true)));
 
+    $rows = array();
+    foreach (jasrek_merkkipaivat($year) as $mp) $rows[] = array($mp['pvm'] !== '' ? JASREK_Xlsx::date($mp['pvm']) : $T('vuoden aikana'), $T($mp['m']->etunimi . ' ' . $mp['m']->sukunimi), $T(jasrek_merkkipaiva_teksti($mp)), $T(jasrek_laji_nimi((string) $mp['m']->jasenlaji)));
+    if ($rows) $x->add_sheet('Merkkipäivät ' . $year, array('Päivä', 'Jäsen', 'Merkkipäivä', 'Jäsenluokka'), $rows, array(12, 28, 22, 18));
+
     $bin = $x->build();
     jasrek_log('vienti', 0, 'vienti', 'Vuosiraportti ' . $year . ' Exceliin');
     nocache_headers();
@@ -168,12 +173,13 @@ function jasrek_page_report() {
         <h1 class="wp-heading-inline">Vuosiraportti <?php echo (int) $year; ?></h1>
         <form method="get" class="jasrek-noprint jasrek-inline">
             <input type="hidden" name="page" value="jasrek-raportti">
-            <select name="vuosi" onchange="this.form.submit()">
+            <select name="vuosi" data-jasrek-autosubmit>
                 <?php foreach ($years as $y): ?><option value="<?php echo (int) $y; ?>" <?php selected($year, $y); ?>><?php echo (int) $y; ?></option><?php endforeach; ?>
             </select>
             <noscript><button class="button">Näytä</button></noscript>
-            <button type="button" class="button" onclick="window.print()">🖨 Tulosta</button>
+            <button type="button" class="button" data-jasrek-print>🖨 Tulosta</button>
             <a class="button" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_report_xlsx&vuosi=' . $year), 'jasrek_report_xlsx')); ?>">Vie Exceliin</a>
+            <a class="button" target="_blank" href="<?php echo esc_url(jasrek_voters_url(array('otsikko' => 'Vuosikokous ' . ((int) $year + 1)))); ?>" title="Tulostettava luettelo äänioikeutetuista allekirjoitussarakkeineen">🗳 Äänioikeusluettelo</a>
         </form>
         <hr class="wp-header-end">
         <p class="jasrek-report-sub"><?php echo esc_html($s['yhdistys']); ?> · <?php echo $kesken ? 'tilanne ' . esc_html(jasrek_date($d['raja'])) . ' (vuosi kesken)' : 'tilikausi 1.1.–31.12.' . (int) $year; ?> · tulostettu <?php echo esc_html(jasrek_date($d['today'])); ?></p>
@@ -258,6 +264,28 @@ function jasrek_page_report() {
             <p class="description">Maksupäivän mukaan vuonna <?php echo (int) $year; ?> kirjatut maksut, myös aiempien vuosien laskuista. Vertaa kirjanpidon jäsenmaksutuottoihin.</p>
             <?php endif; ?>
         </div>
+
+        <?php if (jasrek_merkki_on()): $mps = jasrek_merkkipaivat($year); ?>
+        <div class="jasrek-panel" id="merkkipaivat">
+            <h2>Merkkipäivät <?php echo (int) $year; ?></h2>
+            <?php if (!$mps): ?>
+                <p class="jasrek-muted">Ei merkkipäiviä vuonna <?php echo (int) $year; ?>.</p>
+            <?php else: ?>
+            <table class="widefat striped jasrek-table">
+                <thead><tr><th>Päivä</th><th>Jäsen</th><th>Merkkipäivä</th><th>Jäsenluokka</th></tr></thead>
+                <tbody>
+                <?php foreach ($mps as $mp): ?>
+                    <tr><td><?php echo esc_html(jasrek_merkkipaiva_pvm($mp)); ?></td>
+                        <td><?php echo esc_html($mp['m']->etunimi . ' ' . $mp['m']->sukunimi); ?><?php if (jasrek_tunnus_on() && $mp['m']->tunnus): ?> <span class="jasrek-call"><?php echo esc_html($mp['m']->tunnus); ?></span><?php endif; ?></td>
+                        <td><strong><?php echo esc_html(jasrek_merkkipaiva_teksti($mp)); ?></strong></td>
+                        <td><?php echo esc_html(jasrek_laji_nimi((string) $mp['m']->jasenlaji)); ?></td></tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+            <p class="description">Voimassa olevat jäsenet. Syntymävuosi tai -päivä merkitään jäsenen tietoihin (vapaaehtoinen). Vuodet valitaan <a href="<?php echo esc_url(admin_url('admin.php?page=jasrek-asetukset#jasrek-merkkipaivat')); ?>">asetuksissa</a>.</p>
+        </div>
+        <?php endif; ?>
     </div>
     <?php
 }

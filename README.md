@@ -1,4 +1,4 @@
-# Jäsenrekisteri – WordPress-lisäosa yhdistyksille
+# OH6KW Jäsenrekisteri – WordPress-lisäosa yhdistyksille
 
 Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisille yhdistyksille.
 
@@ -23,6 +23,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Vapaasti nimettävä lisätunniste, esim. *Jäsennumero*.
 - **Omat lisäkentät**, esim. *Avain* (kerhotalon avaimen numero) tai *Talkoolistalla*. Kenttä voi olla teksti tai valintaruutu, ja sen voi näyttää jäsenlistassa omana sarakkeenaan. Haku kentän nimellä (esim. ”avain”) löytää kaikki, joilla kenttä on täytetty.
 - Eroamispäivä tallentuu, kun jäsen merkitään eronneeksi.
+- **Merkkipäivät:** tasavuosia täyttävät (jäsenen vapaaehtoinen *syntymävuosi tai -päivä*; pelkkä vuosi riittää) ja jäsenyysvuodet (liittymispäivästä) asetuksissa valituilla vuosilla, esim. 50, 60, 70, 80 ja 90 vuotta tai 10, 25 ja 50 vuotta jäsenenä. Lähestyvät merkkipäivät näkyvät jäsenlistassa. Ominaisuuden voi kytkeä pois asetuksista.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
 - Varoitus mahdollisesta tuplakirjauksesta.
 - **Kesken kauden liittyvä jäsen** lisätään jäsenlomakkeesta suoraan jo lähetetylle laskulle. Hän saa oman viitteen ja eräpäivän, ja laskun voi lähettää heti.
@@ -45,7 +46,8 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - **Excel-raportti:** yhdellä painalluksella kaikki laskut yhteen Excel-tiedostoon: yhteenveto, kaikki avoimet maksut ja jokainen lasku omalla välilehdellään (kuka on maksanut, kuka ei, maksupäivät ja maksajat).
 
 **Vuosiraportti ja muutosloki**
-- **Vuosiraportti vuosikokoukseen:** jäsenmäärät jäsenluokittain vuoden alussa ja lopussa, liittyneet ja eronneet, vuoden laskut (laskutettu, maksettu, avoinna) jäsenluokittain sekä vuoden aikana kertyneet jäsenmaksut. Tulostettavissa ja vietävissä Exceliin.
+- **Äänioikeusluettelo vuosikokoukseen:** tulostettava luettelo jäsenistä, joiden jäsenmaksu valitulta laskulta on maksettu tai joiden jäsenluokan jäsenmaksu on 0 €, ja allekirjoitussarake.
+- **Vuosiraportti vuosikokoukseen:** jäsenmäärät jäsenluokittain vuoden alussa ja lopussa, liittyneet ja eronneet, vuoden laskut (laskutettu, maksettu, avoinna) jäsenluokittain sekä vuoden aikana kertyneet jäsenmaksut ja vuoden merkkipäivät. Tulostettavissa ja vietävissä Exceliin.
 - **Muutosloki:** kuka muutti mitä ja milloin – jäsenten tiedot vanha → uusi, maksumerkinnät, lähetykset, postitukset, laskut, asetukset, tiedotteet, tuonnit ja viennit. Jäsenen sivulla näkyy hänen oma muutoshistoriansa. Säilytysaika valitaan asetuksista.
 
 **Tiedotteet**
@@ -62,18 +64,25 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Tiedote](docs/kuvat/09-tiedote.png) **Tiedote** koko jäsenistölle tai yhdelle luokalle. | ![Laskut](docs/kuvat/03-laskut.png) **Laskut:** maksukertymä ja maksujen tuonti. |
 | ![Paperilaskut](docs/kuvat/13-paperilaskut.png) **Paperilaskut** laskun sivulla: tulosta, laita kuoreen ja merkitse postitetuksi. | ![Tulostettava paperilasku](docs/kuvat/14-paperilasku.png) **Tulostettava lasku** ikkunakuoreen (C5 tai DL). |
 | ![Vuosiraportti](docs/kuvat/15-vuosiraportti.png) **Vuosiraportti:** jäsenmäärät luokittain ja jäsenmaksut. | ![Muutosloki](docs/kuvat/16-muutosloki.png) **Muutosloki:** kuka muutti mitä ja milloin. |
-| ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** asetuksissa, esim. avaimen numero. | |
-| ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. |
+| ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** ja **merkkipäivien** valinnat asetuksissa. | ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. |
+| ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
+| ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
 
 ## Asennus
 
-1. Lataa uusin `jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest).
+1. Lataa uusin `oh6kw-jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest).
 2. Valitse WordPressissä **Lisäosat → Lisää uusi → Lataa lisäosa** ja anna zip-tiedosto.
 3. Ota lisäosa käyttöön. Valikkoon ilmestyy **Jäsenrekisteri**.
 
-> Käytä julkaisun `jasenrekisteri.zip`-tiedostoa, älä GitHubin vihreän *Code*-painikkeen zip-latausta. Julkaisun zipissä lisäosan kansion nimi on `jasenrekisteri`, jolloin myöhemmät päivitykset korvaavat vanhan version oikein.
+> Käytä julkaisun `oh6kw-jasenrekisteri.zip`-tiedostoa, älä GitHubin vihreän *Code*-painikkeen zip-latausta. Julkaisun zipissä lisäosan kansion nimi on `oh6kw-jasenrekisteri`, jolloin myöhemmät päivitykset korvaavat vanhan version oikein.
 
 **Päivitys:** lataa uusi zip samalla tavalla. WordPress tarjoaa nykyisen version korvaamista, ja tietokanta päivittyy automaattisesti. Ota varmuuskopio ennen päivitystä.
+
+**Päivitys versiosta 4.6.4 tai vanhemmasta (kansio `jasenrekisteri`):** lisäosan nimi ja kansio muuttuivat versiossa 4.6.5, joten WordPress asentaa sen uutena lisäosana. Tiedot säilyvät, kun teet näin:
+1. Ota varmuuskopio.
+2. Poista vanha *Jäsenrekisteri* käytöstä ja valitse kyselyssä **Säilytä tiedot**.
+3. Asenna ja ota käyttöön `oh6kw-jasenrekisteri.zip`. Jäsenet, laskut ja asetukset ovat heti käytössä.
+4. Poista vanha lisäosa vasta tämän jälkeen. Varmista ensin, että *Asetukset → Lisäosan poistaminen* -kohdassa tietoja **ei** ole valittu poistettavaksi.
 
 ## Käyttöönotto
 
@@ -90,7 +99,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 3. Lataa verkkopankista viitesiirtoaineisto tai camt.054 ja tuo se kohdasta **Laskutus → Tuo maksut pankista**. Toista tarvittaessa – samaa maksua ei kirjata kahdesti.
 4. Eräpäivän jälkeen maksamattomat saavat muistutuksen automaattisesti tai yhdellä painalluksella.
 5. **Paperilaskut:** jos paperilaskuista peritään postimaksu, aseta se kohdassa *Asetukset → Paperilaskut*. Laskun sivun kohdassa *Paperilaskut* ovat jäsenet, jotka haluavat laskun paperilla, ja jäsenet ilman sähköpostia. Valitse **Tulosta postittamattomat**, tulosta A4-paperille (marginaalit: ei mitään tai oletus, skaalaus 100 %), taita reunan merkkien kohdalta ja laita ikkunakuoreen. Merkitse sitten postitetuksi tulostussivun painikkeella. Erääntyneille voi tulostaa paperisen muistutuksen samalla tavalla.
-6. **Vuosikokous:** *Jäsenrekisteri → Vuosiraportti* näyttää jäsenmäärät ja jäsenmaksukertymän valitulta vuodelta. Tulosta tai vie Exceliin.
+6. **Vuosikokous:** *Jäsenrekisteri → Vuosiraportti* näyttää jäsenmäärät, jäsenmaksukertymän ja merkkipäivät valitulta vuodelta. Tulosta tai vie Exceliin. Painike **Äänioikeusluettelo** avaa tulostettavan luettelon: valitse lasku, jonka maksaneilla on äänioikeus (oletuksena uusin), ja halutessasi vain äänioikeutetut.
 7. **Kesken kauden liittyvä jäsen:** kun lisäät uuden jäsenen, lomakkeessa on kohta *Jäsenmaksu jo tehdyltä laskulta*. Valitse lasku, tarkista summa (osan kaudesta voi laskuttaa pienemmällä summalla) ja tallenna. Jäsen saa oman viitteen ja vähintään kolmen viikon eräpäivän, ja lasku lähtee heti sähköpostilla. Saman voi tehdä myöhemmin jäsenen muokkaussivulta. Laskun sivun painike *Lisää laskulle uudet jäsenet* lisää kerralla kaikki laskulta puuttuvat maksavat jäsenet.
 
 ## Pankkitiedostot
@@ -140,10 +149,11 @@ Lisäosa on valmisteltu WordPressin viralliseen lisäosahakemistoon: englanninki
 ## Rakenne
 
 ```
-jasenrekisteri.php          Lisäosan pääsivu, valikot ja kytkennät
+oh6kw-jasenrekisteri.php    Lisäosan pääsivu (otsaketiedot ja käynnistys)
 uninstall.php               Tietojen poisto lisäosan poiston yhteydessä (jos valittu)
 readme.txt                  WordPress.orgin lisäosahakemiston kuvaus (englanniksi)
 includes/
+  main.php                  Osien lataus, valikot, tyylit ja skriptit
   install.php               Tietokantataulut ja versiopäivitykset
   helpers.php               Asetukset, viitenumero, IBAN, virtuaaliviivakoodi, CSV, sähköposti
   members.php               Jäsenlista, jäsenlomake, joukkotoiminnot
@@ -157,12 +167,13 @@ includes/
   settings.php              Asetussivu
   print.php                 Tulostettavat paperilaskut ja postitusmerkinnät
   report.php                Vuosiraportti (näyttö ja Excel)
+  voters.php                Äänioikeusluettelo
   log.php                   Muutosloki
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
   lib/jasrek-qrcode.php     QR-koodikirjasto (MIT)
-assets/                     Hallinnan CSS ja JavaScript
+assets/                     Hallinnan CSS ja JavaScript sekä tulostettavien sivujen tyylit (print.css, voters.css, print-page.js)
 ```
 
 ## Palaute ja kehitysehdotukset

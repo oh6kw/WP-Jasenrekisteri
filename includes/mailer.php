@@ -11,9 +11,9 @@ function jasrek_mail_recipients($kohde) {
     global $wpdb;
     $base = "SELECT id FROM {$wpdb->jasrek_jasenet} WHERE email IS NOT NULL AND email <> ''";
     if ($kohde === 'aktiiviset') {
-        $ids = $wpdb->get_col("$base AND tila <> 'eronnut' ORDER BY id"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
+        $ids = $wpdb->get_col("$base AND tila = 'aktiivinen' ORDER BY id"); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
     } elseif (strpos($kohde, 'luokka_') === 0) {
-        $ids = $wpdb->get_col($wpdb->prepare("$base AND tila <> 'eronnut' AND jasenlaji = %s ORDER BY id", substr($kohde, 7))); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
+        $ids = $wpdb->get_col($wpdb->prepare("$base AND tila = 'aktiivinen' AND jasenlaji = %s ORDER BY id", substr($kohde, 7))); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $base is a literal query without user input.
     } elseif ($kohde === 'maksamattomat') {
         $latest = (int) $wpdb->get_var("SELECT MAX(id) FROM {$wpdb->jasrek_laskut}");
         if (!$latest) return array();

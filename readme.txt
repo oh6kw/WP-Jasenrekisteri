@@ -1,11 +1,11 @@
-=== Jäsenrekisteri ===
+=== OH6KW Jäsenrekisteri ===
 Contributors: oh6kw
 Donate link: https://ko-fi.com/oh6kw
 Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.6.4
+Stable tag: 4.6.5
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -13,7 +13,7 @@ Membership register and dues invoicing for Finnish associations: Finnish referen
 
 == Description ==
 
-Jäsenrekisteri ("membership register") is a complete membership register and membership-fee invoicing tool for Finnish associations (yhdistys / ry), built into the WordPress admin. The user interface is in Finnish, because the plugin implements Finnish banking standards.
+OH6KW Jäsenrekisteri ("membership register") is a complete membership register and membership-fee invoicing tool for Finnish associations (yhdistys / ry), built into the WordPress admin. The user interface is in Finnish, because the plugin implements Finnish banking standards.
 
 **Members**
 
@@ -22,6 +22,7 @@ Jäsenrekisteri ("membership register") is a complete membership register and me
 * Custom fields defined in the settings, such as a clubhouse key number (text) or a yes/no checkbox, optionally shown as a column in the member list.
 * CSV import and export (Excel compatible). Columns are recognised from the headers.
 * The resignation date is recorded, for accurate yearly member counts.
+* Optional milestones: members reaching round birthdays (from an optional birth year or birth date) or membership anniversaries; the years are configurable and the feature can be switched off.
 
 **Invoicing**
 
@@ -40,6 +41,7 @@ Jäsenrekisteri ("membership register") is a complete membership register and me
 
 **Reports and audit log**
 
+* Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
 * Annual report for the general meeting: member counts per class at the start and end of the year, joined and resigned members, invoiced, paid and open fees, and fees received during the year. Printable and exportable to Excel.
 * Audit log: who changed what and when, including old and new values of member data, payments, sending, settings and exports. The retention period is configurable.
 
@@ -92,8 +94,16 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 6. Importing payments from a bank file, with a preview before saving.
 7. Annual report for the general meeting.
 8. Audit log: who changed what and when.
+9. Voting register for the general meeting.
 
 == Changelog ==
+
+= 4.6.5 =
+* Renamed to OH6KW Jäsenrekisteri (slug oh6kw-jasenrekisteri).
+* Print pages load their styles and scripts with wp_register_style / wp_print_styles instead of inline tags.
+* Works without the PHP mbstring extension.
+* New: voting register for the general meeting.
+* New: optional milestones (round birthdays and membership anniversaries) with configurable years; optional birth year or date for members; new custom field type Date.
 
 = 4.6.4 =
 * Paper invoice: no empty trailing page with Letter paper or large print margins.
@@ -115,6 +125,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 The full Finnish changelog is in CHANGELOG.md.
 
 == Upgrade Notice ==
+
+= 4.6.5 =
+Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.
 
 = 4.6.2 =
 Settings move to new option names automatically. In cover texts, {summa} is now the membership fee without postage; use {maksettava} for the total amount payable.

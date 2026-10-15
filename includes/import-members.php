@@ -21,6 +21,7 @@ function jasrek_import_fields() {
         'puhelin'         => 'Puhelin',
         'email'           => 'Sähköposti',
         'liittynyt'       => 'Liittynyt',
+        'syntynyt'        => 'Syntymävuosi tai -päivä',
         'jasenlaji'       => 'Jäsenluokka',
         'tila'            => 'Jäsenyys (voimassa / eronnut)',
         'eronnut_pvm'     => 'Eroamispäivä',
@@ -47,6 +48,7 @@ function jasrek_guess_field($header) {
         'puhelin' => 'puhelin', 'puh' => 'puhelin', 'puhelinnumero' => 'puhelin', 'matkapuhelin' => 'puhelin', 'gsm' => 'puhelin', 'phone' => 'puhelin',
         'sahkoposti' => 'email', 'email' => 'email', 'sposti' => 'email', 'emailosoite' => 'email', 'sahkopostiosoite' => 'email',
         'liittynyt' => 'liittynyt', 'liittymispaiva' => 'liittynyt', 'liittymisvuosi' => 'liittynyt', 'jasenalkaen' => 'liittynyt',
+        'syntynyt' => 'syntynyt', 'syntymaaika' => 'syntynyt', 'syntymapaiva' => 'syntynyt', 'syntymavuosi' => 'syntynyt', 'syntymavuositaipaiva' => 'syntynyt', 'syntynytvuonna' => 'syntynyt', 'birthdate' => 'syntynyt',
         'jasenlaji' => 'jasenlaji', 'laji' => 'jasenlaji', 'jasentyyppi' => 'jasenlaji', 'jasenluokka' => 'jasenlaji', 'luokka' => 'jasenlaji',
         'jasenyys' => 'tila', 'tila' => 'tila', 'status' => 'tila',
         'lisatiedot' => 'lisatiedot', 'huom' => 'lisatiedot', 'huomautukset' => 'lisatiedot', 'muistiinpanot' => 'lisatiedot',
@@ -104,13 +106,13 @@ function jasrek_import_tila($s, $oletus) {
 add_action('admin_post_jasrek_members_template', function () {
     jasrek_check('jasrek_members_template');
     $kentat = array_values(array_map(function ($k) { return $k['nimi']; }, jasrek_lisakentat()));
-    $head = array_merge(array('Etunimi', 'Sukunimi', jasrek_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'), $kentat);
+    $head = array_merge(array('Etunimi', 'Sukunimi', jasrek_tunnus_nimi(), 'Osoite', 'Puhelin', 'Sähköposti', 'Liittynyt', 'Syntynyt', 'Jäsenluokka', 'Jäsenyys', 'Eronnut', 'Paperilasku', 'Lisätiedot'), $kentat);
     $tyhjat = array_fill(0, count($kentat), '');
     $nimet = array_values(array_map(function ($l) { return $l['nimi']; }, jasrek_jasenlajit()));
     jasrek_csv_output('jasenrekisteri-malli.csv', $head, array(
-        array_merge(array('Matti', 'Meikäläinen', '', 'Esimerkkitie 1, 00100 Helsinki', '040 123 4567', 'matti@example.com', '1.1.2020', isset($nimet[0]) ? $nimet[0] : 'Jäsen', 'Voimassa', '', '', ''), $tyhjat),
-        array_merge(array('Maija', 'Mallikas', '', 'Mallitie 2, 00200 Helsinki', '', '', '2015', isset($nimet[1]) ? $nimet[1] : 'Kunniajäsen', 'Voimassa', '', 'Kyllä', ''), $tyhjat),
-        array_merge(array('Erkki', 'Esimerkki', '', '', '', '', '2001', '', 'Eronnut', '31.12.2025', '', ''), $tyhjat),
+        array_merge(array('Matti', 'Meikäläinen', '', 'Esimerkkitie 1, 00100 Helsinki', '040 123 4567', 'matti@example.com', '1.1.2020', '12.3.1976', isset($nimet[0]) ? $nimet[0] : 'Jäsen', 'Voimassa', '', '', ''), $tyhjat),
+        array_merge(array('Maija', 'Mallikas', '', 'Mallitie 2, 00200 Helsinki', '', '', '2015', '1950', isset($nimet[1]) ? $nimet[1] : 'Kunniajäsen', 'Voimassa', '', 'Kyllä', ''), $tyhjat),
+        array_merge(array('Erkki', 'Esimerkki', '', '', '', '', '2001', '', '', 'Eronnut', '31.12.2025', '', ''), $tyhjat),
     ));
 });
 
@@ -178,7 +180,7 @@ function jasrek_handle_members_import() {
             if ($byname) $laji = $byname;
         }
         $tunnus = sanitize_text_field($g('tunnus'));
-        if ($isot) $tunnus = function_exists('mb_strtoupper') ? mb_strtoupper($tunnus) : strtoupper($tunnus);
+        if ($isot) $tunnus = jasrek_upper($tunnus);
         $tila = jasrek_import_tila(isset($v['tila']) ? $v['tila'] : '', $oletus);
         $ero  = $tila === 'eronnut' ? jasrek_parse_date_any($g('eronnut_pvm')) : null;
         $lisa = array();
@@ -195,6 +197,7 @@ function jasrek_handle_members_import() {
             'puhelin'    => sanitize_text_field(jasrek_normalize_phone($g('puhelin'))),
             'email'      => sanitize_email($g('email')),
             'liittynyt'  => $liitt,
+            'syntynyt'   => jasrek_syntynyt_parse($g('syntynyt')) !== '' ? jasrek_syntynyt_parse($g('syntynyt')) : null,
             'tila'       => $tila,
             'jasenlaji'  => $laji,
             'lisatiedot' => sanitize_textarea_field($g('lisatiedot')),

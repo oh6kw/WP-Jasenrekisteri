@@ -1,5 +1,54 @@
 # Muutosloki – Jäsenrekisteri
 
+## 4.6.5 (2026-10-15)
+
+### Uutta: äänioikeusluettelo vuosikokoukseen
+- Vuosiraportin painikkeiden (*Tulosta*, *Vie Exceliin*) jatkona on painike **🗳 Äänioikeusluettelo**. Se avaa tulostettavan A4-luettelon voimassa olevista jäsenistä aakkosjärjestyksessä. Sarakkeet: numero, nimi, lisätunniste (esim. jäsennumero), jäsenluokka, jäsenmaksun tila, äänioikeus (✓) ja allekirjoitus.
+- **Äänioikeus:** jäsenmaksu valitulta laskulta on maksettu, tai jäsenluokan jäsenmaksu on 0 € (esim. kunniajäsen). Muiden tilaksi näytetään *Maksamatta* tai *Ei laskulla*.
+- Luettelon yläpalkissa valitaan kokouksen nimi (oletuksena ”Vuosikokous” ja raporttia seuraava vuosi), päivä ja lasku (oletuksena uusin). Valinnalla *Vain äänioikeutetut* luettelo näyttää vain äänioikeutetut. Lopussa on äänioikeutettujen määrä.
+- Monisivuinen luettelo toistaa otsikkorivin joka sivulla. Luettelon avaaminen kirjataan muutoslokiin, koska se sisältää henkilötietoja.
+
+### Uutta: merkkipäivät
+- Jäsenen tietoihin tuli vapaaehtoinen kenttä **Syntymävuosi tai -päivä** (liittymispäivän viereen). Se näkyy jäsenen lomakkeella vain, kun merkkipäivät ovat käytössä.
+  - Kelpaa pelkkä vuosi (esim. 1976) tai päivämäärä (12.3.1976 tai 1976-03-12). Kaikki eivät halua ikäänsä julki, joten vuosi riittää: merkkipäivä näkyy silloin vuosiraportissa ja Excelissä muodossa *vuoden aikana* ja listan lopussa, mutta ei jäsenlistan 60 päivän kortissa.
+  - Tyhjä kenttä tarkoittaa, ettei syntymävuotta tiedetä. Virheellinen tai tuleva vuosi/päivä ei tallennu, ja selain huomauttaa väärästä muodosta.
+  - Kun merkkipäivät kytketään pois, kenttä piilotetaan, mutta jo tallennetut syntymävuodet säilyvät.
+  - Kenttä on mukana CSV-viennissä (sarake *Syntynyt*), CSV-tuonnissa (tunnistaa otsikot *Syntynyt*, *Syntymävuosi*, *Syntymäaika*, *Syntymäpäivä*), CSV-mallissa ja muutoslokissa.
+  - Tietokanta päivittyy automaattisesti (versio 10: jäsentauluun sarake *syntynyt*).
+- Lisäkenttiin tuli uusi tyyppi **Päivämäärä**. Jäsenen lomakkeella se on päivämääräkenttä. CSV-viennissä se on muodossa p.k.vvvv, ja tuonnissa kelpaavat sekä p.k.vvvv että vvvv-kk-pp.
+- Asetuksissa on uusi kohta **Merkkipäivät**: *Täytettävät vuodet* (oletuksena 50, 60, 70, 75, 80, 85, 90, 95 ja 100) ja *Jäsenyysvuodet* (oletuksena 10, 20, 25, 30, 40, 50 ja 60). Vuodet voi muuttaa vapaasti, ja tyhjä kenttä poistaa ne käytöstä.
+- **Vuosiraportissa** on osio *Merkkipäivät* (päivä, jäsen, merkkipäivä, jäsenluokka), ja se on myös Excel-raportissa omana välilehtenään.
+- **Jäsenlistassa** on kortti, joka näyttää seuraavan 60 päivän merkkipäivät ja ensimmäisen niistä, myös vuodenvaihteen yli. Kortista pääsee vuosiraportin merkkipäiviin.
+- Karkauspäivänä syntyneen merkkipäivä on muina vuosina 28.2. Mukana ovat vain voimassa olevat jäsenet.
+- **Merkkipäivät voi kytkeä päälle ja pois** asetuksista (*Asetukset → Merkkipäivät → Merkkipäivät käytössä*, oletuksena päällä). Pois päältä merkkipäiviä ei näytetä jäsenlistan kortissa, vuosiraportissa eikä Excel-raportissa, ja asetetut vuodet säilyvät.
+
+### Nimi muuttui: OH6KW Jäsenrekisteri (WordPress.orgin tarkastus)
+- WordPress.orgin tarkastus piti nimeä *Jäsenrekisteri* liian yleisenä. Lisäosan nimi on nyt **OH6KW Jäsenrekisteri** ja tunniste (slug, kansio ja Text Domain) **`oh6kw-jasenrekisteri`**. Pääsivun tiedosto on `oh6kw-jasenrekisteri.php`. Hallinnan valikossa nimi on edelleen *Jäsenrekisteri*.
+- Uudet bannerit, joissa on uusi nimi. GitHubin julkaisu tekee nyt tiedoston `oh6kw-jasenrekisteri.zip`, ja WordPress.org-vienti käyttää uutta slugia.
+- **Päivitys vanhasta versiosta:** kansio vaihtui, joten WordPress asentaa 4.6.5:n uutena lisäosana. Tiedot (jäsenet, laskut, asetukset) säilyvät, koska ne ovat samoissa tauluissa ja asetuksissa. Ohje on README:ssä: poista vanha käytöstä (*Säilytä tiedot*), asenna ja ota käyttöön uusi, ja poista vanha vasta sitten.
+- Jos vanha ja uusi ovat yhtä aikaa käytössä, uusi ei lataudu toista kertaa (ei virhettä), vaan näyttää ilmoituksen vanhan poistamisesta käytöstä. Siksi pääsivun koodi siirtyi tiedostoon `includes/main.php`.
+
+### Korjaukset WordPress.orgin tarkastuksesta
+- **Tyylit ja skriptit WordPressin omilla funktioilla:**
+  - Tulostettavien sivujen (paperilaskut ja äänioikeusluettelo) `<style>`-lohkot siirtyivät tiedostoihin `assets/print.css` ja `assets/voters.css`. Ne rekisteröidään `wp_register_style`-funktiolla ja tulostetaan `wp_print_styles`-funktiolla.
+  - Sivujen `onclick`-, `onload`- ja `onchange`-käsittelijät siirtyivät skripteihin: tulostettavilla sivuilla `assets/print-page.js`, hallinnassa `admin.js`. Niitä käyttävät *Tulosta*-painikkeet, postitusmerkinnän vahvistus, automaattinen tulostus ja vuosiraportin vuoden valinta.
+  - Käytöstä poiston kyselyn tyylit siirtyivät WordPressin `common`-tyylistä omaan tiedostoonsa `assets/deactivate.css`.
+- **Toimii ilman PHP:n mbstring-laajennusta:**
+  - Jäsenlista kutsui `mb_strtolower`-funktiota ehdoitta, ja se olisi kaatanut sivun palvelimella, jossa mbstringiä ei ole.
+  - Nyt kirjainkoon muunnokset kulkevat apufunktioiden `jasrek_lower` ja `jasrek_upper` kautta. Ne toimivat myös ilman mbstringiä, myös å-, ä- ja ö-kirjaimilla.
+  - Pankki- ja CSV-tiedostojen merkistömuunnos (Windows-1252 → UTF-8) toimii myös ilman mbstringiä ja iconvia.
+- **Tyylit vain omilla sivuilla:**
+  - Hallinnan CSS ja JS ladataan vain lisäosan omille sivuille, ja sivut tunnistetaan niiden rekisteröinnissä saaduista tunnisteista.
+  - Vuosiraportin tulostustyylit (WordPressin valikon piilotus) on rajattu luokkaan `body.jasrek-screen`, joten ne eivät vaikuta WordPressin muihin sivuihin.
+- Kaikkien lomakkeiden ja AJAX-kutsujen käsittelijät tarkistettiin: jokainen tarkistaa noncen ja käyttöoikeuden (`manage_options`).
+- Testattu puhtaassa WordPressissä (WP_DEBUG päällä): aktivointi ilman virheitä ja tulosteita, kaikki sivut ilman varoituksia, myös PHP:llä ilman mbstringiä. Plugin Check: 0 virhettä, 0 varoitusta.
+
+### Muut muutokset
+- Jäsenyyden ehdot yhtenäistetty: jäseniksi lasketaan kaikkialla vain voimassa olevat jäsenet (aiemmin ”ei eronnut”). Tämä vaikuttaa jäsenmäärien, tiedotteiden, asetusten ja joukkotoimintojen ehtoihin.
+- Lisäosa toimii edelleen vain WordPressin hallintapaneelissa: sivustolle ei tule lomakkeita eikä lyhytkoodeja. Kokeiluversion 4.7.0 liittymislomake jätettiin pois (liittymiseen kannattaa käyttää esim. Contact Form 7:ää).
+- Kokeiluversion 4.7.0 lisäkenttätyyppi *Syntymäaika* poistui. Jos sellainen kenttä oli käytössä, sen arvot siirtyvät päivityksessä automaattisesti jäsenen Syntymävuosi tai -päivä -kenttään ja lisäkenttä poistetaan asetuksista. Siirto kirjataan muutoslokiin.
+- Jos 4.7.0-kokeiluversiolla ehti tulla liittymishakemuksia, ne näkyvät jäsenlistan välilehdellä *Eronneet* merkinnällä *liittymishakemus*. Niitä ei laskuteta eikä lasketa jäseniksi. Hakemuksen voi palauttaa jäseneksi (joukkotoiminto *Palauta jäseneksi* tai jäsenen lomakkeella) tai poistaa.
+
 ## 4.6.4 (2026-10-14)
 
 ### Korjaus: tyhjä toinen sivu paperilaskun PDF:ssä
