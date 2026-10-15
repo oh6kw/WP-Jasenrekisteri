@@ -36,7 +36,7 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
   - Jos tietokantataulut ovat vanhaa MyISAM-tyyppiä, transaktio ei ole käytössä. Keskeytynyt palautus korjataan silloin perumalla.
 
 ### Uutta: paperilasku tilisiirtolomakkeella
-- **Asetukset → Paperilaskut → Laskun malli:** perusmallin rinnalle tuli *Tilisiirtolomake*, perinteinen suomalainen pankkisiirtolomake (tilisiirto / girering) sivun alareunaan. Oletuksena on edelleen perusmalli.
+- **Asetukset → Paperilaskut → Laskun malli:** perusmallin rinnalle tuli *Tilisiirtolomake*, perinteinen suomalainen pankkisiirtolomake (tilisiirto / girering) sivun alareunaan. Tilisiirtolomake on oletus (ks. *Uudet oletukset*).
 - **Sivun rakenne:**
   - Ylhäällä lähettäjä, ikkunakuoren osoite ja laskun tiedot, täsmälleen samassa kohdassa kuin perusmallissa. Osoite osuu C5- ja DL-kuorten ikkunaan, ja testissä sen paikka oli molemmissa malleissa 20 mm vasemmalta ja 27,1 mm ylhäältä.
   - Keskellä saateteksti.
@@ -82,6 +82,12 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
     - Jäsenen muutoslokimerkinnät poistetaan, ja hänen nimensä korvataan muista merkinnöistä tekstillä *[poistettu]*.
     - Poisto kirjataan lokiin.
 - **Ehdotus sivuston tietosuojaselosteeseen** (*Asetukset → Tietosuoja → Opas*): lisäosa kertoo, mitä tietoja se käsittelee. Se ei kerää tietoja sivuston kävijöistä eikä käytä evästeitä.
+
+### Uudet oletukset
+- **Uudessa asennuksessa** paperilasku ja sähköpostilasku käyttävät tilisiirtolomaketta, ja maksukoodina on vain pankkiviivakoodi (ei QR-koodia).
+  - Paperilaskussa pankkiviivakoodi on lomakkeen alla.
+  - Sähköpostilaskussa on virtuaaliviivakoodi tekstinä, joten viestissä ei ole liitteitä eikä kuvia.
+- **Päivitettäessä** aiemman version maksukoodin valinta säilyy, jos asetukset on joskus tallennettu. Laskun mallit ovat uusia asetuksia, joten myös päivitetyllä sivustolla paperi- ja sähköpostilaskut tulevat tilisiirtolomakkeella. Perusmallin saa takaisin asetuksista.
 
 ### Muut muutokset
 - **Käytöstä poiston kysely** suosittelee nyt koko varmuuskopiota: linkki *Lataa ensin varmuuskopio* lataa kaikki tiedot muutoslokeineen. Jäsenluettelon CSV on toissijaisena vaihtoehtona Exceliä varten.

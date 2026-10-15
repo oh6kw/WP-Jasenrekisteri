@@ -45,7 +45,7 @@ function jasrek_handle_save_settings() {
         'iban'             => $iban,
         'bic'              => strtoupper(sanitize_text_field(jasrek_post('bic'))),
         'ytunnus'          => sanitize_text_field(jasrek_post('ytunnus')),
-        'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'molemmat',
+        'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'viivakoodi',
         'sposti_malli'     => jasrek_post('sposti_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
         'sposti_qr'        => jasrek_post('sposti_qr') === '1' ? '1' : '0',
         'lahettaja_nimi'   => sanitize_text_field(jasrek_post('lahettaja_nimi')),
