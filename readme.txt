@@ -28,7 +28,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 * One click sends every member an individual invoice by email, with a unique Finnish reference number (viitenumero, 7-3-1 check digit).
 * Every invoice contains an EPC QR code, a Finnish bank barcode (version 4) and a virtual barcode, so paying in a banking app takes seconds.
-* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page.
+* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page. Email invoices can use the same bank transfer form, without attachments.
 * Sending runs in small batches with a progress bar, so large member lists do not time out. Test invoices and previews before sending.
 * Manual or automatic payment reminders.
 * Members who join mid-season can be added to an invoice that has already been sent, with their own due date.
@@ -110,6 +110,7 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 = 4.7.0 =
 * New: full backup and restore (Settings → Backup and moving), for example for moving the register to another site. The previous state is kept so a restore can be undone.
 * New: optional paper invoice layout with the traditional Finnish bank transfer form at the bottom of the page.
+* New: optional email invoice layout with the same bank transfer form as HTML, without attachments or images (QR code optional).
 * New: privacy notice template and support for the WordPress personal data export and erase tools.
 
 = 4.6.5 =

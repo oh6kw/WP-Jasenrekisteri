@@ -168,7 +168,7 @@ function jasrek_send_rivi($lasku, $r, $reminder = false, $test_to = null) {
     $subject = ($reminder ? 'Muistutus: ' : '') . $lasku->nimi . ($s['yhdistys'] !== '' ? ' – ' . $s['yhdistys'] : '');
     if ($test_to) $subject = '[TESTI] ' . $subject;
 
-    $ok = jasrek_mail($to, $subject, jasrek_invoice_html($lasku, $r, $reminder), jasrek_invoice_images($lasku, $r));
+    $ok = jasrek_mail($to, $subject, jasrek_invoice_html($lasku, $r, $reminder), jasrek_invoice_email_images($lasku, $r));
     if ($test_to) return $ok;
 
     $upd = array('viim_yritys' => $now);

@@ -2,7 +2,7 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
-## 4.7.0 (kehitysversio)
+## 4.7.0 (2026-10-15)
 
 ### Uutta: varmuuskopio ja siirto
 - **Asetukset → Varmuuskopio ja siirto:** koko jäsenrekisteri yhteen tiedostoon ja takaisin. Käyttötarkoituksia:
@@ -53,6 +53,15 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
 - Sivu on tulosteessa koko A4:n korkuinen ja tekstikoko sama kuin esikatselussa (10,5 pt). Aiemman 4.6.4-perusmallin pienennetyt koot eivät koske tätä mallia.
 - Tulostus: A4, reunukset *Oletus* tai *Ei mitään*, mittakaava 100 %. Testattu Chromen PDF-tulostuksella: yksi sivu laskua kohden, lomake 6 mm alareunasta.
 - Perusmalli toimii kuten ennenkin. Sen yläosa ja saate tulevat nyt samasta koodista kuin tilisiirtomallissa.
+
+### Uutta: sähköpostilasku tilisiirtolomakkeella
+- **Asetukset → Yhdistys ja tilitiedot → Sähköpostilaskun malli:** *Perusmalli* (kuten ennen) tai *Tilisiirtolomake*. Tilisiirtolomake on sama ulkoasu kuin paperilaskussa.
+- Lomake on HTML-taulukko inline-tyyleillä, joten se näkyy Gmailissa, Outlookissa ja puhelimen postiohjelmissa ilman kuvia. Tilinumeron, viitteen ja virtuaaliviivakoodin voi kopioida verkkopankkiin.
+- **Viestissä ei ole liitteitä eikä kuvia.** Pankkiviivakoodia ei lähetetä kuvana, koska omalta näytöltä ei voi skannata. Virtuaaliviivakoodi on viestissä tekstinä.
+- **QR-koodi on valinnainen:** ruksi *Lisää tilisiirtolomakkeen yläpuolelle myös QR-koodi* (oletuksena pois päältä). QR on upotettu kuva, ja osa sähköpostiohjelmista näyttää sen myös liitteenä.
+- **Puhelimessa** lomakkeen vasen puolisko (tilinumero, saaja, maksaja) ja oikea puolisko (viite, eräpäivä, summa) asettuvat allekkain. Leveällä näytöllä ne ovat vierekkäin kuten paperilla. Toimii ilman mediakyselyjä, myös Gmailissa ja Outlookissa.
+- Laskun esikatselu, testilasku, lähetys, muistutukset ja automaattiset muistutukset käyttävät valittua mallia.
+- Viestin pelkkä tekstiversio (roskapostisuodattimia varten) muotoilee nyt myös otsikkosolut oikein.
 
 ### Uutta: tietosuoja (GDPR)
 - **Jäsenrekisterin tietosuojaselosteen pohja** (Tietoja-sivu → *Jäsenrekisterin tietosuojaselosteen pohja*): yhdistyksen tiedoilla esitäytetty seloste tietosuoja-asetuksen 13 ja 14 artiklan mukaan. Se sisältää:

@@ -54,6 +54,8 @@ function jasrek_settings() {
         'postimaksu'      => '0',
         'postiosoite'     => '',
         'paperi_malli'    => 'perus',
+        'sposti_malli'    => 'perus',
+        'sposti_qr'       => '0',
         'merkki_kaytossa' => '1',
         'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
         'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',
@@ -615,7 +617,7 @@ function jasrek_mail($to, $subject, $html, $images = array()) {
     // suhtautuu epäluuloisesti pelkkään HTML-viestiin.
     $alt = function ($phpmailer) use ($html, $images) {
         $text = preg_replace('#<(br|/p|/tr|/div|/h\d)[^>]*>#i', "\n", $html);
-        $text = preg_replace('#</td>\s*<td[^>]*>#i', ': ', $text);
+        $text = preg_replace('#</t[dh]>\s*<t[dh][^>]*>#i', ': ', $text);
         $text = html_entity_decode(wp_strip_all_tags(preg_replace('#<head.*?</head>#is', '', $text)), ENT_QUOTES, 'UTF-8');
         $text = preg_replace("/[ \t]+/", ' ', $text);
         $phpmailer->AltBody = trim(preg_replace("/\s*\n\s*(\n\s*)+/", "\n\n", $text));

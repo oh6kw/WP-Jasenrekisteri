@@ -66,6 +66,7 @@ function jasrek_postimaksu_note($text, $r, $vars) {
  */
 function jasrek_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
     $s    = jasrek_settings();
+    if ($s['sposti_malli'] === 'tilisiirto') return jasrek_invoice_html_tilisiirto($lasku, $r, $reminder, $img);
     $vars = jasrek_invoice_vars($lasku, $r);
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
 
@@ -128,5 +129,103 @@ function jasrek_invoice_html($lasku, $r, $reminder = false, $img = 'cid') {
 
     $html .= '<p style="margin:20px 0 0;font-size:13px;color:#6b7785;">Käytäthän maksaessasi viitenumeroa (ei viestiä), jotta maksu kohdistuu sinulle.</p>';
 
+    return jasrek_email_layout($lasku->nimi, $html);
+}
+
+/** Sähköpostilaskun kuvat valitun mallin mukaan (upotetaan viestiin cid-kuvina). */
+function jasrek_invoice_email_images($lasku, $r) {
+    $s = jasrek_settings();
+    if ($s['sposti_malli'] !== 'tilisiirto') return jasrek_invoice_images($lasku, $r);
+    if ($s['sposti_qr'] !== '1') return array(); // tilisiirtomalli: ei kuvia eikä liitteitä
+    $png = jasrek_qr_png(jasrek_epc_payload($lasku, $r));
+    return $png !== '' ? array('jrqr' => $png) : array();
+}
+
+/**
+ * Sähköpostilasku tilisiirtolomakkeella: sama ulkoasu kuin paperilaskussa, mutta lomake on HTML-taulukko
+ * (inline-tyylit, toimii Gmailissa, Outlookissa ja puhelimella). Ei kuvia, ellei QR-koodia ole valittu.
+ */
+function jasrek_invoice_html_tilisiirto($lasku, $r, $reminder = false, $img = 'cid') {
+    $s    = jasrek_settings();
+    $vars = jasrek_invoice_vars($lasku, $r);
+    $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
+    $images = jasrek_invoice_email_images($lasku, $r);
+    $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
+    $saaja = array_merge(array($s['yhdistys']), array_filter(array_map('trim', preg_split('/\s*[,\n]\s*/', (string) $s['postiosoite']))));
+    $maksaja = jasrek_address_lines($r);
+    $br = function ($lines) { return implode('<br>', array_map('esc_html', $lines)); };
+
+    $B  = '2px solid #000';   // lomakkeen paksu viiva
+    $b  = '1px solid #000';   // ohut viiva
+    $th = 'font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:1.25;color:#000;text-align:right;vertical-align:top;padding:5px 6px;font-weight:normal;';
+    $td = 'font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.35;color:#000;vertical-align:top;padding:5px 7px;';
+    $sm = '<span style="display:block;font-size:10px;line-height:1.25;color:#000;">';
+
+    $html  = '<p style="margin:0 0 18px;">' . jasrek_fill($text, $vars) . '</p>';
+    $note  = jasrek_postimaksu_note($text, $r, $vars);
+    if ($note !== '') $html .= '<p style="margin:0 0 18px;font-weight:bold;">' . esc_html($note) . '</p>';
+
+    // Laskun tiedot
+    $html .= '<div style="font-size:12px;letter-spacing:.08em;color:#6b7785;text-transform:uppercase;margin:0 0 4px;">' . ($reminder ? 'Maksumuistutus' : 'Lasku') . '</div>';
+    $html .= '<div style="font-size:20px;font-weight:bold;margin:0 0 10px;">' . esc_html($lasku->nimi) . '</div>';
+    $info = array(array('Päiväys', $reminder ? jasrek_date(current_time('Y-m-d')) : $vars['laskupvm']));
+    if (jasrek_tunnus_on() && $vars['tunnus'] !== '') $info[] = array(jasrek_tunnus_nimi(), $vars['tunnus']);
+    $luokka = isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '';
+    if ($luokka !== '') $info[] = array('Jäsenluokka', $luokka);
+    if (jasrek_rivi_postimaksu($r) > 0) {
+        $info[] = array('Jäsenmaksu', $vars['jasenmaksu']);
+        $info[] = array('Postimaksu', $vars['postimaksu']);
+    }
+    $html .= '<table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;margin:0 0 14px;">';
+    foreach ($info as $i) $html .= '<tr><td style="padding:2px 18px 2px 0;color:#6b7785;">' . esc_html($i[0]) . '</td><td style="padding:2px 0;">' . esc_html(html_entity_decode($i[1])) . '</td></tr>';
+    $html .= '</table>';
+    $html .= '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:#eaf2fb;border-radius:6px;">'
+           . '<tr><td style="padding:12px 16px;font-size:15px;">Maksettava viimeistään ' . esc_html($vars['erapaiva']) . '</td>'
+           . '<td align="right" style="padding:12px 16px;font-size:22px;font-weight:bold;color:#1d3557;white-space:nowrap;">' . esc_html($vars['maksettava']) . '</td></tr></table>';
+
+    // QR-koodi (valinnainen) lomakkeen yläpuolella
+    if (isset($images['jrqr'])) {
+        $src = $img === 'data' ? 'data:image/png;base64,' . base64_encode($images['jrqr']) : 'cid:jrqr';
+        $html .= '<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 16px;"><tr>'
+               . '<td style="padding:0 14px 0 0;vertical-align:middle;"><img src="' . esc_attr($src) . '" width="130" height="130" alt="Maksun QR-koodi" style="display:block;width:130px;height:130px;"></td>'
+               . '<td style="vertical-align:middle;font-size:13px;color:#6b7785;">Maksa helposti: avaa pankkisovellus ja skannaa QR-koodi. Saaja, tilinumero, summa ja viite täyttyvät valmiiksi.</td></tr></table>';
+    }
+
+    // Tilisiirtolomake: kaksi puoliskoa, jotka ovat leveällä näytöllä vierekkäin ja puhelimessa allekkain
+    // (inline-block, ei mediakyselyjä – toimii myös Gmailissa ja Outlookissa). Rivikorkeudet täsmäävät puoliskojen välillä.
+    $cell = function ($label, $value, $h, $extra = '') use ($th, $td, $B) {
+        return '<tr><th style="' . $th . 'width:30%;height:' . $h . 'px;border-bottom:' . $B . ';">' . $label . '</th>'
+             . '<td style="' . $td . 'border-left:' . $B . ';border-bottom:' . $B . ';' . $extra . '">' . $value . '</td></tr>';
+    };
+    $half = 'display:inline-block;width:100%;max-width:272px;vertical-align:top;font-size:14px;';
+    $tbl  = '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:' . $B . ';">';
+    $html .= '<div style="font-family:Arial,Helvetica,sans-serif;font-size:10px;font-weight:bold;letter-spacing:.06em;color:#000;margin:0 0 3px;">TILISIIRTO · GIRERING</div>';
+    $html .= '<div style="font-size:0;line-height:0;">';
+    // Vasen puolisko: saajan tilinumero, saaja, maksaja ja allekirjoitus, tililtä nro
+    $html .= '<div style="' . $half . '">' . $tbl
+           . $cell('Saajan tilinumero<br>Mottagarens kontonummer', $sm . 'IBAN</span><span style="font-size:15px;white-space:nowrap;">' . esc_html($vars['iban']) . '</span>', 54)
+           . $cell('Saaja<br>Mottagare', $br($saaja), 70)
+           . $cell('Maksaja<br>Betalare<br><br>Allekirjoitus<br>Underskrift', $br($maksaja) . '<div style="border-bottom:1px solid #000;margin:14px 8px 2px 0;height:1px;line-height:1px;font-size:1px;">&nbsp;</div>', 96)
+           . $cell('Tililtä nro<br>Från konto nr', '&nbsp;', 40)
+           . '</table></div>';
+    // Oikea puolisko: BIC, viesti, viitenumero, eräpäivä ja summa
+    $html .= '<div style="' . $half . '"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;border-top:' . $B . ';border-left:' . $B . ';">'
+           . '<tr><td colspan="4" style="' . $td . 'height:54px;border-bottom:' . $B . ';">' . $sm . 'BIC</span>' . esc_html($s['bic']) . '</td></tr>'
+           . '<tr><td colspan="4" style="' . $td . 'height:126px;border-bottom:' . $B . ';">' . $sm . 'Viesti / Meddelande</span></td></tr>'
+           . '<tr><th style="' . $th . 'width:19%;height:40px;border-bottom:' . $B . ';vertical-align:middle;">Viitenro<br>Ref.nr</th>'
+           . '<td colspan="3" style="' . $td . 'border-left:' . $b . ';border-bottom:' . $B . ';vertical-align:middle;font-size:15px;white-space:nowrap;"><strong>' . esc_html($vars['viite']) . '</strong></td></tr>'
+           . '<tr><th style="' . $th . 'width:19%;height:40px;border-bottom:' . $B . ';vertical-align:middle;">Eräpäivä<br>Förf.dag</th>'
+           . '<td style="' . $td . 'border-left:' . $b . ';border-bottom:' . $B . ';vertical-align:middle;font-size:13px;white-space:nowrap;padding-right:4px;"><strong>' . esc_html($vars['erapaiva']) . '</strong></td>'
+           . '<th style="' . $th . 'width:15%;border-left:' . $b . ';border-bottom:' . $B . ';vertical-align:middle;">Summa</th>'
+           . '<td style="' . $td . 'border-left:' . $b . ';border-bottom:' . $B . ';vertical-align:middle;text-align:right;font-size:13px;white-space:nowrap;padding-left:3px;"><strong>' . esc_html(number_format((float) $r->summa, 2, ',', ' ')) . '&nbsp;EUR</strong></td></tr>'
+           . '</table></div>';
+    $html .= '</div>';
+
+    if ($vvk !== '') {
+        $html .= '<div style="margin:16px 0 0;padding:12px 14px;border:1px dashed #b8c2cc;border-radius:6px;">'
+               . '<div style="font-size:13px;color:#6b7785;margin:0 0 6px;">Virtuaaliviivakoodi – kopioi verkkopankkiin, niin maksun tiedot täyttyvät valmiiksi:</div>'
+               . '<div style="font-family:Consolas,Menlo,monospace;font-size:14px;word-break:break-all;">' . esc_html($vvk) . '</div></div>';
+    }
+    $html .= '<p style="margin:16px 0 0;font-size:13px;color:#6b7785;">Käytäthän maksaessasi viitenumeroa (ei viestiä), jotta maksu kohdistuu sinulle.</p>';
     return jasrek_email_layout($lasku->nimi, $html);
 }
