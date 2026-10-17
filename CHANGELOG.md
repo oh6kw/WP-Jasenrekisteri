@@ -2,6 +2,21 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.4 (2026-10-17)
+
+### Uutta: Vie kaikki tiedot Exceliin
+- Jäsenet-sivun yläreunaan, *Lisää uusi jäsen* -painikkeen viereen, uusi painike **Vie kaikki tiedot Exceliin**. Se tekee koko rekisteristä yhden Excel-tiedoston samalla tyylillä kuin laskujen Excel-raportti (siniset otsikot, kiinnitetty otsikkorivi, suodattimet, eurot ja päivämäärät oikeassa muodossa).
+- Välilehdet:
+  - **Yhteenveto:** yhdistys, vientiaika, jäsenmäärät jäsenluokittain, eronneet, laskut, avoimet maksut ja niiden summa.
+  - **Jäsenet:** kaikki jäsenet (myös eronneet) kaikkine tietoineen, omat lisäkentät omina sarakkeinaan.
+  - **Jokainen oma lisäkenttä omalla välilehdellään** (esim. *Kerhon avain*): vain jäsenet, joilla kentässä on arvo, järjestettynä arvon mukaan (8.2 ennen 8.10), sekä jäsenyys ja yhteystiedot.
+  - **Jäsenluokat:** jäsenmaksu sekä voimassa olevat ja eronneet jäsenet luokittain.
+  - **Laskut:** jokaisen laskun laskutettu, postimaksut, maksettu ja avoinna, yhteensä-rivi.
+  - **Laskurivit:** jokainen jäsenelle lähetetty lasku: laskutapa (sähköposti/paperi), viite, summa, eräpäivä, tila, maksupäivä, maksettu summa, maksaja, arkistotunnus, lähetys ja muistutukset.
+  - **Avoimet maksut:** maksamattomat laskut kaikista laskuista.
+  - **Muutosloki:** kaikki tapahtumat muutoksineen.
+- Vienti kirjataan muutoslokiin. Tiedosto on luettavaksi ja arkistoon; tietojen palauttamiseen käytetään edelleen varmuuskopiota.
+
 ## 4.8.3 (2026-10-17)
 
 ### Korjattu
