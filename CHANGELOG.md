@@ -22,6 +22,9 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
 - Esikatselussa jäsenrekisterin sivuilla näkyy ilmoitus, että kyse on kokeiluympäristöstä. Sähköposteja ei yritetä lähettää.
 - Lähdetiedostot `demo-seed.php` ja `preview-notice.php`; blueprint.json tehdään niistä komennolla `python3 .wordpress-org/blueprints/build.py`. Blueprint on tarkistettu Playgroundin virallista skeemaa vasten, ja demoaineiston luonti on testattu tyhjällä SQLite-asennuksella (kuten Playgroundissa).
 
+### Kuvakaappaukset
+- Uudet kuvat (README ja wordpress.org): laskun sivu Tulosta-painikkeineen, sähköpostilasku maksukorttina tietokoneella ja puhelimessa, paperilaskut sekä tulostettava paperilasku tilisiirtolomakkeella (oletusmalli). Vanhat kuvat perusmallin paperilaskusta ja sähköpostin tilisiirtolomakkeesta poistettiin.
+
 ## 4.8.0 (2026-10-17)
 
 ### Uutta: PDF-lasku

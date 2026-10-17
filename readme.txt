@@ -95,15 +95,15 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 
 1. Member list with membership classes as tabs and a custom field column.
 2. Invoice page: sending, reminders and payment status.
-3. The invoice the member receives by email, with QR code and bank barcode.
+3. The email invoice as a payment card: amount and due date, copyable payment details, QR code and virtual barcode.
 4. Paper invoices: print, put in a window envelope and mark as posted.
-5. Printable paper invoice for a window envelope.
+5. Printable paper invoice for a window envelope, with the Finnish bank transfer form. The optional PDF attachment of email invoices looks the same.
 6. Importing payments from a bank file, with a preview before saving.
 7. Annual report for the general meeting.
 8. Audit log: who changed what and when.
 9. Voting register for the general meeting.
 10. Backup and restore in the settings.
-11. Paper invoice with the Finnish bank transfer form.
+11. The email invoice on a phone.
 
 == Changelog ==
 

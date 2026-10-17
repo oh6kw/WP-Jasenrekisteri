@@ -62,16 +62,16 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 
 | | |
 |---|---|
-| ![Laskun lähetys ja maksutilanne](docs/kuvat/04-lasku.png) **Lasku:** lähetys, muistutukset ja maksutilanne. Maksajan nimi ja poikkeava summa näkyvät. | ![Lasku sähköpostissa](docs/kuvat/06-lasku-sahkoposti.png) **Jäsenen saama lasku:** jäsenluokka, viite, QR-koodi ja pankkiviivakoodi. |
+| ![Laskun lähetys ja maksutilanne](docs/kuvat/04-lasku.png) **Lasku:** lähetys, muistutukset ja maksutilanne. Maksajan nimi ja poikkeava summa näkyvät. | ![Lasku sähköpostissa](docs/kuvat/06-lasku-sahkoposti.png) **Jäsenen saama sähköpostilasku (maksukortti):** summa ja eräpäivä, kopioitavat maksutiedot, QR-koodi ja virtuaaliviivakoodi. |
 | ![Uusi lasku](docs/kuvat/05-uusi-lasku.png) **Uusi lasku:** summat jäsenluokittain. Luokat, joiden jäsenmaksu on 0 €, jätetään laskutuksesta pois. | ![Maksujen tuonti](docs/kuvat/07-maksujen-tuonti.png) **Maksujen tuonti pankista:** esikatselu ennen kirjausta. |
 | ![Jäsenen tiedot](docs/kuvat/02-jasen.png) **Jäsenen tiedot** sekä kaikki laskut ja maksut. | ![Asetukset](docs/kuvat/08-asetukset.png) **Asetukset:** jäsenluokat ja automaattinen muistutus. |
 | ![Tiedote](docs/kuvat/09-tiedote.png) **Tiedote** koko jäsenistölle tai yhdelle luokalle. | ![Laskut](docs/kuvat/03-laskut.png) **Laskut:** maksukertymä ja maksujen tuonti. |
-| ![Paperilaskut](docs/kuvat/13-paperilaskut.png) **Paperilaskut** laskun sivulla: tulosta, laita kuoreen ja merkitse postitetuksi. | ![Tulostettava paperilasku](docs/kuvat/14-paperilasku.png) **Tulostettava lasku** ikkunakuoreen (C5 tai DL). |
+| ![Paperilaskut](docs/kuvat/13-paperilaskut.png) **Paperilaskut** laskun sivulla: tulosta, laita kuoreen ja merkitse postitetuksi. | ![Tulostettava paperilasku](docs/kuvat/14-paperilasku.png) **Tulostettava lasku** ikkunakuoreen (C5 tai DL) tilisiirtolomakkeella. Sähköpostilaskun PDF-liite on samanlainen. |
 | ![Vuosiraportti](docs/kuvat/15-vuosiraportti.png) **Vuosiraportti:** jäsenmäärät luokittain ja jäsenmaksut. | ![Muutosloki](docs/kuvat/16-muutosloki.png) **Muutosloki:** kuka muutti mitä ja milloin. |
 | ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** ja **merkkipäivien** valinnat asetuksissa. | ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. |
 | ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
 | ![Varmuuskopio](docs/kuvat/20-varmuuskopio.png) **Varmuuskopio ja siirto** asetuksissa. | ![Palautus](docs/kuvat/21-palautus.png) **Palautus:** yhteenveto ja vahvistus ennen kuin mitään muutetaan. |
-| ![Tilisiirtolomake](docs/kuvat/22-tilisiirtolomake.png) **Paperilasku tilisiirtolomakkeella** (valinnainen malli): lomake aina sivun alareunassa. | ![Tietosuojaseloste](docs/kuvat/23-tietosuojaseloste.png) **Tietosuojaselosteen pohja** yhdistyksen tiedoilla. |
+| ![Maksukortti puhelimessa](docs/kuvat/25-maksukortti-puhelin.png) **Sähköpostilasku puhelimessa.** | ![Tietosuojaseloste](docs/kuvat/23-tietosuojaseloste.png) **Tietosuojaselosteen pohja** yhdistyksen tiedoilla. |
 | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
 
 ## Asennus
