@@ -19,7 +19,7 @@ Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhde
 - **Toimii vain hallintapaneelissa:** README, wordpress.orgin kuvaus ja Tietoja-sivu kertovat, ettei lisäosa julkaise sivustolle mitään (ei sivuja, lomakkeita, lyhytkoodeja eikä lohkoja) ja että WordPress hoitaa kirjautumisen, käyttäjät, automaattiset päivitykset sekä webhotellin varmuuskopiot ja HTTPS:n.
 - wordpress.orgin kuvaus jäsennelty uudelleen: sähköposti- ja paperilasku omina kohtinaan, *Raportit vuosikokoukseen ja kirjanpitäjälle*, *Tietosuoja, varmuuskopio ja siirto*. Uudet usein kysytyt kysymykset: näkyykö sivustolla jotain, ja tekeekö lisäosa kirjanpidon.
 - Uusi kuvakaappaus *Jäsenmaksut kirjanpitoon* (README ja wordpress.org, kuva 12).
-- Uusi wordpress.orgin ikoni ja banneri (lähteet `docs/brand/`).
+- Uusi wordpress.orgin ikoni ja banneri, joissa pieni Suomen lippu (lähteet `docs/brand/`).
 - Kuvat 02, 05 ja 11 otettu uudelleen: päivämäärät suomalaisessa muodossa ja jäsenlomake nykyisen näköisenä.
 - Vanhentunut ohje päivityksestä versiosta 4.6.4 tai vanhemmasta poistettu.
 
