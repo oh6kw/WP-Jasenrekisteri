@@ -164,9 +164,3 @@ The full Finnish changelog is in CHANGELOG.md.
 
 = 4.7.0 =
 Adds backup and restore, privacy tools and the Finnish bank transfer form layout, which is now the default for paper and email invoices (the previous layout can be chosen in the settings).
-
-= 4.6.5 =
-Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.
-
-= 4.6.2 =
-Settings move to new option names automatically. In cover texts, {summa} is now the membership fee without postage; use {maksettava} for the total amount payable.
