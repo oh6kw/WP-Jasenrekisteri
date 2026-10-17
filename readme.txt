@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.7.2
+Stable tag: 4.8.0
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -28,7 +28,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 * One click sends every member an individual invoice by email, with a unique Finnish reference number (viitenumero, 7-3-1 check digit).
 * Every invoice contains an EPC QR code, a Finnish bank barcode (version 4) and a virtual barcode, so paying in a banking app takes seconds.
-* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page. Email invoices can use the same bank transfer form, without attachments.
+* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page. Email invoices can optionally include the same invoice as a PDF attachment, and any member's invoice can be downloaded as a PDF from the invoice page.
 * Sending runs in small batches with a progress bar, so large member lists do not time out. Test invoices and previews before sending.
 * Manual or automatic payment reminders.
 * Members who join mid-season can be added to an invoice that has already been sent, with their own due date.
@@ -56,7 +56,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 
 Developed by Jarno Jaskari (oh6kw) together with Claude, an AI assistant made by Anthropic.
 
-The plugin does not use any external services. All data stays in your own WordPress database. QR codes, barcodes and Excel files are generated locally without extra PHP extensions.
+The plugin does not use any external services. All data stays in your own WordPress database. QR codes, barcodes, PDF and Excel files are generated locally without extra PHP extensions. Bundled libraries: qrcode-generator by Kazuhiko Arase (MIT) and FPDF by Olivier Plathey (permissive FPDF license), both GPL-compatible.
 
 Source code, issue tracker and full Finnish documentation: [github.com/oh6kw/oh6kw-jasenrekisteri](https://github.com/oh6kw/oh6kw-jasenrekisteri)
 
@@ -106,6 +106,11 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 11. Paper invoice with the Finnish bank transfer form.
 
 == Changelog ==
+
+= 4.8.0 =
+* New: optional PDF attachment for email invoices and reminders – the same A4 invoice as the paper invoice, with the bank transfer form, QR code and bank barcode.
+* New: download any member's invoice (or reminder for an overdue invoice) as a PDF from the invoice page, e.g. when a member has lost the email.
+* The member identifier setting (member number / call sign) moved to Settings → association details, with a shortcut from the member form.
 
 = 4.7.2 =
 * New: separate official association address (Settings → association details), used for the payee on the bank transfer form and in the privacy notice. The envelope return address stays a separate setting.

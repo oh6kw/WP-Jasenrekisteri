@@ -216,7 +216,8 @@ function jasrek_member_form($id) {
             <p><label for="jasrek-sukunimi">Sukunimi *</label>
                <input type="text" id="jasrek-sukunimi" name="sukunimi" value="<?php echo esc_attr($v('sukunimi')); ?>" required></p>
             <?php if (jasrek_tunnus_on()): ?>
-            <p><label for="jasrek-tunnus"><?php echo esc_html(jasrek_tunnus_nimi()); ?></label>
+            <p><label for="jasrek-tunnus"><?php echo esc_html(jasrek_tunnus_nimi()); ?>
+               <a class="jasrek-label-link" href="<?php echo esc_url(admin_url('admin.php?page=jasrek-asetukset#jasrek-lisatunniste')); ?>">muuta nimeä</a></label>
                <input type="text" id="jasrek-tunnus" name="tunnus" value="<?php echo esc_attr($v('tunnus')); ?>" maxlength="20" class="<?php echo jasrek_settings()['tunnus_isot'] === '1' ? 'jasrek-upper' : ''; ?>"></p>
             <?php else: ?>
                <input type="hidden" name="tunnus" value="<?php echo esc_attr($v('tunnus')); ?>">

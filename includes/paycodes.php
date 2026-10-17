@@ -75,9 +75,9 @@ function jasrek_png_from_rows($rows, $scale_x, $scale_y) {
         . $chunk('IEND', '');
 }
 
-/** EPC QR -koodi PNG:nä. */
-function jasrek_qr_png($payload, $scale = 5, $margin = 4) {
-    if ($payload === '') return '';
+/** QR-koodin moduulit (true = musta) ilman reunusta, tai tyhjä taulukko. */
+function jasrek_qr_matrix($payload) {
+    if ($payload === '') return array();
     require_once JASREK_DIR . 'includes/lib/jasrek-qrcode.php';
     // Tavutila (UTF-8), virheenkorjaus M kuten EPC-standardi suosittelee
     $mode  = JASREK_QR_MODE_8BIT_BYTE;
@@ -90,18 +90,32 @@ function jasrek_qr_png($payload, $scale = 5, $margin = 4) {
         for ($t = 1; $t <= 40; $t++) {
             if (strlen($payload) <= JASREK_QRUtil::getMaxLength($t, $mode, $level)) { $type = $t; break; }
         }
-        if (!$type) return '';
+        if (!$type) return array();
         $qr->setTypeNumber($type);
         $qr->make();
     } catch (Exception $e) {
-        return ''; // QR-koodia ei voitu muodostaa – laskussa on silti virtuaaliviivakoodi
+        return array(); // QR-koodia ei voitu muodostaa – laskussa on silti virtuaaliviivakoodi
     }
     $n = $qr->getModuleCount();
+    $m = array();
+    for ($y = 0; $y < $n; $y++) {
+        $row = array();
+        for ($x = 0; $x < $n; $x++) $row[] = (bool) $qr->isDark($y, $x);
+        $m[] = $row;
+    }
+    return $m;
+}
+
+/** EPC QR -koodi PNG:nä. */
+function jasrek_qr_png($payload, $scale = 5, $margin = 4) {
+    $m = jasrek_qr_matrix($payload);
+    if (!$m) return '';
+    $n = count($m);
     $rows = array();
     for ($y = -$margin; $y < $n + $margin; $y++) {
         $row = array();
         for ($x = -$margin; $x < $n + $margin; $x++) {
-            $row[] = ($x >= 0 && $y >= 0 && $x < $n && $y < $n) ? $qr->isDark($y, $x) : false;
+            $row[] = ($x >= 0 && $y >= 0 && $x < $n && $y < $n) ? $m[$y][$x] : false;
         }
         $rows[] = $row;
     }
@@ -123,9 +137,9 @@ function jasrek_code128_patterns() {
         . '114131 311141 411131 211412 211214 211232 2331112');
 }
 
-/** Pankkiviivakoodi (Code 128 C) PNG:nä virtuaaliviivakoodin numeroista. */
-function jasrek_barcode_png($digits, $module = 2, $height = 60) {
-    if ($digits === '' || strlen($digits) % 2 !== 0 || !ctype_digit($digits)) return '';
+/** Pankkiviivakoodin (Code 128 C) moduulit (true = palkki) hiljaisine alueineen, tai tyhjä taulukko. */
+function jasrek_barcode_modules($digits) {
+    if ($digits === '' || strlen($digits) % 2 !== 0 || !ctype_digit($digits)) return array();
     $p = jasrek_code128_patterns();
     $values = array(105); // Start C
     foreach (str_split($digits, 2) as $pair) $values[] = (int) $pair;
@@ -142,8 +156,13 @@ function jasrek_barcode_png($digits, $module = 2, $height = 60) {
             $dark = !$dark;
         }
     }
-    $mods = array_merge($mods, array_fill(0, 10, false));
-    return jasrek_png_from_rows(array($mods), $module, $height);
+    return array_merge($mods, array_fill(0, 10, false));
+}
+
+/** Pankkiviivakoodi (Code 128 C) PNG:nä virtuaaliviivakoodin numeroista. */
+function jasrek_barcode_png($digits, $module = 2, $height = 60) {
+    $mods = jasrek_barcode_modules($digits);
+    return $mods ? jasrek_png_from_rows(array($mods), $module, $height) : '';
 }
 
 /** Laskun kuvat: ['jrqr' => png, 'jrbar' => png] asetusten mukaan. */

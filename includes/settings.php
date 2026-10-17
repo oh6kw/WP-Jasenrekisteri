@@ -47,6 +47,7 @@ function jasrek_handle_save_settings() {
         'ytunnus'          => sanitize_text_field(jasrek_post('ytunnus')),
         'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'viivakoodi',
         'sposti_malli'     => jasrek_post('sposti_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
+        'sposti_pdf'       => jasrek_post('sposti_pdf') === '1' ? '1' : '0',
         'lahettaja_nimi'   => sanitize_text_field(jasrek_post('lahettaja_nimi')),
         'lahettaja_email'  => sanitize_email(jasrek_post('lahettaja_email')),
         'vastaus_email'    => sanitize_email(jasrek_post('vastaus_email')),
@@ -81,7 +82,7 @@ function jasrek_handle_save_settings() {
 /** Kirjaa muuttuneet asetukset muutoslokiin. */
 function jasrek_log_settings_change($a, $b) {
     $labels = array(
-        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli',
+        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli', 'sposti_pdf' => 'Sähköpostilasku PDF-liitteenä',
         'yhteystiedot' => 'Yhteystiedot', 'lahettaja_nimi' => 'Lähettäjän nimi', 'lahettaja_email' => 'Lähettäjän osoite',
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
@@ -90,7 +91,7 @@ function jasrek_log_settings_change($a, $b) {
         'merkki_kaytossa' => 'Merkkipäivät käytössä', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
-        if (in_array($k, array('tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot', 'merkki_kaytossa'), true)) return $v === '1' ? 'kyllä' : 'ei';
+        if (in_array($k, array('sposti_pdf', 'tunnus_kaytossa', 'tunnus_isot', 'auto_muistutus', 'auto_raportti', 'poista_tiedot', 'merkki_kaytossa'), true)) return $v === '1' ? 'kyllä' : 'ei';
         return (string) $v;
     };
     $old = array(); $new = array();
@@ -148,6 +149,15 @@ function jasrek_page_settings() {
                 <p><label for="jasrek-osoite">Yhdistyksen osoite</label>
                    <textarea id="jasrek-osoite" name="osoite" rows="2" style="max-width:420px" placeholder="esim. Kerhotie 1&#10;60100 Seinäjoki"><?php echo esc_textarea($s['osoite']); ?></textarea>
                    <span class="description">Yhdistyksen virallinen osoite. Näkyy tilisiirtolomakkeen Saaja-kentässä ja tietosuojaselosteen rekisterinpitäjän tiedoissa. Kuoren palautusosoitteen voi antaa erikseen kohdassa <em>Paperilaskut</em>.</span></p>
+                <fieldset class="jasrek-fieldset" id="jasrek-lisatunniste"><legend>Jäsenten lisätunniste</legend>
+                    <span class="description">Vapaaehtoinen lisäkenttä jäsenille, esim. jäsennumero, tunnus tai kutsutunnus. Näkyy jäsenlistassa, jäsenen lomakkeella ja laskussa. Nimen voi vaihtaa vapaasti.</span>
+                    <label class="jasrek-radio"><input type="checkbox" name="tunnus_kaytossa" value="1" <?php checked($s['tunnus_kaytossa'], '1'); ?>> Lisätunniste käytössä</label>
+                    <div class="jasrek-grid">
+                        <p><label for="jasrek-tnimi">Kentän nimi</label>
+                           <input type="text" id="jasrek-tnimi" name="tunnus_nimi" value="<?php echo esc_attr($s['tunnus_nimi']); ?>" placeholder="esim. Jäsennumero, Tunnus, Kutsutunnus"></p>
+                        <p><label class="jasrek-radio" style="margin-top:28px"><input type="checkbox" name="tunnus_isot" value="1" <?php checked($s['tunnus_isot'], '1'); ?>> Muunna isoiksi kirjaimiksi (esim. kutsutunnukset)</label></p>
+                    </div>
+                </fieldset>
                 <p><label for="jasrek-maksukoodi">Maksukoodi laskussa</label>
                    <select id="jasrek-maksukoodi" name="maksukoodi">
                        <option value="molemmat" <?php selected($s['maksukoodi'], 'molemmat'); ?>>QR-koodi ja pankkiviivakoodi</option>
@@ -159,6 +169,7 @@ function jasrek_page_settings() {
                 <fieldset class="jasrek-fieldset"><legend>Sähköpostilaskun malli</legend>
                     <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="perus" <?php checked($s['sposti_malli'], 'perus'); ?>> <strong>Perusmalli</strong> – maksutiedot taulukkona sekä QR-koodi ja pankkiviivakoodi kuvina (kohdan <em>Maksukoodi laskussa</em> mukaan).</label>
                     <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="tilisiirto" <?php checked($s['sposti_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – sama ulkoasu kuin paperilaskun tilisiirtolomakkeessa. Lomake on tekstiä, joten tilinumeron, viitteen ja virtuaaliviivakoodin voi kopioida verkkopankkiin. QR-koodi ja pankkiviivakoodi tulevat kohdan <em>Maksukoodi laskussa</em> mukaan (upotettuina kuvina).</label>
+                    <label class="jasrek-radio"><input type="checkbox" name="sposti_pdf" value="1" <?php checked($s['sposti_pdf'], '1'); ?>> <strong>Liitä lasku PDF:nä</strong> – viestin liitteenä sama lasku kuin paperilaskussa: A4-sivu tilisiirtolomakkeineen, QR-koodi ja pankkiviivakoodi kohdan <em>Maksukoodi laskussa</em> mukaan. Jäsen voi tulostaa ja arkistoida laskun. Liite kasvattaa viestiä noin 5–10 kt. Koskee myös muistutuksia ja testilaskuja.</label>
                 </fieldset>
                 <p><label for="jasrek-yhteystiedot">Yhteystiedot viestien alalaitaan</label>
                    <textarea id="jasrek-yhteystiedot" name="yhteystiedot" rows="3" placeholder="Esim. Yhdistys ry · rahastonhoitaja@example.fi · www.example.fi"><?php echo esc_textarea($s['yhteystiedot']); ?></textarea></p>
@@ -270,17 +281,6 @@ function jasrek_page_settings() {
                 <p><label class="jasrek-radio"><input type="checkbox" name="auto_raportti" value="1" <?php checked($s['auto_raportti'], '1'); ?>> Lähetä yhteenveto lähetetyistä muistutuksista osoitteeseen <?php echo esc_html($raportti_to); ?></label></p>
                 <p class="description">Muistutuksen saavat vain jäsenet, joille lasku on jo lähetetty ja joilla on sähköpostiosoite. Automaattisen muistutuksen voi kytkeä pois myös yksittäiseltä laskulta. WordPress tarkistaa tilanteen kerran tunnissa, kun sivustolla on kävijöitä.
                 <?php if ($s['auto_muistutus'] === '1' && $next): ?><br>Seuraava tarkistus: <?php echo esc_html(wp_date('j.n.Y H:i', $next)); ?><?php endif; ?></p>
-            </div>
-
-            <div class="jasrek-panel">
-                <h2>Jäsenten lisätunniste</h2>
-                <p class="description">Vapaaehtoinen lisäkenttä jäsenille, esim. jäsennumero, tunnus tai lisenssinumero. Nimen voi vaihtaa vapaasti.</p>
-                <p><label class="jasrek-radio"><input type="checkbox" name="tunnus_kaytossa" value="1" <?php checked($s['tunnus_kaytossa'], '1'); ?>> Lisätunniste käytössä</label></p>
-                <div class="jasrek-grid">
-                    <p><label for="jasrek-tnimi">Kentän nimi</label>
-                       <input type="text" id="jasrek-tnimi" name="tunnus_nimi" value="<?php echo esc_attr($s['tunnus_nimi']); ?>" placeholder="esim. Jäsennumero, Tunnus"></p>
-                    <p><label class="jasrek-radio" style="margin-top:28px"><input type="checkbox" name="tunnus_isot" value="1" <?php checked($s['tunnus_isot'], '1'); ?>> Muunna isoiksi kirjaimiksi</label></p>
-                </div>
             </div>
 
             <div class="jasrek-panel">

@@ -168,7 +168,15 @@ function jasrek_send_rivi($lasku, $r, $reminder = false, $test_to = null) {
     $subject = ($reminder ? 'Muistutus: ' : '') . $lasku->nimi . ($s['yhdistys'] !== '' ? ' – ' . $s['yhdistys'] : '');
     if ($test_to) $subject = '[TESTI] ' . $subject;
 
-    $ok = jasrek_mail($to, $subject, jasrek_invoice_html($lasku, $r, $reminder), jasrek_invoice_email_images($lasku, $r));
+    $liitteet = array();
+    if ($s['sposti_pdf'] === '1') {
+        try {
+            $liitteet[jasrek_invoice_pdf_name($lasku, $r, $reminder)] = jasrek_invoice_pdf($lasku, array($r), $reminder);
+        } catch (Exception $e) {
+            $liitteet = array(); // lasku lähtee silti ilman liitettä
+        }
+    }
+    $ok = jasrek_mail($to, $subject, jasrek_invoice_html($lasku, $r, $reminder), jasrek_invoice_email_images($lasku, $r), $liitteet);
     if ($test_to) return $ok;
 
     $upd = array('viim_yritys' => $now);
@@ -956,6 +964,8 @@ function jasrek_invoice_detail($id) {
                             <a class="button button-small" target="_blank" href="<?php echo esc_url(jasrek_print_url($id, array('rivi' => $r->id, 'tulosta' => 1))); ?>">Tulosta</a>
                         <?php else: ?>
                             <a class="button button-small" target="_blank" href="<?php echo esc_url($prev_url); ?>">Näytä</a>
+                            <?php $pdf_muist = $r->lahetetty && !$r->maksettu && jasrek_rivi_era($lasku, $r) < $today; ?>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jasrek_pdf_url($r->id, $pdf_muist)); ?>" title="<?php echo esc_attr(($pdf_muist ? 'Maksumuistutus' : 'Lasku') . ' PDF-tiedostona, samannäköisenä kuin paperilasku. Voit lähettää sen jäsenelle omasta sähköpostistasi, jos lasku on hukassa.'); ?>"><?php echo $pdf_muist ? 'PDF (muistutus)' : 'PDF'; ?></a>
                         <?php endif; ?>
                         <?php if ($r->to_email && !$paperi): ?>
                             <a class="button button-small" href="<?php echo esc_url($send_url); ?>"

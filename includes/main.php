@@ -17,6 +17,7 @@ require_once JASREK_DIR . 'includes/invoices.php';
 require_once JASREK_DIR . 'includes/import-payments.php';
 require_once JASREK_DIR . 'includes/export-xlsx.php';
 require_once JASREK_DIR . 'includes/print.php';
+require_once JASREK_DIR . 'includes/pdf.php';
 require_once JASREK_DIR . 'includes/report.php';
 require_once JASREK_DIR . 'includes/voters.php';
 require_once JASREK_DIR . 'includes/backup.php';

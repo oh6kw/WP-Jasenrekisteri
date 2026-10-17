@@ -236,3 +236,5 @@ a.jasrek-card-link:hover { border-color: #2271b1; }
 .jasrek-backup-compare { max-width: 760px; margin-bottom: 16px; }
 .jasrek-backup-compare tbody th { font-weight: 600; width: 160px; }
 #jasrek-varmuuskopio h3 { margin: 12px 0 4px; }
+.jasrek-fieldset > .description { display: block; margin-bottom: 6px; }
+.jasrek-label-link { font-weight: normal; font-size: 12px; margin-left: 8px; }

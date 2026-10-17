@@ -2,6 +2,22 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.0 (2026-10-17)
+
+### Uutta: PDF-lasku
+- **Sähköpostilasku PDF-liitteenä** (valinnainen): *Asetukset → Sähköpostilaskun malli → Liitä lasku PDF:nä*. Oletuksena pois päältä.
+  - PDF on sama A4-lasku kuin paperilaskun tilisiirtolomakemalli: lähettäjä, ikkunakuoren osoite (ja palautusosoite), laskun tiedot, saate, maksuohje, QR-koodi sekä tilisiirtolomake pankkiviivakoodeineen. Jäsen voi tulostaa ja arkistoida laskun, ja tulostettuna viivakoodi toimii.
+  - Koskee laskuja, muistutuksia (otsikko *MAKSUMUISTUTUS*, muistutusteksti) ja testilaskuja. Liitteen nimi on esim. `Jasenmaksu-2027-200017.pdf`.
+  - Liite on noin 5–10 kt. Jos PDF:n tekeminen jostain syystä epäonnistuu, lasku lähtee silti ilman liitettä.
+  - QR-koodi ja pankkiviivakoodi piirretään PDF:ään vektoreina, joten ne ovat terävät millä tahansa tulostimella. Molemmat on tarkistettu viivakoodinlukijalla (QR: EPC-tiedot, viivakoodi: virtuaaliviivakoodi).
+  - Ääkköset ja €-merkki toimivat. Muut erikoismerkit (esim. Ł, č) muutetaan lähimmäksi kirjaimeksi.
+- **PDF-linkki laskun rivilistassa:** jokaisen sähköpostilaskun saajan kohdalla on *PDF*-painike, joka avaa jäsenen laskun PDF:nä. Erääntyneelle maksamattomalle laskulle painike on *PDF (muistutus)*. Rahastonhoitaja voi lähettää PDF:n jäsenelle omasta sähköpostistaan, jos jäsen on hukannut laskunsa. Lataus kirjataan muutoslokiin.
+- PDF tehdään FPDF-kirjastolla (versio 1.86, vapaa ja GPL-yhteensopiva lisenssi). Kirjaston luokka on nimetty uudelleen, jotta se ei törmää muiden lisäosien FPDF:ään, ja siitä on poistettu kuvatiedostojen lukeminen (ei tiedostojärjestelmän käsittelyä). Ei vaadi PHP:n lisälaajennuksia (toimii myös ilman mbstring- ja GD-laajennuksia).
+
+### Jäsenten lisätunniste ylemmäs
+- *Jäsenten lisätunniste* -asetukset (käytössä, kentän nimi, isot kirjaimet) siirrettiin omasta osiostaan *Asetukset → Yhdistys ja tilitiedot* -kohtaan. Kentän nimen esimerkkeinä *Jäsennumero, Tunnus, Kutsutunnus*.
+- Jäsenen lomakkeella lisätunnisteen vieressä on linkki *muuta nimeä*, joka vie suoraan asetukseen.
+
 ## 4.7.2 (2026-10-17)
 
 ### Yhdistyksen osoite ja palautusosoite erikseen

@@ -53,6 +53,7 @@ function jasrek_settings() {
         'loki_kk'         => '24',
         'postimaksu'      => '0',
         'osoite'          => '',
+        'sposti_pdf'      => '0',
         'postiosoite'     => '',
         'paperi_malli'    => 'tilisiirto',
         'sposti_malli'    => 'tilisiirto',
@@ -602,7 +603,7 @@ add_action('wp_mail_failed', function ($error) {
     $GLOBALS['jasrek_mail_error'] = $error->get_error_message();
 });
 
-function jasrek_mail($to, $subject, $html, $images = array()) {
+function jasrek_mail($to, $subject, $html, $images = array(), $attachments = array()) {
     $s = jasrek_settings();
     $headers = array('Content-Type: text/html; charset=UTF-8');
     if ($s['lahettaja_email'] && is_email($s['lahettaja_email'])) {
@@ -615,7 +616,7 @@ function jasrek_mail($to, $subject, $html, $images = array()) {
     $GLOBALS['jasrek_mail_error'] = '';
     // Lisätään viestiin myös pelkkä tekstiversio (multipart/alternative). Moni roskapostisuodatin
     // suhtautuu epäluuloisesti pelkkään HTML-viestiin.
-    $alt = function ($phpmailer) use ($html, $images) {
+    $alt = function ($phpmailer) use ($html, $images, $attachments) {
         $text = preg_replace('#<(br|/p|/tr|/div|/h\d)[^>]*>#i', "\n", $html);
         $text = preg_replace('#</t[dh]>\s*<t[dh][^>]*>#i', ': ', $text);
         $text = html_entity_decode(wp_strip_all_tags(preg_replace('#<head.*?</head>#is', '', $text)), ENT_QUOTES, 'UTF-8');
@@ -624,6 +625,10 @@ function jasrek_mail($to, $subject, $html, $images = array()) {
         // Kuvat upotetaan viestiin (cid:), jolloin ne näkyvät ilman ulkoisia latauksia.
         foreach ($images as $cid => $png) {
             $phpmailer->addStringEmbeddedImage($png, $cid, $cid . '.png', 'base64', 'image/png');
+        }
+        // Liitteet muistista (esim. PDF-lasku) – ei väliaikaistiedostoja
+        foreach ($attachments as $name => $data) {
+            $phpmailer->addStringAttachment($data, $name, 'base64', 'application/pdf');
         }
     };
     add_action('phpmailer_init', $alt);

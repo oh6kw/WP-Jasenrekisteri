@@ -128,6 +128,8 @@ Jos oman pankkisi tiedosto ei aukea, avaa [issue](https://github.com/oh6kw/oh6kw
 
 Asetuksista voi valita, näytetäänkö QR-koodi, viivakoodi, molemmat vai ei kumpaakaan. Kuvat upotetaan sähköpostiin, joten ne näkyvät ilman ulkoisia latauksia. Kuvien tekemiseen ei tarvita PHP:n GD-laajennusta.
 
+**PDF-lasku:** sähköpostilaskun liitteeksi voi valita PDF:n (*Asetukset → Sähköpostilaskun malli → Liitä lasku PDF:nä*). PDF on sama A4-lasku kuin paperilasku: ikkunakuoren osoite, saate, QR-koodi ja tilisiirtolomake pankkiviivakoodeineen. Yksittäisen jäsenen laskun (tai erääntyneen laskun muistutuksen) voi ladata PDF:nä myös laskun rivilistasta, esim. jos jäsen on hukannut laskunsa.
+
 ## Tietosuoja ja tietoturva
 
 Jäsenrekisteri sisältää henkilötietoja. Rekisterinpitäjä on yhdistys, ja sen tulee laatia jäsenrekisteristä tietosuojaseloste.
@@ -181,7 +183,9 @@ includes/
   export-xlsx.php           Laskujen Excel-raportti
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
+  pdf.php                   PDF-lasku (liite ja lataus)
   lib/jasrek-qrcode.php     QR-koodikirjasto (MIT)
+  lib/jasrek-fpdf.php       PDF-kirjasto FPDF 1.86 (vapaa lisenssi, GPL-yhteensopiva)
 assets/                     Hallinnan CSS ja JavaScript sekä tulostettavien sivujen tyylit (print.css, voters.css, print-page.js)
 ```
 
@@ -213,7 +217,7 @@ Katso [CHANGELOG.md](CHANGELOG.md).
 
 Saat käyttää, muokata ja jakaa lisäosaa vapaasti. Jos jaat muokatun version tai tarjoat sitä palveluna verkon yli, myös muokattu lähdekoodi on annettava saataville saman lisenssin ehdoin.
 
-QR-koodien tekoon käytetään Kazuhiko Arasen [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)-kirjastoa (MIT-lisenssi, [includes/lib/LICENSE-qrcode.txt](includes/lib/LICENSE-qrcode.txt)).
+QR-koodien tekoon käytetään Kazuhiko Arasen [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator)-kirjastoa (MIT-lisenssi, [includes/lib/LICENSE-qrcode.txt](includes/lib/LICENSE-qrcode.txt)). PDF-laskut tehdään Olivier Platheyn [FPDF](http://www.fpdf.org/)-kirjastolla (versio 1.86, vapaa lisenssi, [includes/lib/LICENSE-fpdf.txt](includes/lib/LICENSE-fpdf.txt)); luokka on nimetty uudelleen (JASREK_FPDF), jotta se ei törmää muiden lisäosien FPDF:ään, ja kuvien lukeminen tiedostoista on poistettu.
 
 ---
 
