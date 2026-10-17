@@ -84,12 +84,6 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 
 **Päivitys:** lataa uusi zip samalla tavalla. WordPress tarjoaa nykyisen version korvaamista, ja tietokanta päivittyy automaattisesti. Ota varmuuskopio ennen päivitystä.
 
-**Päivitys versiosta 4.6.4 tai vanhemmasta (kansio `jasenrekisteri`):** lisäosan nimi ja kansio muuttuivat versiossa 4.6.5, joten WordPress asentaa sen uutena lisäosana. Tiedot säilyvät, kun teet näin:
-1. Ota varmuuskopio.
-2. Poista vanha *Jäsenrekisteri* käytöstä ja valitse kyselyssä **Säilytä tiedot**.
-3. Asenna ja ota käyttöön `oh6kw-jasenrekisteri.zip`. Jäsenet, laskut ja asetukset ovat heti käytössä.
-4. Poista vanha lisäosa vasta tämän jälkeen. Varmista ensin, että *Asetukset → Lisäosan poistaminen* -kohdassa tietoja **ei** ole valittu poistettavaksi.
-
 ## Käyttöönotto
 
 1. **Asetukset:** yhdistyksen nimi, tilinumero (IBAN, ohjelma tarkistaa sen), lähettäjän sähköposti ja vastausosoite (esim. rahastonhoitaja).
