@@ -441,6 +441,7 @@ function jasrek_member_list() {
     <h1 class="wp-heading-inline">Jäsenrekisteri</h1>
     <a href="<?php echo esc_url(add_query_arg(array('view' => 'new', 'laji' => strpos($nayta, 'l_') === 0 ? substr($nayta, 2) : null), $base)); ?>" class="page-title-action">Lisää uusi jäsen</a>
     <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=jasrek_export_all'), 'jasrek_export_all')); ?>" class="page-title-action" title="Jäsenet, lisäkentät, jäsenluokat, laskut, maksut ja muutosloki omille välilehdilleen">Vie kaikki tiedot Exceliin</a>
+    <a href="<?php echo esc_url(jasrek_member_print_url($nayta === 'eronnut' ? array('tila' => 'eronnut') : (strpos($nayta, 'l_') === 0 ? array('laji' => substr($nayta, 2)) : array()))); ?>" class="page-title-action" target="_blank" title="Jäsenluettelo tulostettavana A4-sivuna: nimi, <?php echo esc_attr(jasrek_tunnus_on() ? jasrek_lower(jasrek_tunnus_nimi()) . ', ' : ''); ?>sähköposti, puhelin, osoite, liittymis- ja syntymäpäivä. Paperille tai PDF:ksi.">Tulosta jäsenluettelo</a>
     <hr class="wp-header-end">
     <?php jasrek_notice(); ?>
 

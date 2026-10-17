@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.8.4
+Stable tag: 4.8.5
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -21,6 +21,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 * Search, sorting, bulk actions and a full invoice and payment history for every member.
 * Custom fields defined in the settings, such as a clubhouse key number (text) or a yes/no checkbox, optionally shown as a column in the member list.
 * CSV import and export (Excel compatible). Columns are recognised from the headers.
+* Printable member list (A4 landscape, paper or PDF): name, member ID, chosen custom fields, email, phone, address, joining date and year or date of birth.
 * Export everything to Excel: one workbook with a summary, members, each custom field (e.g. keys), membership classes, invoices, every invoice row with payments, open payments and the audit log.
 * The resignation date is recorded, for accurate yearly member counts.
 * Optional milestones: members reaching round birthdays (from an optional birth year or birth date) or membership anniversaries; the years are configurable and the feature can be switched off.
@@ -124,6 +125,10 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 12. Membership fees for bookkeeping: posting proposal for the accountant, breakdown by membership class and open fees.
 
 == Changelog ==
+
+= 4.8.5 =
+* New: "Print member list" button on the Members page. A tidy A4 landscape list for paper or PDF: name, member ID, chosen custom fields, membership class, email, phone, address, joining date and year or date of birth. Choose current, resigned or all members, a membership class and the sort order.
+* The voter list now shows the same print/PDF instruction as the other printable pages.
 
 = 4.8.4 =
 * New: "Export everything to Excel" button on the Members page. One workbook with a summary, all members (current and resigned), each custom field on its own sheet (e.g. keys), membership classes, invoices, every invoice row with payment details, open payments and the audit log. For reading and archiving; restoring still uses the backup.

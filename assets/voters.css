@@ -8,6 +8,7 @@ body { margin: 0; background: #e9ecef; font-family: Arial, Helvetica, sans-serif
 .tools input[type=text], .tools select, .tools input[type=date] { font-size: 14px; padding: 4px 6px; }
 .tools button { font-size: 14px; padding: 6px 14px; border-radius: 4px; border: 0; cursor: pointer; background: #fff; color: #1d3557; font-weight: bold; }
 .tools a { color: #fff; }
+.tools .info { flex-basis: 100%; opacity: .85; font-size: 13px; }
 .paperi { width: 210mm; min-height: 297mm; margin: 10mm auto; background: #fff; padding: 12mm; box-shadow: 0 2px 12px rgba(0,0,0,.2); }
 h1 { font-size: 16pt; margin: 0 0 1mm; color: #1d3557; }
 .ala { color: #555; margin: 0 0 5mm; }

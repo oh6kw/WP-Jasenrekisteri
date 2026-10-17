@@ -2,6 +2,19 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.5 (2026-10-17)
+
+### Uutta: Tulosta jäsenluettelo
+- Jäsenet-sivun yläreunaan, *Vie kaikki tiedot Exceliin* -painikkeen viereen, uusi painike **Tulosta jäsenluettelo**. Se avaa uuteen välilehteen siistin, vaakasuuntaisen A4-luettelon paperille tai PDF:ksi.
+- Sarakkeet: järjestysnumero, nimi (sukunimi etunimi), tunnus (esim. kutsumerkki), jäsenluokka, valitut omat lisäkentät (esim. kerhon avain), sähköposti, puhelin, osoite, liittymispäivä ja syntymävuosi/-päivä. Eronneita tulostettaessa myös eroamispäivä.
+- Työkalurivillä valitaan: voimassa olevat / eronneet / kaikki, jäsenluokka, järjestys (sukunimi tai tunnus) ja näytettävät sarakkeet (jäsenluokka ja jokainen oma lisäkenttä). Oletuksena näytetään lisäkentät, jotka näkyvät myös jäsenlistassa. Jos jäsenlistassa on auki jäsenluokan tai eronneiden välilehti, tuloste avautuu sen mukaisena.
+- Ohje samaan tapaan kuin muissa tulosteissa: *Tulosta tämä paperille tai tallenna PDF:nä (tulostusikkunassa tulostimeksi Tallenna PDF-tiedostona).* Otsikkorivi toistuu jokaisella sivulla.
+- Alareunassa muistutus: luettelo sisältää henkilötietoja, säilytä huolellisesti ja hävitä tarpeeton tuloste.
+- Tulostus kirjataan muutoslokiin.
+
+### Muuta
+- Äänioikeusluettelon työkalurivillä on nyt sama tulostus- ja PDF-ohje kuin muissa tulosteissa.
+
 ## 4.8.4 (2026-10-17)
 
 ### Uutta: Vie kaikki tiedot Exceliin
