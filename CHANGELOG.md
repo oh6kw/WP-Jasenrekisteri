@@ -2,6 +2,30 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.2 (2026-10-17)
+
+### Uutta: Jäsenmaksut kirjanpitoon
+- Uusi välilehti **Vuosiraportti → Jäsenmaksut kirjanpitoon**: raportti rahastonhoitajalle ja kirjanpitäjälle. Lisäosa ei tee kirjanpitoa, vaan kokoaa jäsenmaksuista sen, mitä kirjanpitoon tarvitaan, käytti kirjanpitäjä mitä ohjelmaa tahansa.
+- **Aikaväli** vapaasti (alkaen–päättyen) tai pikavalinnoilla: tilikausi, edellinen kuukausi, kuluva kuukausi. Oletuksena kuluva tilikausi (tammi–helmikuussa edellinen).
+- **Vientiehdotus** kahdenkertaiseen kirjanpitoon: *debet Pankkitili / kredit Jäsenmaksutuotot*, maksupäivittäin (oletus, täsmää tiliotteeseen) tai kuukausittain (päivänä kuun viimeinen päivä). Selitteessä maksujen määrä ja laskun nimi. Paperilaskujen postimaksut omana vientinään.
+- **Tilit** asetetaan kohdassa *Asetukset → Jäsenmaksut kirjanpitoon* (esim. *1910 Pankkitili*, *3000 Jäsenmaksutuotot*). Tyhjänä käytetään tilin nimeä. Postimaksuille voi antaa oman tilin tai saman kuin jäsenmaksuille.
+- **Jäsenluokittain:** maksut, jäsenmaksut ja postimaksut luokittain (luokka laskutushetken mukaan).
+- **Poikkeavat maksut:** maksut, joiden summa poikkeaa laskusta (yli- ja alimaksut), maksajan nimi ja erotus. Vientiehdotuksessa on todellinen maksettu summa.
+- **Avoimet jäsenmaksut aikavälin lopussa** laskuittain (tilinpäätöksen saamisia varten).
+- **Tulosta** (sama tulostettava sivu kuin vuosiraportissa) ja **Vie Exceliin**: välilehdet *Vientiehdotus*, *Maksut* (jokainen maksu jäsenittäin: maksupäivä, jäsen, lasku, viite, jäsenluokka, laskutettu, maksettu, postimaksu, maksaja), *Jäsenluokittain*, *Poikkeavat maksut* ja *Avoimet* jäsenittäin. Excel-vienti kirjataan muutoslokiin.
+- Summat on tarkistettu tietokannan maksuja vasten; maksupäivittäinen ja kuukausittainen vientiehdotus antavat saman loppusumman.
+
+### Tekstit ja kuvat
+- **Toimii vain hallintapaneelissa:** README, wordpress.orgin kuvaus ja Tietoja-sivu kertovat, ettei lisäosa julkaise sivustolle mitään (ei sivuja, lomakkeita, lyhytkoodeja eikä lohkoja) ja että WordPress hoitaa kirjautumisen, käyttäjät, automaattiset päivitykset sekä webhotellin varmuuskopiot ja HTTPS:n.
+- wordpress.orgin kuvaus jäsennelty uudelleen: sähköposti- ja paperilasku omina kohtinaan, *Raportit vuosikokoukseen ja kirjanpitäjälle*, *Tietosuoja, varmuuskopio ja siirto*. Uudet usein kysytyt kysymykset: näkyykö sivustolla jotain, ja tekeekö lisäosa kirjanpidon.
+- Uusi kuvakaappaus *Jäsenmaksut kirjanpitoon* (README ja wordpress.org, kuva 12).
+- Uusi wordpress.orgin ikoni ja banneri, joissa pieni Suomen lippu (lähteet `docs/brand/`).
+- Kuvat 02, 05 ja 11 otettu uudelleen: päivämäärät suomalaisessa muodossa ja jäsenlomake nykyisen näköisenä.
+- Vanhentunut ohje päivityksestä versiosta 4.6.4 tai vanhemmasta poistettu.
+
+### Muuta
+- GitHubin julkaisuautomaatio: käsin tehty julkaisu ei enää käynnistä automaatiota kahdesti (aiemmin toinen ajo näkyi epäonnistuneena), ja työkalut päivitetty (Node.js 20 -varoitus poistuu). Ei vaikuta lisäosaan.
+
 ## 4.8.1 (2026-10-17)
 
 ### Sähköpostilasku: maksukortti tilisiirtolomakkeen tilalle

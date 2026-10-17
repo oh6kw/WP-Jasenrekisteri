@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.8.1
+Stable tag: 4.8.2
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -27,8 +27,9 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 **Invoicing**
 
 * One click sends every member an individual invoice by email, with a unique Finnish reference number (viitenumero, 7-3-1 check digit).
-* Every invoice contains an EPC QR code, a Finnish bank barcode (version 4) and a virtual barcode, so paying in a banking app takes seconds.
-* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL). An optional postage fee can be added to paper invoices only. Choose between the standard layout and a traditional Finnish bank transfer form (tilisiirtolomake) at the bottom of the page. Email invoices show a clear payment card (amount, due date, copyable payment details, virtual barcode and QR code) and can optionally include the same A4 invoice as a PDF attachment. Any member's invoice can also be printed or saved as PDF from the invoice page.
+* Email invoices show a clear payment card that works on phones and computers: amount and due date, copyable payment details, a virtual barcode and an optional EPC QR code. The same A4 invoice as on paper can be attached as a PDF.
+* Members who prefer paper, or have no email address, get a printable A4 invoice that fits a window envelope (C5/DL), with a traditional Finnish bank transfer form (tilisiirtolomake) and bank barcode at the bottom of the page, or a simpler standard layout. An optional postage fee can be added to paper invoices only.
+* If a member loses an email invoice, the same A4 invoice can be printed or saved as PDF from the invoice page.
 * Sending runs in small batches with a progress bar, so large member lists do not time out. Test invoices and previews before sending.
 * Manual or automatic payment reminders.
 * Members who join mid-season can be added to an invoice that has already been sent, with their own due date.
@@ -39,13 +40,14 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 * A preview shows matching payments, differing amounts and unknown references before anything is saved. The same payment is never recorded twice.
 * Excel export of all invoices: a summary, all open payments and one sheet per invoice.
 
-**Reports and audit log**
+**Reports for the general meeting and the accountant**
 
-* Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
 * Annual report for the general meeting: member counts per class at the start and end of the year, joined and resigned members, invoiced, paid and open fees, and fees received during the year. Printable and exportable to Excel.
+* Membership fees for bookkeeping: a ready posting proposal for the accountant (debit bank account / credit membership fee income) per payment day or per month for any period, a breakdown by membership class, postage fees separately, payments that differ from the invoice, and open fees at the end of the period. Printable and exportable to Excel with every payment by member. The plugin does not do the bookkeeping itself – it gives the accountant what is needed, whatever bookkeeping software they use.
+* Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
 * Audit log: who changed what and when, including old and new values of member data, payments, sending, settings and exports. The retention period is configurable.
 
-**Backup and moving**
+**Privacy, backup and moving**
 
 * Privacy (GDPR): a pre-filled privacy notice template for the member register, and support for the WordPress personal data export and erase tools (members are found by email address; erasing anonymises the member and keeps the fee amounts for bookkeeping).
 * Full backup in one file (JSON, compressed): members, invoices, payments, settings and optionally the audit log. Restore it on the same or another site, for example when the register moves to a new website. A summary is shown before restoring, the file is checked before anything is changed, and the previous state is kept so a restore can be undone.
@@ -53,6 +55,12 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 **Newsletters**
 
 * Email to all members, one membership class, or members with unpaid invoices. Placeholders such as {etunimi} (first name) personalise every message.
+
+**Admin only – nothing is published on the website**
+
+The plugin adds nothing to the public site: no pages, forms, shortcodes or blocks, and member data is never shown to visitors. The register lives in the WordPress admin and only administrators can use it.
+
+WordPress does the heavy lifting: user login and roles (add two-factor authentication with a separate plugin if you like), automatic plugin updates, and your host's backups and HTTPS. The association gets a member register without a separate service, monthly fees or new accounts – it runs behind the website you already have.
 
 Developed by Jarno Jaskari (oh6kw) together with Claude, an AI assistant made by Anthropic.
 
@@ -70,6 +78,14 @@ Source code, issue tracker and full Finnish documentation: [github.com/oh6kw/oh6
 6. Create an invoice (Laskutus → Uusi lasku), send a test invoice to yourself and then send the invoices.
 
 == Frequently Asked Questions ==
+
+= Does the plugin show anything on the website? =
+
+No. It works only in the WordPress admin. It adds no pages, forms, shortcodes or blocks, and visitors never see member data.
+
+= Does it do the association's bookkeeping? =
+
+No. The plugin keeps the member register and membership fees. For the accountant it produces the "Membership fees for bookkeeping" report: a posting proposal, a breakdown and open fees, printable and in Excel. The bookkeeping and the financial statements are done in the association's own bookkeeping software or by its accountant.
 
 = Does it work outside Finland? =
 
@@ -104,8 +120,12 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 9. Voting register for the general meeting.
 10. Backup and restore in the settings.
 11. The email invoice on a phone.
+12. Membership fees for bookkeeping: posting proposal for the accountant, breakdown by membership class and open fees.
 
 == Changelog ==
+
+= 4.8.2 =
+* New: "Membership fees for bookkeeping" report (Annual report → second tab) for the treasurer and the accountant: a posting proposal (debit bank account / credit membership fee income) per payment day or per month for any period, breakdown by membership class, postage fees separately, payments that differ from the invoice, and open membership fees at the end of the period. Printable and exportable to Excel (including every payment by member). Account names or numbers are set in the settings. The plugin does not do bookkeeping itself.
 
 = 4.8.1 =
 * Email invoice: the bank transfer form layout is replaced by a payment card that works on phones and computers (amount and due date, copyable payment details, virtual barcode, QR code). Sites that used the old layout switch automatically.
@@ -160,9 +180,3 @@ The full Finnish changelog is in CHANGELOG.md.
 
 = 4.7.0 =
 Adds backup and restore, privacy tools and the Finnish bank transfer form layout, which is now the default for paper and email invoices (the previous layout can be chosen in the settings).
-
-= 4.6.5 =
-Renamed to OH6KW Jäsenrekisteri with a new plugin folder. When updating from an earlier version installed from a zip, deactivate the old plugin (keep data), then activate the new one. Data is kept. Adds a voting register and optional milestones.
-
-= 4.6.2 =
-Settings move to new option names automatically. In cover texts, {summa} is now the membership fee without postage; use {maksettava} for the total amount payable.

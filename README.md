@@ -2,7 +2,7 @@
 
 Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisille yhdistyksille.
 
-Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella, ja tulosta paperilaskut niille, jotka niitä haluavat. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
+Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella, ja tulosta paperilaskut niille, jotka niitä haluavat. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi. Vuosikokoukseen saat vuosiraportin ja äänioikeusluettelon, kirjanpitäjälle valmiin vientiehdotuksen jäsenmaksuista.
 
 [![Versio](https://img.shields.io/github/v/release/oh6kw/oh6kw-jasenrekisteri?label=versio)](https://github.com/oh6kw/oh6kw-jasenrekisteri/releases/latest)
 ![WordPress 6.2+](https://img.shields.io/badge/WordPress-6.2%2B-21759b)
@@ -13,6 +13,19 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 ![Jäsenlista](docs/kuvat/01-jasenlista.png)
 
 > Kuvissa on keksitty esimerkkiyhdistys. Nimet, jäsennumerot, osoitteet ja puhelinnumerot ovat kuvitteellisia, ja tilinumero on pankkien yleisesti käyttämä esimerkkinumero.
+
+## Toimii vain hallintapaneelissa
+
+Lisäosa ei julkaise sivustolle mitään. Se ei lisää sivuja, lomakkeita, lyhytkoodeja eikä lohkoja, eikä jäsentietoja näy sivuston kävijöille. Jäsenrekisteri on WordPressin hallintapaneelissa vain ylläpitäjien käytössä.
+
+WordPress toimii rekisterin ”moottorina”, ja sen valmiit ominaisuudet hoitavat paljon:
+- **Kirjautuminen ja käyttäjät:** rekisterin näkevät vain ylläpitäjät. Kirjautumista voi vahvistaa esimerkiksi kaksivaiheisella tunnistautumisella erillisellä lisäosalla.
+- **Automaattiset päivitykset:** kun lisäosa on asennettu WordPress.orgista, WordPress voi päivittää sen automaattisesti.
+- **Varmuuskopiot:** rekisteri on sivuston omassa tietokannassa, joten webhotellin tai varmuuskopiolisäosan kopiot kattavat myös sen. Lisäosassa on lisäksi oma varmuuskopio rekisterin siirtoon.
+- **Sähköposti:** laskut lähtevät WordPressin sähköpostin kautta. SMTP-lisäosalla ne lähtevät yhdistyksen omalta sähköpostitililtä.
+- **Salattu yhteys (HTTPS)** ja palvelimen ylläpito tulevat sivuston omasta webhotellista.
+
+Näin yhdistys saa jäsenrekisterin ilman erillistä palvelua, kuukausimaksuja tai uusia tunnuksia. Rekisteri toimii jo olemassa olevan sivuston taustalla.
 
 ## Ominaisuudet
 
@@ -33,12 +46,13 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 **Laskutus**
 - Lasku koko jäsenistölle tai valituille jäsenille. Summa määräytyy jäsenluokan mukaan, ja sitä voi muuttaa laskukohtaisesti.
 - Yksilöllinen viitenumero (7-3-1-tarkiste), josta näkee suoraan laskun ja jäsenen.
-- Siisti HTML-lasku, jossa on EPC QR -koodi, pankkiviivakoodi (versio 4) ja virtuaaliviivakoodi tekstinä. Sähköpostissa on mukana myös tekstiversio.
+- Laskussa on EPC QR -koodi ja/tai pankkiviivakoodi (versio 4) asetuksen mukaan sekä aina virtuaaliviivakoodi tekstinä. Sähköpostissa on mukana myös tekstiversio.
 - Ennen lähetystä voi esikatsella laskun ja lähettää testilaskun valittuun osoitteeseen.
 - Lähetys tehdään pienissä erissä edistymispalkin kanssa, joten suurikaan jäsenmäärä ei aiheuta aikakatkaisuja. Jo lähetettyjä laskuja ei lähetetä uudelleen.
 - **Paperilaskut:** jäsenelle voi valita ”Haluaa laskun paperilla”. Hänelle ja jäsenille, joilla ei ole sähköpostia, ei lähetetä sähköpostia, vaan laskun sivulla on oma lista, josta laskut tulostetaan A4-paperille ikkunakuoreen sopiviksi (QR- ja pankkiviivakoodeineen) ja merkitään postitetuiksi. Myös paperiset maksumuistutukset.
 - **Paperilaskun malli:** perusmalli tai perinteinen suomalainen **tilisiirtolomake** sivun alareunassa (Asetukset → Paperilaskut). Kummassakin mallissa nimi ja osoite osuvat kuoren ikkunaan.
 - **Sähköpostilasku maksukorttina** (oletus): summa ja eräpäivä isolla, maksun tiedot allekkain helposti kopioitavina, virtuaaliviivakoodi ja QR-koodi. Toimii puhelimessa ja tietokoneella. Valinnaisena **PDF-liite**, joka on sama A4-lasku kuin paperilasku.
+- **Lasku hukassa?** Sähköpostilaskun saajan rivillä on *Tulosta*-painike (erääntyneelle *Tulosta muistutus*): sama A4-lasku tulostettavaksi tai tallennettavaksi PDF:nä, jonka voi lähettää jäsenelle omasta sähköpostista.
 - **Postimaksu:** asetuksissa voi määrittää postimaksun (esim. 2,50 €), joka lisätään vain paperilaskun saajien laskuihin. Laskun yläosassa näkyvät erikseen jäsenmaksu, postimaksu ja maksettava, ja QR- ja viivakoodissa on kokonaissumma. Vuosiraportti erittelee kertyneet postimaksut. Saatetekstissä `{summa}` on jäsenmaksu ja `{maksettava}` maksettava yhteensä. Ikkunakuoren palautusosoitteen voi antaa asetuksissa.
 - Maksumuistutukset käsin tai automaattisesti, esim. 14 päivää eräpäivän jälkeen ja enintään 2 kertaa. Rahastonhoitaja saa halutessaan yhteenvedon lähetetyistä muistutuksista.
 
@@ -49,9 +63,10 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Merkintä onnistuu myös käsin, yksittäin tai joukkona. Hakukenttä löytää laskun tiliotteen viitteellä.
 - **Excel-raportti:** yhdellä painalluksella kaikki laskut yhteen Excel-tiedostoon: yhteenveto, kaikki avoimet maksut ja jokainen lasku omalla välilehdellään (kuka on maksanut, kuka ei, maksupäivät ja maksajat).
 
-**Vuosiraportti ja muutosloki**
+**Raportit vuosikokoukseen ja kirjanpitäjälle**
 - **Äänioikeusluettelo vuosikokoukseen:** tulostettava luettelo jäsenistä, joiden jäsenmaksu valitulta laskulta on maksettu tai joiden jäsenluokan jäsenmaksu on 0 €, ja allekirjoitussarake.
 - **Vuosiraportti vuosikokoukseen:** jäsenmäärät jäsenluokittain vuoden alussa ja lopussa, liittyneet ja eronneet, vuoden laskut (laskutettu, maksettu, avoinna) jäsenluokittain sekä vuoden aikana kertyneet jäsenmaksut ja vuoden merkkipäivät. Tulostettavissa ja vietävissä Exceliin.
+- **Jäsenmaksut kirjanpitoon** (Vuosiraportin toinen välilehti): vientiehdotus kirjanpitäjälle (*Pankkitili / Jäsenmaksutuotot*) maksupäivittäin tai kuukausittain mille tahansa aikavälille, erittely jäsenluokittain, postimaksut erikseen, poikkeavat maksut ja avoimet jäsenmaksut aikavälin lopussa. Tilien nimet tai numerot asetuksissa. Tulostettavissa ja Exceliin (myös jokainen maksu jäsenittäin). Lisäosa ei tee kirjanpitoa – raportti on apu kirjanpitäjälle.
 - **Muutosloki:** kuka muutti mitä ja milloin – jäsenten tiedot vanha → uusi, maksumerkinnät, lähetykset, postitukset, laskut, asetukset, tiedotteet, tuonnit ja viennit. Jäsenen sivulla näkyy hänen oma muutoshistoriansa. Säilytysaika valitaan asetuksista.
 
 **Tiedotteet**
@@ -71,8 +86,8 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Omat lisäkentät](docs/kuvat/17-lisakentat.png) **Omat lisäkentät** ja **merkkipäivien** valinnat asetuksissa. | ![Äänioikeusluettelo](docs/kuvat/18-aanioikeusluettelo.png) **Äänioikeusluettelo** vuosikokoukseen allekirjoitussarakkeineen. |
 | ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
 | ![Varmuuskopio](docs/kuvat/20-varmuuskopio.png) **Varmuuskopio ja siirto** asetuksissa. | ![Palautus](docs/kuvat/21-palautus.png) **Palautus:** yhteenveto ja vahvistus ennen kuin mitään muutetaan. |
-| ![Maksukortti puhelimessa](docs/kuvat/25-maksukortti-puhelin.png) **Sähköpostilasku puhelimessa.** | ![Tietosuojaseloste](docs/kuvat/23-tietosuojaseloste.png) **Tietosuojaselosteen pohja** yhdistyksen tiedoilla. |
-| ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
+| ![Jäsenmaksut kirjanpitoon](docs/kuvat/26-kirjanpito.png) **Jäsenmaksut kirjanpitoon:** vientiehdotus kirjanpitäjälle, erittely jäsenluokittain ja avoimet jäsenmaksut. | ![Maksukortti puhelimessa](docs/kuvat/25-maksukortti-puhelin.png) **Sähköpostilasku puhelimessa.** |
+| ![Tietosuojaseloste](docs/kuvat/23-tietosuojaseloste.png) **Tietosuojaselosteen pohja** yhdistyksen tiedoilla. | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. |
 
 ## Asennus
 
