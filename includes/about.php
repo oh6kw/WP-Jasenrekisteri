@@ -57,6 +57,7 @@ function jasrek_page_about() {
         <div class="jasrek-panel">
             <h2>OH6KW Jäsenrekisteri <?php echo esc_html(JASREK_VERSION); ?></h2>
             <p>Jäsenrekisteri ja jäsenmaksulaskutus yhdistyksille.</p>
+            <p class="description">Jäsenrekisteri toimii vain hallintapaneelissa. Sivustolle ei julkaista mitään, eikä jäsentietoja näy kävijöille.</p>
             <dl>
                 <dt>Tekijä</dt>
                 <dd>Jarno Jaskari, OH6KW – alkuperäinen lisäosa, ideointi ja ylläpito</dd>

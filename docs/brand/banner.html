@@ -1,0 +1,41 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1544px;height:500px;overflow:hidden;font-family:"Inter","Segoe UI",Arial,sans-serif;
+ background:radial-gradient(900px 500px at 85% 20%,#2f5f98 0%,rgba(47,95,152,0) 60%),linear-gradient(120deg,#0f2140 0%,#1a3358 45%,#22426e 100%);color:#fff;position:relative}
+.dots{position:absolute;inset:0;background-image:radial-gradient(rgba(255,255,255,.07) 1.5px,transparent 1.6px);background-size:28px 28px;mask-image:linear-gradient(90deg,transparent 0%,#000 55%)}
+.left{position:absolute;left:92px;top:74px;width:760px}
+.tag{font-weight:700;letter-spacing:.28em;color:#8fb8ff;font-size:26px}
+h1{font-size:96px;font-weight:800;letter-spacing:-.02em;margin:6px 0 14px;line-height:1}
+.sub{font-size:30px;color:#dbe6f5;line-height:1.3}
+.chips{margin-top:28px;display:flex;flex-wrap:wrap;gap:10px;width:760px}
+.chip{font-size:20px;padding:8px 16px;border-radius:999px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);color:#e8f0fb}
+.chip b{color:#7ee2a8;font-weight:700;margin-right:6px}
+/* paperi */
+.paper{position:absolute;right:300px;top:58px;width:300px;height:400px;background:#fff;border-radius:10px;transform:rotate(-7deg);box-shadow:0 30px 60px rgba(0,0,0,.35);padding:24px 22px;color:#1f2933}
+.paper .t{font-weight:800;color:#1d3557;font-size:20px}
+.ln{height:9px;border-radius:5px;background:#e3e8ef;margin:9px 0}
+.form{position:absolute;left:14px;right:14px;bottom:52px;height:118px;border-top:2px dashed #9aa5b1;padding-top:8px}
+.grid{display:grid;grid-template-columns:30% 70%;height:100%;border:2px solid #111}
+.grid div{border-bottom:2px solid #111}
+.grid div:nth-child(odd){border-right:2px solid #111}
+.bar{position:absolute;left:18px;bottom:14px;height:30px;width:200px;background:repeating-linear-gradient(90deg,#111 0 2px,#fff 2px 4px,#111 4px 7px,#fff 7px 8px,#111 8px 9px,#fff 9px 12px)}
+/* maksukortti */
+.card{position:absolute;right:70px;top:110px;width:330px;background:#fff;border-radius:18px;box-shadow:0 30px 70px rgba(0,0,0,.4);overflow:hidden;color:#1f2933;transform:rotate(3deg)}
+.card .top{background:#eaf2fb;padding:20px 22px}
+.small{font-size:16px;color:#6b7785}
+.amt{font-size:42px;font-weight:800;color:#1d3557;line-height:1.1}
+.row{padding:12px 22px;border-top:1px solid #e3e8ee}
+.row .v{font-size:19px;font-weight:700;font-family:Consolas,Menlo,monospace}
+.paid{position:absolute;right:14px;top:14px;background:#1f9d55;color:#fff;font-weight:700;font-size:15px;padding:5px 11px;border-radius:999px}
+.coin{position:absolute;right:380px;bottom:36px;width:96px;height:96px;border-radius:50%;background:linear-gradient(145deg,#3ccf7f,#1f9d55);box-shadow:0 14px 30px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:54px;font-weight:800;color:#fff}
+</style></head><body><div class="dots"></div>
+<div class="left"><div class="tag">OH6KW</div><h1>Jäsenrekisteri</h1>
+<div class="sub">Jäsenrekisteri ja jäsenmaksulaskutus<br>suomalaisille yhdistyksille</div>
+<div class="chips"><span class="chip"><b>✓</b>Viitenumerot</span><span class="chip"><b>✓</b>QR- ja pankkiviivakoodi</span><span class="chip"><b>✓</b>PDF- ja paperilaskut</span><span class="chip"><b>✓</b>Pankkituonti</span><span class="chip"><b>✓</b>Vuosiraportti</span><span class="chip"><b>✓</b>Kirjanpitoraportti</span></div></div>
+<div class="paper"><div class="t">LASKU</div><div class="ln" style="width:60%"></div><div class="ln" style="width:85%"></div><div class="ln" style="width:75%"></div><div class="ln" style="width:50%"></div>
+<div class="form"><div class="grid"><div></div><div></div><div></div><div></div><div></div><div></div></div></div><div class="bar"></div></div>
+<div class="card"><div class="top"><div class="small">Maksettava</div><div class="amt">25,00 €</div><div style="font-size:17px;margin-top:4px">Eräpäivä <b>31.10.</b></div><span class="paid">✓ Maksettu</span></div>
+<div class="row"><div class="small">Saajan tilinumero (IBAN)</div><div class="v">FI79 4405 2020 0360 82</div></div>
+<div class="row"><div class="small">Viitenumero</div><div class="v">2 00017</div></div></div>
+<div class="coin">€</div>
+</body></html>
