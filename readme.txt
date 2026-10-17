@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.8.2
+Stable tag: 4.8.3
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -123,6 +123,10 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 12. Membership fees for bookkeeping: posting proposal for the accountant, breakdown by membership class and open fees.
 
 == Changelog ==
+
+= 4.8.3 =
+* Fix: CSV import no longer merges two different people who share an email address (e.g. a parent and a youth member). An email address alone now identifies an existing member only if the first name matches too.
+* Fix: CSV import no longer merges people with the same name but a different member ID (e.g. call sign or member number).
 
 = 4.8.2 =
 * New: "Membership fees for bookkeeping" report (Annual report → second tab) for the treasurer and the accountant: a posting proposal (debit bank account / credit membership fee income) per payment day or per month for any period, breakdown by membership class, postage fees separately, payments that differ from the invoice, and open membership fees at the end of the period. Printable and exportable to Excel (including every payment by member). Account names or numbers are set in the settings. The plugin does not do bookkeeping itself.

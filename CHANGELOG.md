@@ -2,6 +2,12 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.3 (2026-10-17)
+
+### Korjattu
+- **Jäsenten tuonti CSV:stä:** kaksi eri henkilöä, joilla on sama sähköpostiosoite (esim. vanhempi ja nuorisojäsen), yhdistyivät tuonnissa yhdeksi jäseneksi, kun valittuna oli *Päivitä*, tai jälkimmäinen ohitettiin, kun valittuna oli *Ohita*. Nyt pelkkä sähköposti tunnistaa jäsenen vain, jos myös etunimi on sama (esim. sukunimi on vaihtunut). Tuontisivun teksti kertoo säännön: *sama nimi, tai sama sähköposti ja etunimi*.
+- **Jäsenten tuonti CSV:stä:** samannimiset eri henkilöt yhdistyivät, vaikka heillä oli eri tunnus (esim. kutsumerkki tai jäsennumero). Nyt eri tunnus tarkoittaa aina eri henkilöä, kun jäsentä etsitään nimen tai sähköpostin perusteella. Jos rekisterissä on useampi samanniminen, tiedoston tunnus valitsee oikean.
+
 ## 4.8.2 (2026-10-17)
 
 ### Uutta: Jäsenmaksut kirjanpitoon
