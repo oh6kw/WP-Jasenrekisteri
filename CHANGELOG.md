@@ -2,6 +2,26 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.1 (2026-10-17)
+
+### Sähköpostilasku: maksukortti tilisiirtolomakkeen tilalle
+- Sähköpostin **tilisiirtolomakemalli poistettiin**. HTML-lomakkeen viivat eivät kohdistuneet eri sähköpostiohjelmissa, lomake näytti kapealta, eikä se toiminut puhelimessa. Sähköpostista maksetaan kopioimalla tiedot tai skannaamalla koodi, ei lomakkeelta.
+- Tilalle tuli **Maksukortti** (uusi oletus): saate, laskun nimi ja jäsenen tiedot, kortissa maksettava summa ja eräpäivä isolla sekä allekkain *Saaja, Saajan tilinumero (IBAN), BIC, Viitenumero, Eräpäivä, Summa* – helppo valita ja kopioida myös puhelimessa. Lisäksi QR-koodi (kohdan *Maksukoodi laskussa* mukaan, tekstinä ohje skannata se puhelimella, kun viestiä luetaan tietokoneella) ja virtuaaliviivakoodi.
+- Pankkiviivakoodia ei näytetä maksukortissa, koska sitä ei voi lukea näytöltä. Tulostettava lasku viivakoodeineen tulee PDF-liitteenä, jos se on valittu; silloin viestissä mainitaan liitteestä.
+- Toimii yhtenä palstana kaikilla näytöillä (inline-tyylit, ei mediakyselyjä).
+- *Perusmalli* säilyy valittavana ennallaan.
+- Päivitys: jos asetuksena oli tilisiirtolomake, käytetään automaattisesti maksukorttia.
+
+### Laskun rivilista: Tulosta-painike PDF-painikkeen tilalle
+- Sähköpostilaskun saajan rivillä on nyt **Tulosta** (erääntyneelle maksamattomalle **Tulosta muistutus**). Se avaa saman tulostusnäkymän kuin paperilaskut, yläpalkkeineen. Laskun voi tulostaa tai tallentaa PDF:nä selaimen tulostusikkunasta ja lähettää jäsenelle omasta sähköpostista.
+- Näkymän otsikko on esim. *Lasku: Jäsenmaksu 2027 – Anna Aaltonen*, eikä siinä ole *Merkitse postitetuksi* -painiketta: tulostaminen ei muuta sähköpostilaskun tilaa.
+- 4.8.0:n PDF-latauspainike poistettiin. PDF-liite sähköpostissa toimii ennallaan.
+
+### Live-esikatselu wordpress.orgissa (WordPress Playground)
+- Uusi `.wordpress-org/blueprints/blueprint.json` (SVN:ssä `assets/blueprints/blueprint.json`). Se asentaa lisäosan wordpress.orgista kokeiluympäristöön, vaihtaa WordPressin suomeksi, luo keksityt esimerkkijäsenet (12 kpl, kolme jäsenluokkaa, yksi paperilaskun saaja) ja yhden laskun, joka on osittain lähetetty ja maksettu, ja avaa jäsenlistan.
+- Esikatselussa jäsenrekisterin sivuilla näkyy ilmoitus, että kyse on kokeiluympäristöstä. Sähköposteja ei yritetä lähettää.
+- Lähdetiedostot `demo-seed.php` ja `preview-notice.php`; blueprint.json tehdään niistä komennolla `python3 .wordpress-org/blueprints/build.py`. Blueprint on tarkistettu Playgroundin virallista skeemaa vasten, ja demoaineiston luonti on testattu tyhjällä SQLite-asennuksella (kuten Playgroundissa).
+
 ## 4.8.0 (2026-10-17)
 
 ### Uutta: PDF-lasku

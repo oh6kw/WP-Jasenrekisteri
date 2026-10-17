@@ -391,28 +391,3 @@ function jasrek_invoice_pdf_name($lasku, $r, $reminder = false) {
     $base = sanitize_file_name(remove_accents(($reminder ? 'Muistutus-' : '') . $lasku->nimi . '-' . preg_replace('/\D/', '', (string) $r->viite)));
     return ($base !== '' ? $base : 'lasku') . '.pdf';
 }
-
-/** Laskun rivilistan PDF-linkki: lataa yhden jäsenen laskun (tai muistutuksen) PDF:nä. */
-function jasrek_pdf_url($rivi_id, $muistutus = false) {
-    $args = array('action' => 'jasrek_pdf', 'rivi' => (int) $rivi_id);
-    if ($muistutus) $args['muistutus'] = 1;
-    return wp_nonce_url(add_query_arg($args, admin_url('admin-post.php')), 'jasrek_pdf_' . (int) $rivi_id);
-}
-
-add_action('admin_post_jasrek_pdf', 'jasrek_handle_pdf');
-function jasrek_handle_pdf() {
-    $rivi = jasrek_get_int('rivi');
-    jasrek_check('jasrek_pdf_' . $rivi);
-    $r = jasrek_get_rivit('WHERE r.id = %d', array($rivi), true);
-    $lasku = $r ? jasrek_get_lasku($r->lasku_id) : null;
-    if (!$r || !$lasku) wp_die('Laskua ei löytynyt.');
-    $muist = !empty(jasrek_get('muistutus'));
-    $pdf = jasrek_invoice_pdf($lasku, array($r), $muist);
-    jasrek_log_rivi($r, 'vienti', ($muist ? 'muistutus' : 'lasku') . ' ladattu PDF:nä', $lasku);
-    nocache_headers();
-    header('Content-Type: application/pdf');
-    header('Content-Disposition: inline; filename="' . jasrek_invoice_pdf_name($lasku, $r, $muist) . '"');
-    header('Content-Length: ' . strlen($pdf));
-    echo $pdf; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- binary PDF document.
-    exit;
-}

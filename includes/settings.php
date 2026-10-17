@@ -46,7 +46,7 @@ function jasrek_handle_save_settings() {
         'bic'              => strtoupper(sanitize_text_field(jasrek_post('bic'))),
         'ytunnus'          => sanitize_text_field(jasrek_post('ytunnus')),
         'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'viivakoodi',
-        'sposti_malli'     => jasrek_post('sposti_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
+        'sposti_malli'     => jasrek_post('sposti_malli') === 'perus' ? 'perus' : 'maksukortti',
         'sposti_pdf'       => jasrek_post('sposti_pdf') === '1' ? '1' : '0',
         'lahettaja_nimi'   => sanitize_text_field(jasrek_post('lahettaja_nimi')),
         'lahettaja_email'  => sanitize_email(jasrek_post('lahettaja_email')),
@@ -168,7 +168,7 @@ function jasrek_page_settings() {
                    <span class="description">QR-koodi on EPC-standardin mukainen (viite RF-muodossa, jonka pankit kohdistavat samaan viitteeseen). Pankkiviivakoodi on perinteinen suomalainen laskun viivakoodi. Virtuaaliviivakoodi tekstinä on laskussa aina.</span></p>
                 <fieldset class="jasrek-fieldset"><legend>Sähköpostilaskun malli</legend>
                     <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="perus" <?php checked($s['sposti_malli'], 'perus'); ?>> <strong>Perusmalli</strong> – maksutiedot taulukkona sekä QR-koodi ja pankkiviivakoodi kuvina (kohdan <em>Maksukoodi laskussa</em> mukaan).</label>
-                    <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="tilisiirto" <?php checked($s['sposti_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – sama ulkoasu kuin paperilaskun tilisiirtolomakkeessa. Lomake on tekstiä, joten tilinumeron, viitteen ja virtuaaliviivakoodin voi kopioida verkkopankkiin. QR-koodi ja pankkiviivakoodi tulevat kohdan <em>Maksukoodi laskussa</em> mukaan (upotettuina kuvina).</label>
+                    <label class="jasrek-radio"><input type="radio" name="sposti_malli" value="maksukortti" <?php checked($s['sposti_malli'], 'maksukortti'); ?>> <strong>Maksukortti</strong> (suositus) – summa ja eräpäivä isolla, maksun tiedot allekkain helposti kopioitavina, virtuaaliviivakoodi ja QR-koodi (jos valittu kohdassa <em>Maksukoodi laskussa</em>). Toimii hyvin puhelimessa ja tietokoneella. Pankkiviivakoodia ei näytetä, koska sitä ei voi lukea näytöltä – tulostettava lasku viivakoodeineen tulee PDF-liitteenä, jos se on valittu alla.</label>
                     <label class="jasrek-radio"><input type="checkbox" name="sposti_pdf" value="1" <?php checked($s['sposti_pdf'], '1'); ?>> <strong>Liitä lasku PDF:nä</strong> – viestin liitteenä sama lasku kuin paperilaskussa: A4-sivu tilisiirtolomakkeineen, QR-koodi ja pankkiviivakoodi kohdan <em>Maksukoodi laskussa</em> mukaan. Jäsen voi tulostaa ja arkistoida laskun. Liite kasvattaa viestiä noin 5–10 kt. Koskee myös muistutuksia ja testilaskuja.</label>
                 </fieldset>
                 <p><label for="jasrek-yhteystiedot">Yhteystiedot viestien alalaitaan</label>

@@ -88,7 +88,10 @@ function jasrek_address_lines($r) {
 
 function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     $s = jasrek_settings();
-    $title = ($reminder ? 'Maksumuistutukset: ' : 'Paperilaskut: ') . $lasku->nimi;
+    // Sähköpostilaskun saajan lasku (laskun rivilistan Tulosta-painike): ei postitusmerkintää
+    $paperi = count(array_filter($rows, 'jasrek_is_paperi')) === count($rows);
+    $title = $paperi ? ($reminder ? 'Maksumuistutukset: ' : 'Paperilaskut: ') . $lasku->nimi
+        : ($reminder ? 'Maksumuistutus: ' : 'Lasku: ') . $lasku->nimi . (count($rows) === 1 ? ' – ' . jasrek_rivi_person($rows[0])['nimi'] : '');
     $ids = array_map(function ($r) { return (int) $r->id; }, $rows);
     $no_addr = array();
     foreach ($rows as $r) if (count(jasrek_address_lines($r)) < 2) $no_addr[] = jasrek_rivi_person($r)['nimi'];
@@ -106,6 +109,8 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     <span><?php echo count($rows); ?> kpl</span>
     <?php if ($rows): ?>
     <button type="button" data-jasrek-print>🖨 Tulosta</button>
+    <?php endif; ?>
+    <?php if ($rows && $paperi): ?>
     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
         <input type="hidden" name="action" value="jasrek_paper_mark">
         <input type="hidden" name="lasku_id" value="<?php echo (int) $lasku->id; ?>">
@@ -116,7 +121,8 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     </form>
     <?php endif; ?>
     <a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a>
-    <?php if ($rows): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).<?php echo $s['paperi_malli'] === 'tilisiirto' ? ' Tilisiirtolomake tulostuu sivun alareunaan.' : ''; ?></span><?php endif; ?>
+    <?php if ($rows && !$paperi): ?><span class="jasrek-info">Jäsen saa laskunsa sähköpostilla. Tulosta tämä paperille tai tallenna PDF:nä (tulostusikkunassa tulostimeksi <em>Tallenna PDF-tiedostona</em>) ja lähetä jäsenelle omasta sähköpostistasi. Tulostaminen ei muuta laskun tilaa.</span><?php endif; ?>
+    <?php if ($rows && $paperi): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).<?php echo $s['paperi_malli'] === 'tilisiirto' ? ' Tilisiirtolomake tulostuu sivun alareunaan.' : ''; ?></span><?php endif; ?>
     <span class="jasrek-warn" id="jasrek-ylivuoto" hidden>⚠ Saateteksti ei mahdu kokonaan sivulle tilisiirtolomakkeen yläpuolelle: <span></span>. Lyhennä laskun saatetekstiä tai käytä perusmallia (Asetukset → Paperilaskut).</span>
     <span class="jasrek-warn" id="jasrek-ikkuna-yli" hidden>⚠ Palautusosoite tai vastaanottajan osoite ei mahdu kokonaan kuoren ikkunaan: <span></span>. Lyhennä palautusosoitetta (Asetukset → Paperilaskut) tai jäsenen osoitetta.</span>
     <?php if ($no_addr): ?><span class="jasrek-warn">⚠ Osoite puuttuu: <?php echo esc_html(implode(', ', $no_addr)); ?>. Lisää osoite jäsenen tietoihin ennen tulostusta.</span><?php endif; ?>

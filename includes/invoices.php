@@ -964,8 +964,8 @@ function jasrek_invoice_detail($id) {
                             <a class="button button-small" target="_blank" href="<?php echo esc_url(jasrek_print_url($id, array('rivi' => $r->id, 'tulosta' => 1))); ?>">Tulosta</a>
                         <?php else: ?>
                             <a class="button button-small" target="_blank" href="<?php echo esc_url($prev_url); ?>">Näytä</a>
-                            <?php $pdf_muist = $r->lahetetty && !$r->maksettu && jasrek_rivi_era($lasku, $r) < $today; ?>
-                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jasrek_pdf_url($r->id, $pdf_muist)); ?>" title="<?php echo esc_attr(($pdf_muist ? 'Maksumuistutus' : 'Lasku') . ' PDF-tiedostona, samannäköisenä kuin paperilasku. Voit lähettää sen jäsenelle omasta sähköpostistasi, jos lasku on hukassa.'); ?>"><?php echo $pdf_muist ? 'PDF (muistutus)' : 'PDF'; ?></a>
+                            <?php $tul_muist = $r->lahetetty && !$r->maksettu && jasrek_rivi_era($lasku, $r) < $today; ?>
+                            <a class="button button-small" target="_blank" href="<?php echo esc_url(jasrek_print_url($id, $tul_muist ? array('rivi' => $r->id, 'muistutus' => 1) : array('rivi' => $r->id))); ?>" title="<?php echo esc_attr(($tul_muist ? 'Maksumuistutus' : 'Lasku') . ' tulostettavana A4-sivuna, samannäköisenä kuin paperilasku. Tulosta paperille tai tallenna PDF:nä (tulostin: Tallenna PDF-tiedostona) ja lähetä jäsenelle omasta sähköpostistasi, jos lasku on hukassa.'); ?>"><?php echo $tul_muist ? 'Tulosta muistutus' : 'Tulosta'; ?></a>
                         <?php endif; ?>
                         <?php if ($r->to_email && !$paperi): ?>
                             <a class="button button-small" href="<?php echo esc_url($send_url); ?>"

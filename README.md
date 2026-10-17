@@ -38,7 +38,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 - Lähetys tehdään pienissä erissä edistymispalkin kanssa, joten suurikaan jäsenmäärä ei aiheuta aikakatkaisuja. Jo lähetettyjä laskuja ei lähetetä uudelleen.
 - **Paperilaskut:** jäsenelle voi valita ”Haluaa laskun paperilla”. Hänelle ja jäsenille, joilla ei ole sähköpostia, ei lähetetä sähköpostia, vaan laskun sivulla on oma lista, josta laskut tulostetaan A4-paperille ikkunakuoreen sopiviksi (QR- ja pankkiviivakoodeineen) ja merkitään postitetuiksi. Myös paperiset maksumuistutukset.
 - **Paperilaskun malli:** perusmalli tai perinteinen suomalainen **tilisiirtolomake** sivun alareunassa (Asetukset → Paperilaskut). Kummassakin mallissa nimi ja osoite osuvat kuoren ikkunaan.
-- **Sähköpostilasku tilisiirtolomakkeella** (valinnainen): sama ulkoasu kuin paperilaskussa, ilman liitteitä tai kuvia. Puhelimessa lomake asettuu kahteen osaan allekkain.
+- **Sähköpostilasku maksukorttina** (oletus): summa ja eräpäivä isolla, maksun tiedot allekkain helposti kopioitavina, virtuaaliviivakoodi ja QR-koodi. Toimii puhelimessa ja tietokoneella. Valinnaisena **PDF-liite**, joka on sama A4-lasku kuin paperilasku.
 - **Postimaksu:** asetuksissa voi määrittää postimaksun (esim. 2,50 €), joka lisätään vain paperilaskun saajien laskuihin. Laskun yläosassa näkyvät erikseen jäsenmaksu, postimaksu ja maksettava, ja QR- ja viivakoodissa on kokonaissumma. Vuosiraportti erittelee kertyneet postimaksut. Saatetekstissä `{summa}` on jäsenmaksu ja `{maksettava}` maksettava yhteensä. Ikkunakuoren palautusosoitteen voi antaa asetuksissa.
 - Maksumuistutukset käsin tai automaattisesti, esim. 14 päivää eräpäivän jälkeen ja enintään 2 kertaa. Rahastonhoitaja saa halutessaan yhteenvedon lähetetyistä muistutuksista.
 
@@ -72,7 +72,6 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | ![Merkkipäivät](docs/kuvat/19-merkkipaivat.png) **Merkkipäivät** vuosiraportissa (valinnainen). | ![Uusi jäsen kesken kauden](docs/kuvat/11-uusi-jasen-laskulle.png) **Kesken kauden liittyvä jäsen** lisätään jo lähetetylle laskulle, ja hän saa oman eräpäivän. |
 | ![Varmuuskopio](docs/kuvat/20-varmuuskopio.png) **Varmuuskopio ja siirto** asetuksissa. | ![Palautus](docs/kuvat/21-palautus.png) **Palautus:** yhteenveto ja vahvistus ennen kuin mitään muutetaan. |
 | ![Tilisiirtolomake](docs/kuvat/22-tilisiirtolomake.png) **Paperilasku tilisiirtolomakkeella** (valinnainen malli): lomake aina sivun alareunassa. | ![Tietosuojaseloste](docs/kuvat/23-tietosuojaseloste.png) **Tietosuojaselosteen pohja** yhdistyksen tiedoilla. |
-| ![Sähköpostilasku](docs/kuvat/24-sahkoposti-tilisiirto.png) **Sähköpostilasku tilisiirtolomakkeella**, ei liitteitä. | |
 | ![Tietoja ja palaute](docs/kuvat/12-tietoja.png) **Tietoja ja palaute:** palautelomake ja Ko-fi. | |
 
 ## Asennus
@@ -128,7 +127,7 @@ Jos oman pankkisi tiedosto ei aukea, avaa [issue](https://github.com/oh6kw/oh6kw
 
 Asetuksista voi valita, näytetäänkö QR-koodi, viivakoodi, molemmat vai ei kumpaakaan. Kuvat upotetaan sähköpostiin, joten ne näkyvät ilman ulkoisia latauksia. Kuvien tekemiseen ei tarvita PHP:n GD-laajennusta.
 
-**PDF-lasku:** sähköpostilaskun liitteeksi voi valita PDF:n (*Asetukset → Sähköpostilaskun malli → Liitä lasku PDF:nä*). PDF on sama A4-lasku kuin paperilasku: ikkunakuoren osoite, saate, QR-koodi ja tilisiirtolomake pankkiviivakoodeineen. Yksittäisen jäsenen laskun (tai erääntyneen laskun muistutuksen) voi ladata PDF:nä myös laskun rivilistasta, esim. jos jäsen on hukannut laskunsa.
+**PDF-lasku:** sähköpostilaskun liitteeksi voi valita PDF:n (*Asetukset → Sähköpostilaskun malli → Liitä lasku PDF:nä*). PDF on sama A4-lasku kuin paperilasku: ikkunakuoren osoite, saate, QR-koodi ja tilisiirtolomake pankkiviivakoodeineen. Jos jäsen on hukannut sähköpostilaskunsa, laskun rivilistan *Tulosta*-painike (erääntyneelle *Tulosta muistutus*) avaa saman A4-laskun tulostusnäkymään. Sen voi tulostaa tai tallentaa PDF:nä selaimen tulostusikkunasta ja lähettää jäsenelle omasta sähköpostista. Tulostaminen ei muuta laskun tilaa.
 
 ## Tietosuoja ja tietoturva
 

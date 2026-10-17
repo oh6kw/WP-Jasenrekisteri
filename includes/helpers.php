@@ -56,7 +56,7 @@ function jasrek_settings() {
         'sposti_pdf'      => '0',
         'postiosoite'     => '',
         'paperi_malli'    => 'tilisiirto',
-        'sposti_malli'    => 'tilisiirto',
+        'sposti_malli'    => 'maksukortti',
         'merkki_kaytossa' => '1',
         'merkki_ika'      => '50, 60, 70, 75, 80, 85, 90, 95, 100',
         'merkki_jasen'    => '10, 20, 25, 30, 40, 50, 60',
@@ -74,6 +74,8 @@ function jasrek_settings() {
     foreach (array('viesti_oletus', 'muistutus_teksti', 'maksukoodi', 'yhdistys', 'lahettaja_nimi') as $k) {
         if (trim((string) $s[$k]) === '') $s[$k] = $defaults[$k];
     }
+    // 4.8.1: sähköpostin tilisiirtolomakemalli korvattiin maksukortilla
+    if ($s['sposti_malli'] === 'tilisiirto' || !in_array($s['sposti_malli'], array('perus', 'maksukortti'), true)) $s['sposti_malli'] = 'maksukortti';
     return $s;
 }
 
