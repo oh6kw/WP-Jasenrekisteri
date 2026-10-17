@@ -2,6 +2,23 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.7.2 (2026-10-17)
+
+### Yhdistyksen osoite ja palautusosoite erikseen
+- **Uusi kenttä *Yhdistyksen osoite*** kohdassa *Asetukset → Yhdistys ja tilitiedot*: yhdistyksen virallinen osoite. Se näkyy tilisiirtolomakkeen Saaja-kentässä (paperi- ja sähköpostilasku) ja tietosuojaselosteen rekisterinpitäjän tiedoissa.
+- **Palautusosoite (kuoren ikkuna)** pysyy omana kenttänään kohdassa *Paperilaskut*, ja sitä käytetään vain kuoren ikkunan palautusosoitteessa. Se voi olla eri kuin yhdistyksen osoite, esim. rahastonhoitajan osoite, jos yhdistyksellä ei ole postilaatikkoa.
+- Päivitettäessä mikään ei muutu itsestään: aiemmin annettu osoite säilyy palautusosoitteena. Niin kauan kuin yhdistyksen osoite on tyhjä, Saaja-kentässä on pelkkä yhdistyksen nimi ja tietosuojaseloste käyttää palautusosoitetta.
+- Uusi asetus on mukana varmuuskopiossa ja muutoslokissa.
+
+### Korjaukset paperilaskuun
+- **Tilisiirtolomake leikkautui alareunasta** joillakin tulostimilla: lomakkeen alaosa (ehdot ja *PANKKI BANKEN*) jatkui noin 1,5 mm varatun alueen ali. Lomakkeen rivejä tiivistettiin hieman (yläreunan katkoviiva, tilinumero- ja saajarivi), joten koko lomake mahtuu nyt 88 mm:n alueeseen 6 mm sivun reunasta.
+- **Saaja- ja maksajakentät eivät enää venytä lomaketta:** kentillä on kiinteä korkeus. Saajassa on enintään kolme riviä (ylimenevät yhdistetään viimeiselle riville), ja pitkä teksti pienennetään tarvittaessa 7 pt:iin.
+- **Palautusosoite ikkunassa:** näkyy nyt kokonaan enintään kahdella rivillä (aiemmin yksi rivi, joka katkesi). Pitkä osoite pienennetään tarvittaessa 6 pt:iin. Jos palautusosoite tai vastaanottajan osoite ei silti mahdu kuoren ikkunaan, tulostussivun yläpalkissa näytetään varoitus ja niiden jäsenten nimet.
+- Asetuksissa ohje palautusosoitteen pituudesta (noin 110 merkkiä yhdistyksen nimi mukaan lukien).
+
+### Muuta
+- GitHub-repon nimi on nyt `oh6kw/oh6kw-jasenrekisteri`; linkit päivitetty (Plugin URI, README, readme.txt, Tietoja-sivu).
+
 ## 4.7.1 (2026-10-15)
 
 ### Sähköpostilasku tilisiirtolomakkeella

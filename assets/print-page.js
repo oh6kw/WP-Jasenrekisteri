@@ -34,6 +34,33 @@
                 yli.push(n ? n.textContent : '?');
             }
         });
+        // Kuoren ikkuna: palautusosoite enintään kaksi riviä (fontti pienenee 6 pt:iin asti),
+        // eikä vastaanottajan osoite saa jatkua ikkunan alle.
+        var ikkuna = [];
+        Array.prototype.forEach.call(document.querySelectorAll('.ikkuna'), function (ik) {
+            var p = ik.querySelector('.palautus'), pt = 7.5, ok = true;
+            while (p && p.scrollHeight > p.clientHeight + 1 && pt > 6) {
+                pt -= 0.5;
+                p.style.fontSize = pt + 'pt';
+            }
+            if (p && p.scrollHeight > p.clientHeight + 1) ok = false;
+            if (ik.scrollHeight > ik.clientHeight + 1) ok = false;
+            if (!ok) {
+                var n = ik.querySelector('.vastaanottaja strong');
+                ikkuna.push(n ? n.textContent : '?');
+            }
+        });
+        // Tilisiirtolomakkeen Saaja: pitkä osoite pienennetään 7 pt:iin, jotta se mahtuu kiinteän korkuiseen kenttään
+        Array.prototype.forEach.call(document.querySelectorAll('.ts-saaja, .ts-maksaja-os'), function (o) {
+            var pt = parseFloat(getComputedStyle(o).fontSize) * 0.75;
+            while (o.scrollHeight > o.clientHeight + 1 && pt > 7) {
+                pt -= 0.5;
+                o.style.fontSize = pt + 'pt';
+                o.style.lineHeight = '1.15';
+            }
+        });
+        var wi = document.getElementById('jasrek-ikkuna-yli');
+        if (wi && ikkuna.length) { wi.querySelector('span').textContent = ikkuna.join(', '); wi.hidden = false; }
         var w = document.getElementById('jasrek-ylivuoto');
         if (w && yli.length) { w.querySelector('span').textContent = yli.join(', '); w.hidden = false; }
         if (document.body.getAttribute('data-jasrek-autoprint') === '1') window.print();

@@ -153,7 +153,7 @@ function jasrek_handle_privacy_template() {
     $s = jasrek_settings();
     $t = '[täydennä]';
     $yht = trim((string) $s['yhteystiedot']);
-    $osoite = trim((string) $s['postiosoite']);
+    $osoite = trim((string) $s['osoite']) !== '' ? trim((string) $s['osoite']) : trim((string) $s['postiosoite']);
     $kk = (int) $s['loki_kk'];
     $tiedot = array('etu- ja sukunimi', 'postiosoite', 'puhelinnumero', 'sähköpostiosoite', 'liittymispäivä', 'jäsenluokka ja jäsenmaksu', 'jäsenyyden tila ja eroamispäivä', 'tieto siitä, haluaako jäsen laskun paperilla');
     if (jasrek_tunnus_on()) $tiedot[] = jasrek_lower(jasrek_tunnus_nimi());

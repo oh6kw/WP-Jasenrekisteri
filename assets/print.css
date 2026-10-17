@@ -17,7 +17,7 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
 .ylaosa { position: relative; height: 62mm; flex: none; }
 /* Ikkunakuoren ikkuna: vasemmalla 20 mm, ylhäältä 15 mm, koko 90 × 45 mm (C5 ja DL). Osoite sijoitetaan ikkunan keskelle. */
 .ikkuna { position: absolute; left: 0; top: 19mm; width: 85mm; height: 37mm; }
-.palautus { font-size: 7.5pt; color: #555; border-bottom: 0.4pt solid #999; padding-bottom: 1mm; margin-bottom: 3mm; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.palautus { font-size: 7.5pt; line-height: 1.2; color: #555; border-bottom: 0.4pt solid #999; padding-bottom: 1mm; margin-bottom: 2.5mm; max-height: calc(2.5em + 1mm); overflow: hidden; overflow-wrap: anywhere; }
 .vastaanottaja { font-size: 11pt; line-height: 1.35; }
 .vastaanottaja .puuttuu { color: #b42318; font-size: 9pt; }
 .lahettaja { position: absolute; left: 0; top: 8mm; font-weight: bold; font-size: 12pt; color: #1d3557; }
@@ -98,7 +98,7 @@ body { background: #e9ecef; font-family: Arial, Helvetica, sans-serif; color: #1
 .ts-qr img.qr { width: 28mm; height: 28mm; image-rendering: pixelated; display: block; margin: 0 auto 1mm; }
 
 .ts-lomake { position: absolute; left: 8mm; right: 8mm; bottom: 6mm; height: 88mm; color: #000; font-family: Arial, Helvetica, sans-serif; }
-.ts-leikkaa { border-top: 0.3mm dashed #000; height: 5mm; font-size: 10pt; line-height: 1; margin-top: 1mm; position: relative; }
+.ts-leikkaa { border-top: 0.3mm dashed #000; height: 4mm; font-size: 10pt; line-height: 1; margin-top: 1mm; position: relative; }
 .ts-leikkaa { padding-left: 0; }
 .ts-leikkaa::before { content: ""; }
 table.ts { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 9pt; line-height: 1.25; }
@@ -116,19 +116,23 @@ table.ts tr.ts-r4 td, table.ts tr.ts-r5 td.ts-arvo { border-left: 0.3mm solid #0
 table.ts tr.ts-r5 th:nth-of-type(3) { border-left: 0.3mm solid #000; }
 /* Vaakaviivat */
 table.ts tr.ts-r1 > *, table.ts tr.ts-r2 > *, table.ts .ts-viesti, table.ts tr.ts-r4 > *, table.ts tr.ts-r5 > *, table.ts .ts-maksaja, table.ts .ts-maksaja-th { border-bottom: 0.6mm solid #000; }
-table.ts tr.ts-r1 { height: 13mm; } table.ts tr.ts-r2 { height: 15mm; } table.ts tr.ts-r3 { height: 17mm; }
+table.ts tr.ts-r1 { height: 12mm; } table.ts tr.ts-r2 { height: 14mm; } table.ts tr.ts-r3 { height: 17mm; }
 table.ts tr.ts-r4 { height: 9mm; } table.ts tr.ts-r5 { height: 9mm; }
 table.ts .ts-arvo { font-size: 11pt; padding-top: 0.6mm; }
 table.ts td.ts-arvo { vertical-align: middle; }
 table.ts tr.ts-r5 th, table.ts tr.ts-r4 th { vertical-align: middle; }
 table.ts .ts-summa { text-align: right; white-space: nowrap; }
-table.ts .ts-osoite { font-size: 10pt; line-height: 1.3; }
+table.ts .ts-osoite { font-size: 10pt; line-height: 1.3; overflow: hidden; }
+/* Kiinteät korkeudet: pitkä osoite ei saa venyttää lomaketta yli sivun alareunan */
+table.ts .ts-saaja { max-height: 11.6mm; }
+table.ts .ts-maksaja-os { max-height: 19mm; }
+table.ts .ts-osoite.ts-pieni { font-size: 8.5pt; line-height: 1.2; }
 table.ts .ts-maksaja-th { position: relative; }
 table.ts .ts-pysty { position: absolute; left: 0.6mm; bottom: 1mm; writing-mode: vertical-rl; transform: rotate(180deg); font-size: 5.8pt; font-weight: bold; letter-spacing: 0; white-space: nowrap; line-height: 1; }
 table.ts .ts-allek-l { position: absolute; right: 1.6mm; bottom: 1.5mm; }
 table.ts .ts-maksaja { position: relative; }
 table.ts .ts-allek { position: absolute; left: 4mm; right: 8mm; bottom: 4mm; border-bottom: 0.3mm solid #000; }
-.ts-ala { display: flex; gap: 6mm; margin-top: 3mm; align-items: flex-start; }
+.ts-ala { display: flex; gap: 6mm; margin-top: 2mm; align-items: flex-start; }
 .ts-viivakoodi { flex: 0 0 110mm; padding-left: 4mm; }
 .ts-viivakoodi img { height: 12mm; image-rendering: pixelated; display: block; max-width: 106mm; }
 .ts-ehdot { flex: 1; font-size: 6.3pt; line-height: 1.3; }

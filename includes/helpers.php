@@ -52,6 +52,7 @@ function jasrek_settings() {
         'lisakentat'      => array(),
         'loki_kk'         => '24',
         'postimaksu'      => '0',
+        'osoite'          => '',
         'postiosoite'     => '',
         'paperi_malli'    => 'tilisiirto',
         'sposti_malli'    => 'tilisiirto',
@@ -691,3 +692,13 @@ function jasrek_csv_output($filename, $header, $rows) {
     fclose($out); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- output stream.
     exit;
 }
+
+/** Tilisiirtolomakkeen Saaja-rivit: yhdistyksen nimi ja virallinen osoite (enintään 3 riviä, ylimenevät yhdistetään viimeiselle). */
+function jasrek_saaja_rivit($s = null) {
+    if ($s === null) $s = jasrek_settings();
+    $osa = array_values(array_filter(array_map('trim', preg_split('/\s*\n\s*/', (string) $s['osoite'])), 'strlen'));
+    $rivit = array_merge(array((string) $s['yhdistys']), $osa);
+    if (count($rivit) > 3) $rivit = array_merge(array_slice($rivit, 0, 2), array(implode(', ', array_slice($rivit, 2))));
+    return $rivit;
+}
+

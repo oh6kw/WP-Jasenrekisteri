@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.7.1
+Stable tag: 4.7.2
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -58,7 +58,7 @@ Developed by Jarno Jaskari (oh6kw) together with Claude, an AI assistant made by
 
 The plugin does not use any external services. All data stays in your own WordPress database. QR codes, barcodes and Excel files are generated locally without extra PHP extensions.
 
-Source code, issue tracker and full Finnish documentation: [github.com/oh6kw/WP-Jasenrekisteri](https://github.com/oh6kw/WP-Jasenrekisteri)
+Source code, issue tracker and full Finnish documentation: [github.com/oh6kw/oh6kw-jasenrekisteri](https://github.com/oh6kw/oh6kw-jasenrekisteri)
 
 == Installation ==
 
@@ -106,6 +106,11 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 11. Paper invoice with the Finnish bank transfer form.
 
 == Changelog ==
+
+= 4.7.2 =
+* New: separate official association address (Settings → association details), used for the payee on the bank transfer form and in the privacy notice. The envelope return address stays a separate setting.
+* Paper invoice: the bank transfer form no longer extends past its area at the bottom of the page; long payee and payer addresses no longer stretch the form.
+* Paper invoice: the return address is shown on up to two lines and shrinks to fit; a warning is shown if an address does not fit the envelope window.
 
 = 4.7.1 =
 * Email invoice with the bank transfer form now includes the bank barcode (and QR code) according to the payment code setting, and is wider.

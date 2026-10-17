@@ -118,6 +118,7 @@ function jasrek_print_document($lasku, $rows, $reminder, $autoprint) {
     <a href="<?php echo esc_url($back); ?>">← Takaisin laskuun</a>
     <?php if ($rows): ?><span class="jasrek-info">Tulosta A4-paperille ilman sivun reunuksia (selaimen tulostusasetus ”Marginaalit: ei mitään” tai ”oletus”, skaalaus 100 %). Taita paperi reunan merkkien kohdalta ja laita ikkunakuoreen (C5 tai DL, ikkuna vasemmalla).<?php echo $s['paperi_malli'] === 'tilisiirto' ? ' Tilisiirtolomake tulostuu sivun alareunaan.' : ''; ?></span><?php endif; ?>
     <span class="jasrek-warn" id="jasrek-ylivuoto" hidden>⚠ Saateteksti ei mahdu kokonaan sivulle tilisiirtolomakkeen yläpuolelle: <span></span>. Lyhennä laskun saatetekstiä tai käytä perusmallia (Asetukset → Paperilaskut).</span>
+    <span class="jasrek-warn" id="jasrek-ikkuna-yli" hidden>⚠ Palautusosoite tai vastaanottajan osoite ei mahdu kokonaan kuoren ikkunaan: <span></span>. Lyhennä palautusosoitetta (Asetukset → Paperilaskut) tai jäsenen osoitetta.</span>
     <?php if ($no_addr): ?><span class="jasrek-warn">⚠ Osoite puuttuu: <?php echo esc_html(implode(', ', $no_addr)); ?>. Lisää osoite jäsenen tietoihin ennen tulostusta.</span><?php endif; ?>
 </div>
 <?php if (!$rows): ?>
@@ -149,7 +150,7 @@ function jasrek_print_head($lasku, $r, $reminder, $s, $vars, $erittely = true) {
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
     $addr = jasrek_address_lines($r);
     $luokka = isset($r->jasenlaji) ? jasrek_laji_nimi((string) $r->jasenlaji) : '';
-    // Palautusosoite ikkunaan vain, jos yhdistyksen postiosoite on annettu (muuten nimi toistuisi turhaan)
+    // Palautusosoite ikkunaan vain, jos se on annettu (muuten nimi toistuisi turhaan). Enintään kaksi riviä, ks. print.css ja print-page.js.
     $palautus = trim((string) $s['postiosoite']) !== '' ? $s['yhdistys'] . ', ' . preg_replace('/\s*\n\s*/', ', ', trim($s['postiosoite'])) : '';
 
     $h  = '<div class="ylaosa">';
@@ -242,7 +243,7 @@ function jasrek_print_page_tilisiirto($lasku, $r, $reminder, $s) {
     $images = jasrek_invoice_images($lasku, $r);
     $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
     $yt = trim(preg_replace('/\s*\n\s*/', ' · ', (string) $s['yhteystiedot']));
-    $saaja = array_merge(array($s['yhdistys']), array_filter(array_map('trim', preg_split('/\s*[,\n]\s*/', (string) $s['postiosoite']))));
+    $saaja = jasrek_saaja_rivit($s);
     $maksaja = jasrek_address_lines($r);
     $br = function ($lines) { return implode('<br>', array_map('esc_html', $lines)); };
 
@@ -268,11 +269,11 @@ function jasrek_print_page_tilisiirto($lasku, $r, $reminder, $s) {
     $h .= '<tr class="ts-r1"><th>Saajan<br>tilinumero<br><span>Mottagarens<br>kontonummer</span></th>'
         . '<td><small>IBAN</small><div class="ts-arvo">' . esc_html($vars['iban']) . '</div></td>'
         . '<td colspan="4" class="ts-oik"><small>BIC</small><div class="ts-arvo">' . esc_html($s['bic']) . '</div></td></tr>';
-    $h .= '<tr class="ts-r2"><th>Saaja<br><span>Mottagare</span></th><td><div class="ts-osoite">' . $br($saaja) . '</div></td>'
+    $h .= '<tr class="ts-r2"><th>Saaja<br><span>Mottagare</span></th><td><div class="ts-osoite ts-saaja' . (count($saaja) > 2 ? ' ts-pieni' : '') . '">' . $br($saaja) . '</div></td>'
         . '<td colspan="4" rowspan="2" class="ts-oik ts-viesti"><small>Viesti / Meddelande</small></td></tr>';
     $h .= '<tr class="ts-r3"><th rowspan="2" class="ts-maksaja-th"><span class="ts-pysty">TILISIIRTO GIRERING</span>Maksaja<br><span>Betalare</span>'
         . '<div class="ts-allek-l">Allekirjoitus<br><span>Underskrift</span></div></th>'
-        . '<td rowspan="2" class="ts-maksaja"><div class="ts-osoite">' . $br($maksaja) . '</div><div class="ts-allek"></div></td></tr>';
+        . '<td rowspan="2" class="ts-maksaja"><div class="ts-osoite ts-maksaja-os' . (count($maksaja) > 4 ? ' ts-pieni' : '') . '">' . $br($maksaja) . '</div><div class="ts-allek"></div></td></tr>';
     $h .= '<tr class="ts-r4"><th class="ts-oik">Viitenro<br><span>Ref.nr</span></th><td colspan="3" class="ts-arvo">' . esc_html($vars['viite']) . '</td></tr>';
     $h .= '<tr class="ts-r5"><th>Tililtä nro<br><span>Från konto nr</span></th><td></td>'
         . '<th class="ts-oik">Eräpäivä<br><span>Förf.dag</span></th><td class="ts-arvo">' . esc_html($vars['erapaiva']) . '</td>'

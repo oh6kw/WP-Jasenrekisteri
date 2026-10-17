@@ -6,7 +6,7 @@ if (!defined('ABSPATH')) exit;
  */
 
 define('JASREK_DEV_EMAIL', 'jarno.jaskari@gmail.com');
-define('JASREK_GITHUB', 'https://github.com/oh6kw/WP-Jasenrekisteri');
+define('JASREK_GITHUB', 'https://github.com/oh6kw/oh6kw-jasenrekisteri');
 define('JASREK_KOFI', 'https://ko-fi.com/oh6kw');
 
 // Linkit Lisäosat-sivulle lisäosan kuvauksen alle

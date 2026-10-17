@@ -149,7 +149,7 @@ function jasrek_invoice_html_tilisiirto($lasku, $r, $reminder = false, $img = 'c
     $text = $reminder ? $s['muistutus_teksti'] : ($lasku->viesti !== '' ? $lasku->viesti : $s['viesti_oletus']);
     $images = jasrek_invoice_email_images($lasku, $r);
     $vvk = jasrek_virtuaaliviivakoodi($s['iban'], $r->summa, $r->viite, jasrek_rivi_era($lasku, $r));
-    $saaja = array_merge(array($s['yhdistys']), array_filter(array_map('trim', preg_split('/\s*[,\n]\s*/', (string) $s['postiosoite']))));
+    $saaja = jasrek_saaja_rivit($s);
     $maksaja = jasrek_address_lines($r);
     $br = function ($lines) { return implode('<br>', array_map('esc_html', $lines)); };
 

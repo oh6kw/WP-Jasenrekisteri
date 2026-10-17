@@ -4,7 +4,7 @@ Jäsenrekisteri ja jäsenmaksulaskutus WordPressin hallintapaneeliin suomalaisil
 
 Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painalluksella, ja tulosta paperilaskut niille, jotka niitä haluavat. Jokainen lasku saa oman suomalaisen viitenumeron, QR-koodin ja pankkiviivakoodin. Tuo maksut pankin tiedostosta, ja ne kohdistuvat oikeille jäsenille viitteen perusteella, vaikka maksaja olisi puoliso tai vanhempi.
 
-[![Versio](https://img.shields.io/github/v/release/oh6kw/WP-Jasenrekisteri?label=versio)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest)
+[![Versio](https://img.shields.io/github/v/release/oh6kw/oh6kw-jasenrekisteri?label=versio)](https://github.com/oh6kw/oh6kw-jasenrekisteri/releases/latest)
 ![WordPress 6.2+](https://img.shields.io/badge/WordPress-6.2%2B-21759b)
 ![PHP 7.4+](https://img.shields.io/badge/PHP-7.4%2B-777bb4)
 [![Lisenssi: AGPL v3](https://img.shields.io/badge/lisenssi-AGPL--3.0-blue)](LICENSE)
@@ -77,7 +77,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 
 ## Asennus
 
-1. Lataa uusin `oh6kw-jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/WP-Jasenrekisteri/releases/latest).
+1. Lataa uusin `oh6kw-jasenrekisteri.zip` [julkaisuista (Releases)](https://github.com/oh6kw/oh6kw-jasenrekisteri/releases/latest).
 2. Valitse WordPressissä **Lisäosat → Lisää uusi → Lataa lisäosa** ja anna zip-tiedosto.
 3. Ota lisäosa käyttöön. Valikkoon ilmestyy **Jäsenrekisteri**.
 
@@ -118,7 +118,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 | camt.053 (`.xml`) | Verkkopankin *XML-tiliote* | Vain saapuvat maksut käsitellään |
 | Tiliote CSV | Verkkopankin tilitapahtumat CSV-muodossa | Sarakkeet tunnistetaan otsikoista (viite ja summa pakollisia) |
 
-Jos oman pankkisi tiedosto ei aukea, avaa [issue](https://github.com/oh6kw/WP-Jasenrekisteri/issues) ja liitä mukaan esimerkki, josta henkilötiedot on poistettu.
+Jos oman pankkisi tiedosto ei aukea, avaa [issue](https://github.com/oh6kw/oh6kw-jasenrekisteri/issues) ja liitä mukaan esimerkki, josta henkilötiedot on poistettu.
 
 ## Maksukoodit
 
@@ -190,7 +190,7 @@ assets/                     Hallinnan CSS ja JavaScript sekä tulostettavien siv
 Kehitysehdotukset ja vikailmoitukset ovat tervetulleita:
 - lisäosan oma **Tietoja ja palaute** -sivu (lomake lähettää viestin kehittäjälle)
 - sähköposti: [jarno.jaskari@gmail.com](mailto:jarno.jaskari@gmail.com)
-- [GitHub-issues](https://github.com/oh6kw/WP-Jasenrekisteri/issues)
+- [GitHub-issues](https://github.com/oh6kw/oh6kw-jasenrekisteri/issues)
 
 ### Tarjoa kahvit
 

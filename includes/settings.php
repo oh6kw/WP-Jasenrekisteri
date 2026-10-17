@@ -56,6 +56,7 @@ function jasrek_handle_save_settings() {
         'tunnus_isot'      => jasrek_post('tunnus_isot') === '1' ? '1' : '0',
         'jasenlajit'       => $lajit,
         'lisakentat'       => $kentat,
+        'osoite'           => sanitize_textarea_field(jasrek_post('osoite')),
         'postiosoite'      => sanitize_textarea_field(jasrek_post('postiosoite')),
         'paperi_malli'     => jasrek_post('paperi_malli') === 'tilisiirto' ? 'tilisiirto' : 'perus',
         'merkki_kaytossa'  => jasrek_post('merkki_kaytossa') === '1' ? '1' : '0',
@@ -85,7 +86,7 @@ function jasrek_log_settings_change($a, $b) {
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
         'auto_max' => 'Muistutuksia enintään', 'auto_raportti' => 'Muistutusten yhteenveto', 'poista_tiedot' => 'Poista tiedot lisäosan poistossa',
-        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'postiosoite' => 'Yhdistyksen postiosoite', 'paperi_malli' => 'Paperilaskun malli', 'merkki_ika' => 'Merkkipäivät: täytettävät vuodet', 'merkki_jasen' => 'Merkkipäivät: jäsenyysvuodet',
+        'loki_kk' => 'Muutoslokin säilytys (kk)', 'postimaksu' => 'Postimaksu paperilaskuihin', 'osoite' => 'Yhdistyksen osoite', 'postiosoite' => 'Palautusosoite (kuoren ikkuna)', 'paperi_malli' => 'Paperilaskun malli', 'merkki_ika' => 'Merkkipäivät: täytettävät vuodet', 'merkki_jasen' => 'Merkkipäivät: jäsenyysvuodet',
         'merkki_kaytossa' => 'Merkkipäivät käytössä', 'viesti_oletus' => 'Laskun saateteksti', 'muistutus_teksti' => 'Muistutuksen teksti',
     );
     $fmt = function ($k, $v) {
@@ -144,6 +145,9 @@ function jasrek_page_settings() {
                     <p><label for="jasrek-ytunnus">Y-tunnus (valinnainen)</label>
                        <input type="text" id="jasrek-ytunnus" name="ytunnus" value="<?php echo esc_attr($s['ytunnus']); ?>"></p>
                 </div>
+                <p><label for="jasrek-osoite">Yhdistyksen osoite</label>
+                   <textarea id="jasrek-osoite" name="osoite" rows="2" style="max-width:420px" placeholder="esim. Kerhotie 1&#10;60100 Seinäjoki"><?php echo esc_textarea($s['osoite']); ?></textarea>
+                   <span class="description">Yhdistyksen virallinen osoite. Näkyy tilisiirtolomakkeen Saaja-kentässä ja tietosuojaselosteen rekisterinpitäjän tiedoissa. Kuoren palautusosoitteen voi antaa erikseen kohdassa <em>Paperilaskut</em>.</span></p>
                 <p><label for="jasrek-maksukoodi">Maksukoodi laskussa</label>
                    <select id="jasrek-maksukoodi" name="maksukoodi">
                        <option value="molemmat" <?php selected($s['maksukoodi'], 'molemmat'); ?>>QR-koodi ja pankkiviivakoodi</option>
@@ -202,9 +206,10 @@ function jasrek_page_settings() {
                     <label class="jasrek-radio"><input type="radio" name="paperi_malli" value="tilisiirto" <?php checked($s['paperi_malli'], 'tilisiirto'); ?>> <strong>Tilisiirtolomake</strong> – perinteinen suomalainen pankkisiirtolomake sivun alareunassa, QR-koodi sen yläpuolella. Saateteksti mahtuu noin puolelle sivulle.</label>
                     <span class="description">Kummassakin mallissa jäsenen nimi ja osoite osuvat ikkunakuoren (C5 tai DL) ikkunaan. QR-koodi ja pankkiviivakoodi tulostuvat kohdan <em>Maksukoodi</em> mukaan.</span>
                 </fieldset>
-                <p><label for="jasrek-postiosoite">Yhdistyksen postiosoite (palautusosoite)</label>
-                   <textarea id="jasrek-postiosoite" name="postiosoite" rows="2" style="max-width:420px" placeholder="esim. PL 123, 00100 Helsinki"><?php echo esc_textarea($s['postiosoite']); ?></textarea>
-                   <span class="description">Tulostetaan pienellä ikkunakuoren ikkunaan vastaanottajan yläpuolelle, jotta kirje palautuu, jos sitä ei voida toimittaa. Tyhjänä palautusosoitetta ei tulosteta.</span></p>
+                <p><label for="jasrek-postiosoite">Palautusosoite (kuoren ikkuna)</label>
+                   <textarea id="jasrek-postiosoite" name="postiosoite" rows="2" style="max-width:420px" placeholder="esim. Rahastonhoitaja Matti Meikäläinen&#10;Kotikatu 5, 60100 Seinäjoki"><?php echo esc_textarea($s['postiosoite']); ?></textarea>
+                   <span class="description">Tulostetaan pienellä ikkunakuoren ikkunaan vastaanottajan yläpuolelle, jotta kirje palautuu, jos sitä ei voida toimittaa. Voi olla eri kuin yhdistyksen osoite, esim. rahastonhoitajan osoite, jos yhdistyksellä ei ole postilaatikkoa. Yhdistyksen nimi lisätään eteen automaattisesti.
+                   Mahtuu enintään kaksi riviä (noin 110 merkkiä yhdistyksen nimi mukaan lukien); pidempi teksti pienennetään tai siitä varoitetaan tulostettaessa. Tyhjänä palautusosoitetta ei tulosteta.</span></p>
             </div>
 
             <div class="jasrek-panel" id="jasrek-lisakentat">
