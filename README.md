@@ -38,6 +38,8 @@ Näin yhdistys saa jäsenrekisterin ilman erillistä palvelua, kuukausimaksuja t
 - Eroamispäivä tallentuu, kun jäsen merkitään eronneeksi.
 - **Merkkipäivät:** tasavuosia täyttävät (jäsenen vapaaehtoinen *syntymävuosi tai -päivä*; pelkkä vuosi riittää) ja jäsenyysvuodet (liittymispäivästä) asetuksissa valituilla vuosilla, esim. 50, 60, 70, 80 ja 90 vuotta tai 10, 25 ja 50 vuotta jäsenenä. Lähestyvät merkkipäivät näkyvät jäsenlistassa. Ominaisuuden voi kytkeä pois asetuksista.
 - Tuonti ja vienti CSV-muodossa (Excel-yhteensopiva). Sarakkeet tunnistetaan otsikoista, ja puhelinnumeroiden etunollat säilyvät.
+- **Tulosta jäsenluettelo** (Jäsenet-sivun yläreunassa): siisti vaakasuuntainen A4-luettelo paperille tai PDF:ksi – nimi, tunnus, valitut omat lisäkentät, sähköposti, puhelin, osoite, liittymispäivä ja syntymävuosi/-päivä. Valittavissa voimassa olevat, eronneet tai kaikki, jäsenluokka ja järjestys.
+- **Vie kaikki tiedot Exceliin** (Jäsenet-sivun yläreunassa): koko rekisteri yhteen Excel-tiedostoon omille välilehdilleen – yhteenveto, jäsenet, jokainen oma lisäkenttä (esim. avaimet), jäsenluokat, laskut, kaikki laskurivit maksuineen, avoimet maksut ja muutosloki. Luettavaksi ja arkistoon; palautukseen käytetään varmuuskopiota.
 - Varoitus mahdollisesta tuplakirjauksesta.
 - **Tietosuoja (GDPR):** valmis pohja jäsenrekisterin tietosuojaselosteeseen yhdistyksen tiedoilla (Tietoja-sivu). WordPressin *Vie / Poista henkilötiedot* -työkalut tuntevat jäsenrekisterin, ja poisto nimettömöi jäsenen niin, että jäsenmaksujen summat säilyvät.
 - **Varmuuskopio ja siirto:** koko rekisteri (jäsenet, laskut, maksut, asetukset ja halutessa muutosloki) yhteen pakattuun tiedostoon. Palautus samalle tai toiselle sivustolle, esim. kun rekisteri siirtyy uudelle sivustolle tai rahastonhoitajalle. Ennen palautusta näytetään yhteenveto, ja palautuksen voi perua.
@@ -184,11 +186,12 @@ includes/
   settings.php              Asetussivu
   print.php                 Tulostettavat paperilaskut ja postitusmerkinnät
   report.php                Vuosiraportti (näyttö ja Excel)
+  member-print.php          Tulostettava jäsenluettelo
   voters.php                Äänioikeusluettelo
   backup.php                Varmuuskopio ja palautus (JSON)
   privacy.php               Tietosuoja: henkilötietojen vienti ja poisto, tietosuojaselosteen pohja
   log.php                   Muutosloki
-  export-xlsx.php           Laskujen Excel-raportti
+  export-xlsx.php           Laskujen Excel-raportti ja kaikki tiedot Exceliin
   xlsx.php                  Excel-kirjoitin (ei ulkoisia kirjastoja)
   about.php                 Tietoja ja palaute -sivu
   pdf.php                   PDF-lasku (liite ja lataus)

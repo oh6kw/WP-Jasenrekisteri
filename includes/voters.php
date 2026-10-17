@@ -79,6 +79,7 @@ function jasrek_handle_voters() {
   </form>
   <button type="button" data-jasrek-print>🖨 Tulosta</button>
   <a href="<?php echo esc_url($back); ?>">← Vuosiraportti</a>
+  <span class="info">Tulosta tämä paperille tai tallenna PDF:nä (tulostusikkunassa tulostimeksi <em>Tallenna PDF-tiedostona</em>).</span>
 </div>
 <div class="paperi">
   <h1><?php echo esc_html('Äänioikeusluettelo – ' . $otsikko); ?></h1>

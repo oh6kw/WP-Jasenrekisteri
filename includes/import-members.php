@@ -212,17 +212,30 @@ function jasrek_handle_members_import() {
         );
 
         // Onko jäsen jo rekisterissä? 1) nimi + sähköposti, 2) nimi (yksiselitteinen),
-        // 3) sähköposti (yksiselitteinen – esim. pariskunnalla voi olla yhteinen osoite).
+        // 3) sähköposti + sama etunimi (yksiselitteinen, esim. sukunimi vaihtunut). Pelkkä
+        //    sähköposti ei riitä: perheenjäsenillä voi olla yhteinen osoite.
+        // Kohdissa 2 ja 3 eri tunnus (esim. kutsumerkki tai jäsennumero) tarkoittaa eri henkilöä.
+        $sama_tunnus = function ($ids) use ($wpdb, $tunnus) {
+            if ($tunnus === '' || !$ids) return $ids;
+            $out = array();
+            foreach ($ids as $id) {
+                $old_t = (string) $wpdb->get_var($wpdb->prepare("SELECT tunnus FROM {$wpdb->jasrek_jasenet} WHERE id = %d", $id));
+                if ($old_t === '' || jasrek_lower($old_t) === jasrek_lower($tunnus)) $out[] = $id;
+            }
+            return $out;
+        };
         $existing = 0;
         if ($data['email'] !== '') {
             $existing = (int) $wpdb->get_var($wpdb->prepare("SELECT id FROM {$wpdb->jasrek_jasenet} WHERE etunimi = %s AND sukunimi = %s AND email = %s ORDER BY id LIMIT 1", $etu, $suku, $data['email']));
         }
         if (!$existing) {
             $ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->jasrek_jasenet} WHERE etunimi = %s AND sukunimi = %s", $etu, $suku));
+            $ids = $sama_tunnus($ids);
             if (count($ids) === 1) $existing = (int) $ids[0];
         }
         if (!$existing && $data['email'] !== '') {
-            $ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->jasrek_jasenet} WHERE email = %s", $data['email']));
+            $ids = $wpdb->get_col($wpdb->prepare("SELECT id FROM {$wpdb->jasrek_jasenet} WHERE email = %s AND etunimi = %s", $data['email'], $etu));
+            $ids = $sama_tunnus($ids);
             if (count($ids) === 1) $existing = (int) $ids[0];
         }
 
@@ -320,7 +333,7 @@ function jasrek_members_import_page() {
         <div class="jasrek-panel">
             <h2>3. Asetukset</h2>
             <fieldset class="jasrek-fieldset">
-                <legend>Jos jäsen on jo rekisterissä (sama sähköposti tai nimi)</legend>
+                <legend>Jos jäsen on jo rekisterissä (sama nimi, tai sama sähköposti ja etunimi<?php if (jasrek_tunnus_on()) echo esc_html(' – eri ' . jasrek_lower(jasrek_tunnus_nimi()) . ' tarkoittaa eri henkilöä'); ?>)</legend>
                 <label class="jasrek-radio"><input type="radio" name="tuplat" value="ohita" checked> Ohita – älä muuta olemassa olevaa jäsentä</label>
                 <label class="jasrek-radio"><input type="radio" name="tuplat" value="paivita"> Päivitä tiedot tiedostosta (tyhjät kentät eivät korvaa nykyisiä)</label>
             </fieldset>

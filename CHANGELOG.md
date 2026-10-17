@@ -2,6 +2,40 @@
 
 Tekijä: Jarno Jaskari (oh6kw). Versiosta 3.0 alkaen lisäosaa on kehitetty yhdessä Claude-tekoälyn (Anthropic) kanssa.
 
+## 4.8.5 (2026-10-17)
+
+### Uutta: Tulosta jäsenluettelo
+- Jäsenet-sivun yläreunaan, *Vie kaikki tiedot Exceliin* -painikkeen viereen, uusi painike **Tulosta jäsenluettelo**. Se avaa uuteen välilehteen siistin, vaakasuuntaisen A4-luettelon paperille tai PDF:ksi.
+- Sarakkeet: järjestysnumero, nimi (sukunimi etunimi), tunnus (esim. kutsumerkki), jäsenluokka, valitut omat lisäkentät (esim. kerhon avain), sähköposti, puhelin, osoite, liittymispäivä ja syntymävuosi/-päivä. Eronneita tulostettaessa myös eroamispäivä.
+- Työkalurivillä valitaan: voimassa olevat / eronneet / kaikki, jäsenluokka, järjestys (sukunimi tai tunnus) ja näytettävät sarakkeet (jäsenluokka ja jokainen oma lisäkenttä). Oletuksena näytetään lisäkentät, jotka näkyvät myös jäsenlistassa. Jos jäsenlistassa on auki jäsenluokan tai eronneiden välilehti, tuloste avautuu sen mukaisena.
+- Ohje samaan tapaan kuin muissa tulosteissa: *Tulosta tämä paperille tai tallenna PDF:nä (tulostusikkunassa tulostimeksi Tallenna PDF-tiedostona).* Otsikkorivi toistuu jokaisella sivulla.
+- Alareunassa muistutus: luettelo sisältää henkilötietoja, säilytä huolellisesti ja hävitä tarpeeton tuloste.
+- Tulostus kirjataan muutoslokiin.
+
+### Muuta
+- Äänioikeusluettelon työkalurivillä on nyt sama tulostus- ja PDF-ohje kuin muissa tulosteissa.
+
+## 4.8.4 (2026-10-17)
+
+### Uutta: Vie kaikki tiedot Exceliin
+- Jäsenet-sivun yläreunaan, *Lisää uusi jäsen* -painikkeen viereen, uusi painike **Vie kaikki tiedot Exceliin**. Se tekee koko rekisteristä yhden Excel-tiedoston samalla tyylillä kuin laskujen Excel-raportti (siniset otsikot, kiinnitetty otsikkorivi, suodattimet, eurot ja päivämäärät oikeassa muodossa).
+- Välilehdet:
+  - **Yhteenveto:** yhdistys, vientiaika, jäsenmäärät jäsenluokittain, eronneet, laskut, avoimet maksut ja niiden summa.
+  - **Jäsenet:** kaikki jäsenet (myös eronneet) kaikkine tietoineen, omat lisäkentät omina sarakkeinaan.
+  - **Jokainen oma lisäkenttä omalla välilehdellään** (esim. *Kerhon avain*): vain jäsenet, joilla kentässä on arvo, järjestettynä arvon mukaan (8.2 ennen 8.10), sekä jäsenyys ja yhteystiedot.
+  - **Jäsenluokat:** jäsenmaksu sekä voimassa olevat ja eronneet jäsenet luokittain.
+  - **Laskut:** jokaisen laskun laskutettu, postimaksut, maksettu ja avoinna, yhteensä-rivi.
+  - **Laskurivit:** jokainen jäsenelle lähetetty lasku: laskutapa (sähköposti/paperi), viite, summa, eräpäivä, tila, maksupäivä, maksettu summa, maksaja, arkistotunnus, lähetys ja muistutukset.
+  - **Avoimet maksut:** maksamattomat laskut kaikista laskuista.
+  - **Muutosloki:** kaikki tapahtumat muutoksineen.
+- Vienti kirjataan muutoslokiin. Tiedosto on luettavaksi ja arkistoon; tietojen palauttamiseen käytetään edelleen varmuuskopiota.
+
+## 4.8.3 (2026-10-17)
+
+### Korjattu
+- **Jäsenten tuonti CSV:stä:** kaksi eri henkilöä, joilla on sama sähköpostiosoite (esim. vanhempi ja nuorisojäsen), yhdistyivät tuonnissa yhdeksi jäseneksi, kun valittuna oli *Päivitä*, tai jälkimmäinen ohitettiin, kun valittuna oli *Ohita*. Nyt pelkkä sähköposti tunnistaa jäsenen vain, jos myös etunimi on sama (esim. sukunimi on vaihtunut). Tuontisivun teksti kertoo säännön: *sama nimi, tai sama sähköposti ja etunimi*.
+- **Jäsenten tuonti CSV:stä:** samannimiset eri henkilöt yhdistyivät, vaikka heillä oli eri tunnus (esim. kutsumerkki tai jäsennumero). Nyt eri tunnus tarkoittaa aina eri henkilöä, kun jäsentä etsitään nimen tai sähköpostin perusteella. Jos rekisterissä on useampi samanniminen, tiedoston tunnus valitsee oikean.
+
 ## 4.8.2 (2026-10-17)
 
 ### Uutta: Jäsenmaksut kirjanpitoon
