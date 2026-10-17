@@ -157,6 +157,10 @@ function jasrek_handle_report_xlsx() {
  * ------------------------------------------------------------------ */
 
 function jasrek_page_report() {
+    if (jasrek_get('view') === 'kirjanpito') {
+        jasrek_page_kirjanpito();
+        return;
+    }
     $years = jasrek_report_years();
     $def = ((int) current_time('n') <= 6) ? (int) current_time('Y') - 1 : (int) current_time('Y');
     $year = jasrek_get_int('vuosi', $def);
@@ -170,6 +174,7 @@ function jasrek_page_report() {
     $kassa = $sum($d['kassa'], 'summa');
     ?>
     <div class="wrap jasrek-wrap jasrek-report">
+        <?php jasrek_report_tabs(''); ?>
         <h1 class="wp-heading-inline">Vuosiraportti <?php echo (int) $year; ?></h1>
         <form method="get" class="jasrek-noprint jasrek-inline">
             <input type="hidden" name="page" value="jasrek-raportti">

@@ -48,6 +48,9 @@ function jasrek_handle_save_settings() {
         'maksukoodi'       => in_array($maksukoodi, array('qr', 'viivakoodi', 'molemmat', 'ei'), true) ? $maksukoodi : 'viivakoodi',
         'sposti_malli'     => jasrek_post('sposti_malli') === 'perus' ? 'perus' : 'maksukortti',
         'sposti_pdf'       => jasrek_post('sposti_pdf') === '1' ? '1' : '0',
+        'kp_pankki'        => sanitize_text_field(jasrek_post('kp_pankki')),
+        'kp_tuotot'        => sanitize_text_field(jasrek_post('kp_tuotot')),
+        'kp_posti'         => sanitize_text_field(jasrek_post('kp_posti')),
         'lahettaja_nimi'   => sanitize_text_field(jasrek_post('lahettaja_nimi')),
         'lahettaja_email'  => sanitize_email(jasrek_post('lahettaja_email')),
         'vastaus_email'    => sanitize_email(jasrek_post('vastaus_email')),
@@ -82,7 +85,7 @@ function jasrek_handle_save_settings() {
 /** Kirjaa muuttuneet asetukset muutoslokiin. */
 function jasrek_log_settings_change($a, $b) {
     $labels = array(
-        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli', 'sposti_pdf' => 'Sähköpostilasku PDF-liitteenä',
+        'yhdistys' => 'Yhdistyksen nimi', 'iban' => 'IBAN', 'bic' => 'BIC', 'ytunnus' => 'Y-tunnus', 'maksukoodi' => 'Maksukoodi', 'sposti_malli' => 'Sähköpostilaskun malli', 'sposti_pdf' => 'Sähköpostilasku PDF-liitteenä', 'kp_pankki' => 'Kirjanpito: pankkitili', 'kp_tuotot' => 'Kirjanpito: jäsenmaksutuotot', 'kp_posti' => 'Kirjanpito: postimaksut',
         'yhteystiedot' => 'Yhteystiedot', 'lahettaja_nimi' => 'Lähettäjän nimi', 'lahettaja_email' => 'Lähettäjän osoite',
         'vastaus_email' => 'Vastausosoite', 'tunnus_kaytossa' => 'Lisätunniste käytössä', 'tunnus_nimi' => 'Lisätunnisteen nimi',
         'tunnus_isot' => 'Lisätunniste isoilla', 'auto_muistutus' => 'Automaattinen muistutus', 'auto_paivia' => 'Muistutus päivää eräpäivän jälkeen',
@@ -253,6 +256,20 @@ function jasrek_page_settings() {
                     </tr>
                 </template>
                 <p><button type="button" class="button jasrek-row-add" data-tpl="#jasrek-kentta-tpl" data-table="#jasrek-kentat">+ Lisää kenttä</button></p>
+            </div>
+
+            <div class="jasrek-panel" id="jasrek-kirjanpito">
+                <h2>Jäsenmaksut kirjanpitoon</h2>
+                <p class="description">Tilit raportissa <a href="<?php echo esc_url(admin_url('admin.php?page=jasrek-raportti&view=kirjanpito')); ?>">Vuosiraportti → Jäsenmaksut kirjanpitoon</a>. Kirjoita kirjanpitäjän käyttämät tilit, esim. <em>1910 Pankkitili</em> ja <em>3000 Jäsenmaksutuotot</em>. Tyhjänä käytetään tilin nimeä ilman numeroa.</p>
+                <div class="jasrek-grid">
+                    <p><label for="jasrek-kp-pankki">Pankkitili (debet)</label>
+                       <input type="text" id="jasrek-kp-pankki" name="kp_pankki" value="<?php echo esc_attr($s['kp_pankki']); ?>" placeholder="Pankkitili"></p>
+                    <p><label for="jasrek-kp-tuotot">Jäsenmaksutuotot (kredit)</label>
+                       <input type="text" id="jasrek-kp-tuotot" name="kp_tuotot" value="<?php echo esc_attr($s['kp_tuotot']); ?>" placeholder="Jäsenmaksutuotot"></p>
+                    <p><label for="jasrek-kp-posti">Paperilaskujen postimaksut (kredit)</label>
+                       <input type="text" id="jasrek-kp-posti" name="kp_posti" value="<?php echo esc_attr($s['kp_posti']); ?>" placeholder="Postimaksut">
+                       <span class="description">Voi olla sama kuin jäsenmaksutuotot, tai esim. postikulujen tili.</span></p>
+                </div>
             </div>
 
             <div class="jasrek-panel" id="jasrek-merkkipaivat">

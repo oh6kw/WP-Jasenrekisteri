@@ -238,3 +238,13 @@ a.jasrek-card-link:hover { border-color: #2271b1; }
 #jasrek-varmuuskopio h3 { margin: 12px 0 4px; }
 .jasrek-fieldset > .description { display: block; margin-bottom: 6px; }
 .jasrek-label-link { font-weight: normal; font-size: 12px; margin-left: 8px; }
+
+/* 4.8.2: Jäsenmaksut kirjanpitoon */
+.jasrek-navtabs { margin-bottom: 12px; }
+.jasrek-kp-form { display: flex; flex-wrap: wrap; gap: 4px 20px; align-items: flex-end; }
+.jasrek-kp-form p { margin: 4px 0; }
+.jasrek-kp-form label { display: block; font-weight: 600; margin-bottom: 2px; }
+.jasrek-kp-form .jasrek-kp-pikat { flex-basis: 100%; color: var(--jasrek-muted); }
+.jasrek-kp-form .jasrek-kp-pikat label { display: inline; }
+.jasrek-r { text-align: right !important; white-space: nowrap; }
+.jasrek-kp-viennit td:last-child { white-space: nowrap; }

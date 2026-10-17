@@ -52,6 +52,7 @@ Lähetä koko jäsenistölle jäsenmaksulaskut sähköpostilla yhdellä painallu
 **Vuosiraportti ja muutosloki**
 - **Äänioikeusluettelo vuosikokoukseen:** tulostettava luettelo jäsenistä, joiden jäsenmaksu valitulta laskulta on maksettu tai joiden jäsenluokan jäsenmaksu on 0 €, ja allekirjoitussarake.
 - **Vuosiraportti vuosikokoukseen:** jäsenmäärät jäsenluokittain vuoden alussa ja lopussa, liittyneet ja eronneet, vuoden laskut (laskutettu, maksettu, avoinna) jäsenluokittain sekä vuoden aikana kertyneet jäsenmaksut ja vuoden merkkipäivät. Tulostettavissa ja vietävissä Exceliin.
+- **Jäsenmaksut kirjanpitoon** (Vuosiraportin toinen välilehti): vientiehdotus kirjanpitäjälle (*Pankkitili / Jäsenmaksutuotot*) maksupäivittäin tai kuukausittain mille tahansa aikavälille, erittely jäsenluokittain, postimaksut erikseen, poikkeavat maksut ja avoimet jäsenmaksut aikavälin lopussa. Tilien nimet tai numerot asetuksissa. Tulostettavissa ja Exceliin (myös jokainen maksu jäsenittäin). Lisäosa ei tee kirjanpitoa – raportti on apu kirjanpitäjälle.
 - **Muutosloki:** kuka muutti mitä ja milloin – jäsenten tiedot vanha → uusi, maksumerkinnät, lähetykset, postitukset, laskut, asetukset, tiedotteet, tuonnit ja viennit. Jäsenen sivulla näkyy hänen oma muutoshistoriansa. Säilytysaika valitaan asetuksista.
 
 **Tiedotteet**

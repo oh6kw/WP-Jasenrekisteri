@@ -5,7 +5,7 @@ Tags: membership, members, invoices, association, finland
 Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 4.8.1
+Stable tag: 4.8.2
 License: AGPLv3 or later
 License URI: https://www.gnu.org/licenses/agpl-3.0.html
 
@@ -42,6 +42,7 @@ OH6KW Jäsenrekisteri ("membership register") is a complete membership register 
 **Reports and audit log**
 
 * Voting register for the general meeting: printable list of members entitled to vote (fee paid or fee-exempt class) with a signature column.
+* Membership fees for bookkeeping: a posting proposal for the accountant (bank account / membership fee income) per payment day or month, with open fees at the end of the period. Printable and exportable to Excel.
 * Annual report for the general meeting: member counts per class at the start and end of the year, joined and resigned members, invoiced, paid and open fees, and fees received during the year. Printable and exportable to Excel.
 * Audit log: who changed what and when, including old and new values of member data, payments, sending, settings and exports. The retention period is configurable.
 
@@ -106,6 +107,9 @@ The Finnish reference payment file (KTL / viitesiirtoaineisto), ISO 20022 camt.0
 11. The email invoice on a phone.
 
 == Changelog ==
+
+= 4.8.2 =
+* New: "Membership fees for bookkeeping" report (Annual report → second tab) for the treasurer and the accountant: a posting proposal (debit bank account / credit membership fee income) per payment day or per month for any period, breakdown by membership class, postage fees separately, payments that differ from the invoice, and open membership fees at the end of the period. Printable and exportable to Excel (including every payment by member). Account names or numbers are set in the settings. The plugin does not do bookkeeping itself.
 
 = 4.8.1 =
 * Email invoice: the bank transfer form layout is replaced by a payment card that works on phones and computers (amount and due date, copyable payment details, virtual barcode, QR code). Sites that used the old layout switch automatically.
